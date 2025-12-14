@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 
     <style>
         body { font-family: 'Poppins', sans-serif; background-color: #111827; color: #f3f4f6; background-image: radial-gradient(circle at 50% 50%, #1f2937 0%, #111827 100%); background-attachment: fixed; }
@@ -188,20 +188,21 @@
     </div>
 
     <script>
-        const socket = io();
+        const API_URL = "https://menuia.onrender.com";
+        const socket = io(API_URL);
+        
         let SHOP_CONFIG = {}, MENU_DATA = {}, cart = [], userLocation = null, distanceKm = 0;
         let allItems = []; 
         let idleTimer, idleWarningShown = false;
         const SHOP_SLUG = window.location.pathname.split('/').pop() || 'sosushi';
         
+        // Variable temporal para el item que se está agregando con opciones
         let pendingItem = null;
 
         // --- CONEXIÓN SOCKET.IO CORREGIDA ---
         socket.on('connect', () => {
             // Unirse explícitamente a la sala de la tienda
             socket.emit('join-store', SHOP_SLUG);
-            // Registrar visita (STATS)
-            socket.emit('register-visit', SHOP_SLUG);
         });
 
         // Actualización en tiempo real sin recarga completa
@@ -217,7 +218,7 @@
 
         async function loadStoreData() {
             try {
-                const res = await fetch(`/api/shop/${SHOP_SLUG}`);
+                const res = await fetch(`${API_URL}/api/shop/${SHOP_SLUG}`);
                 if(!res.ok) throw new Error();
                 const data = await res.json();
                 SHOP_CONFIG = data.config; MENU_DATA = data.menu;
@@ -228,6 +229,7 @@
                 });
 
                 applyConfig(); 
+                // Renderizar de nuevo el menú manteniendo el filtro actual si es posible, o resetear a 'all'
                 renderMenu('all');
                 
                 const loader = document.getElementById('app-loader');
