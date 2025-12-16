@@ -189,13 +189,15 @@
                         </div>
                     </div>
 
-                    <!-- CTA Subscription -->
+                    <!-- CTA Subscription (MODIFICADO PARA TRANSFERENCIA) -->
                     <div id="sub-pay-container" class="hidden bg-gradient-to-r from-gray-900 to-gray-800 rounded-2xl p-6 text-white flex flex-col md:flex-row justify-between items-center gap-4 shadow-xl">
                         <div>
                             <h3 class="font-bold text-lg mb-1">🚀 Desbloquea todo el potencial</h3>
                             <p class="text-gray-300 text-sm">Tu prueba gratuita está activa. Pásate a PRO por solo $100/mes.</p>
                         </div>
-                        <button onclick="startSubscription()" class="bg-white text-gray-900 px-6 py-2.5 rounded-full font-bold text-sm hover:bg-gray-100 transition shadow-lg">Activar PRO</button>
+                        <button onclick="openSubModal()" class="bg-white text-gray-900 px-6 py-2.5 rounded-full font-bold text-sm hover:bg-gray-100 transition shadow-lg flex items-center gap-2">
+                            <i class="fa-solid fa-crown text-yellow-500"></i> Activar PRO
+                        </button>
                     </div>
                 </div>
 
@@ -232,7 +234,7 @@
                                     <button onclick="openGroupCreator()" class="text-xs bg-blue-50 hover:bg-blue-100 text-blue-600 px-2 py-1 rounded font-bold transition flex items-center gap-1"><i class="fa-solid fa-plus"></i> Nuevo</button>
                                 </div>
                                 
-                                <!-- CREATOR FORM (NUEVO) -->
+                                <!-- CREATOR FORM -->
                                 <div id="group-creator" class="hidden bg-gray-50 p-3 rounded-lg mb-3 border border-gray-200 animate-fade-in-up">
                                     <div class="flex justify-between items-center mb-2">
                                         <span class="text-xs font-bold text-gray-500 uppercase">Crear Grupo</span>
@@ -418,6 +420,48 @@
             <div class="p-4 bg-gray-50 border-t flex justify-end gap-3">
                 <button onclick="closeProductModal()" class="px-4 py-2 rounded text-gray-500 hover:bg-gray-200 text-sm font-bold">Cancelar</button>
                 <button onclick="saveProductInternal()" class="px-6 py-2 rounded bg-blue-600 text-white font-bold text-sm hover:bg-blue-700 shadow">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SUBSCRIPTION MODAL (NUEVO: TRANSFERENCIA) -->
+    <div id="sub-modal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden animate-fade-in-up">
+            <div class="bg-gradient-to-r from-gray-900 to-gray-800 p-6 text-white text-center">
+                <h3 class="text-2xl font-bold mb-2">🚀 Plan PRO</h3>
+                <p class="text-gray-300 text-sm">Transferencia Bancaria</p>
+            </div>
+            <div class="p-6 space-y-4">
+                <p class="text-sm text-gray-600 text-center">Realiza una transferencia de <span class="font-bold text-gray-800">$100 MXN</span> a la siguiente cuenta para activar tu mes:</p>
+                
+                <div class="bg-gray-100 p-4 rounded-xl border border-gray-200 text-sm space-y-2">
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">Banco:</span>
+                        <span class="font-bold text-gray-800">BBVA / STP</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">CLABE:</span>
+                        <span class="font-bold text-gray-800 select-all">123456789012345678</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-500">Beneficiario:</span>
+                        <span class="font-bold text-gray-800">MenúIA S.A.</span>
+                    </div>
+                    <div class="flex justify-between border-t border-gray-300 pt-2 mt-2">
+                        <span class="text-gray-500">Concepto:</span>
+                        <span class="font-bold text-blue-600 select-all" id="sub-concept-ref">PRO-TIENDA</span>
+                    </div>
+                </div>
+
+                <div class="text-xs text-gray-400 text-center">
+                    <p>Una vez realizado el pago, envía tu comprobante por WhatsApp.</p>
+                </div>
+
+                <button onclick="window.open('https://wa.me/5211234567890?text=Hola,%20envio%20mi%20comprobante%20de%20pago%20para%20activar%20mi%20tienda.', '_blank')" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl shadow-lg transition flex items-center justify-center gap-2">
+                    <i class="fa-brands fa-whatsapp text-xl"></i> Enviar Comprobante
+                </button>
+                
+                <button onclick="document.getElementById('sub-modal').classList.add('hidden')" class="w-full text-gray-400 text-sm hover:text-gray-600 py-2">Cerrar</button>
             </div>
         </div>
     </div>
@@ -742,6 +786,12 @@
         function editProduct(cat, idx) { currentCategory = cat; openProductModal(idx); }
         function deleteProduct(cat, idx) { if(confirm("¿Eliminar?")) { SESSION.data.menu[cat].splice(idx, 1); renderMenuGrid(cat); } }
 
+        // --- SUBSCRIPTION ---
+        function openSubModal() {
+            document.getElementById('sub-concept-ref').innerText = `PRO-${SESSION.slug.toUpperCase()}`;
+            document.getElementById('sub-modal').classList.remove('hidden');
+        }
+
         // --- GLOBAL SAVE ---
         async function saveChanges() {
             const newConfig = { ...SESSION.data.config };
@@ -803,17 +853,6 @@
             else { wrapper.style.width = "300px"; wrapper.style.background = "#111827"; wrapper.style.color="white"; wrapper.style.borderRadius="10px"; wrapper.innerHTML = `<div class="mb-4"><h2 class="text-xl font-bold text-yellow-400">${name}</h2></div><div class="bg-white p-3 rounded"><div id="qrcode"></div></div>`; }
             container.appendChild(wrapper);
             setTimeout(() => new QRCode(wrapper.querySelector("#qrcode"), { text: url, width: 150, height: 150, colorDark: style==='poster'?"#000":"#000", colorLight: "#fff" }), 50);
-        }
-        
-        async function startSubscription() { 
-            const btn = event.currentTarget;
-            const oldText = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Procesando...';
-            try {
-                const res = await fetch(`${API_URL}/api/create-subscription`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ slug: SESSION.slug }) });
-                const data = await res.json();
-                if(data.url) window.location.href = data.url; else { alert("Error iniciando pago: " + (data.error || "Desconocido")); btn.innerHTML = oldText; }
-            } catch(e) { console.error(e); alert("Error de conexión"); btn.innerHTML = oldText; }
         }
         
         function logout() { localStorage.removeItem('shop_pass'); location.reload(); }
