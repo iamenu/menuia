@@ -129,7 +129,7 @@
                 </div>
             </div>
             <div class="p-4 bg-gray-900 border-t border-gray-700">
-                <button onclick="confirmOptions()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 rounded-lg transition">Confirmar y Agregar</button>
+                <button id="modal-confirm-btn" onclick="confirmOptions()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 rounded-lg transition">Confirmar y Agregar</button>
             </div>
         </div>
     </div>
@@ -479,7 +479,7 @@
             });
         }
 
-        // --- CARRITO & CHECKOUT MEJORADO CON OPCIONES ---
+        // --- CARRITO & CHECKOUT MEJORADO CON OPCIONES Y PRECIOS ---
         
         function toggleCart() { document.getElementById('cart-modal').classList.toggle('active'); }
         
@@ -507,12 +507,26 @@
                 pendingItem._resolvedOptions = options;
                 
                 const container = document.getElementById('options-list');
-                container.innerHTML = options.map((opt, idx) => `
-                    <label class="flex items-center p-3 bg-gray-900 border border-gray-700 rounded-lg cursor-pointer hover:bg-gray-800 transition">
-                        <input type="checkbox" value="${opt}" class="option-check form-checkbox h-5 w-5 text-blue-600 rounded mr-3">
-                        <span class="text-white font-medium">${opt}</span>
+                
+                // Renderizar Opciones (Manejando objetos {name, price} o strings antiguos)
+                container.innerHTML = options.map((opt, idx) => {
+                    // Normalizar formato
+                    const name = typeof opt === 'object' ? opt.name : opt;
+                    const price = typeof opt === 'object' ? (opt.price || 0) : 0;
+                    const priceTxt = price > 0 ? `(+$${price})` : '';
+                    
+                    return `
+                    <label class="flex items-center p-3 bg-gray-900 border border-gray-700 rounded-lg cursor-pointer hover:bg-gray-800 transition justify-between group">
+                        <div class="flex items-center">
+                            <input type="checkbox" value="${idx}" data-price="${price}" data-name="${name}" onchange="updateModalTotal()" class="option-check form-checkbox h-5 w-5 text-blue-600 rounded mr-3">
+                            <span class="text-white font-medium">${name}</span>
+                        </div>
+                        ${price > 0 ? `<span class="text-green-400 font-bold text-sm bg-green-900/30 px-2 py-1 rounded">${priceTxt}</span>` : ''}
                     </label>
-                `).join('');
+                    `;
+                }).join('');
+                
+                updateModalTotal(); // Calcular total inicial
                 toggleOptionsModal(true);
             } else {
                 // Si no, agregar directo
@@ -520,10 +534,33 @@
             }
         }
 
+        // Calcular precio en tiempo real en el modal
+        function updateModalTotal() {
+            const checks = document.querySelectorAll('.option-check:checked');
+            let extra = 0;
+            checks.forEach(c => extra += parseFloat(c.dataset.price));
+            const total = pendingItem.price + extra;
+            document.getElementById('modal-confirm-btn').innerText = `Agregar por $${total.toFixed(2)}`;
+        }
+
         function confirmOptions() {
             const checks = document.querySelectorAll('.option-check:checked');
-            const selected = Array.from(checks).map(c => c.value);
-            addItemToCartInternal(pendingItem, selected);
+            const selectedNames = [];
+            let extraCost = 0;
+            
+            checks.forEach(c => {
+                const name = c.dataset.name;
+                const price = parseFloat(c.dataset.price);
+                extraCost += price;
+                // Formato bonito para mostrar en carrito
+                selectedNames.push(price > 0 ? `${name} (+$${price})` : name);
+            });
+            
+            // Creamos una copia del item con el precio actualizado (Base + Extras)
+            // Esto asegura que la lógica del carrito (precio * cantidad) siga funcionando
+            const itemToAdd = { ...pendingItem, price: pendingItem.price + extraCost };
+            
+            addItemToCartInternal(itemToAdd, selectedNames);
             toggleOptionsModal(false);
         }
 
@@ -532,6 +569,7 @@
             const optionsKey = options.sort().join('|');
             
             // Buscar si ya existe este producto exacto (con mismas opciones)
+            // Usamos item.name como identificador base
             const ex = cart.find(i => i.name === item.name && (i.selectedOptions || []).sort().join('|') === optionsKey);
             
             if(ex) {
@@ -575,7 +613,7 @@
                     <div class="flex-1">
                         <h4 class="text-sm font-bold text-white leading-tight">${i.name}</h4>
                         ${optsHtml}
-                        <p class="text-xs text-gray-400 mt-0.5">$${i.price} c/u</p>
+                        <p class="text-xs text-gray-400 mt-0.5">$${i.price.toFixed(2)} c/u</p>
                     </div>
                     <div class="flex flex-col items-end">
                         <span class="text-red-400 font-bold mb-1">$${(i.price * i.qty).toFixed(2)}</span>
@@ -638,7 +676,7 @@
             cart.forEach(i=> {
                 // Incluir opciones en el mensaje de WhatsApp
                 const optsTxt = i.selectedOptions && i.selectedOptions.length > 0 ? ` (${i.selectedOptions.join(', ')})` : '';
-                m+=`${i.qty}x ${i.name}${optsTxt} $${i.price*i.qty}\n`
+                m+=`${i.qty}x ${i.name}${optsTxt} $${(i.price*i.qty).toFixed(2)}\n`
             });
             m+=`\nTotal: ${document.getElementById('cart-total').innerText}`;
             window.open(`https://wa.me/521${SHOP_CONFIG.whatsapp}?text=${encodeURIComponent(m)}`, '_blank');
