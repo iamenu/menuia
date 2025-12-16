@@ -447,14 +447,15 @@
                         <span class="text-gray-500">Beneficiario:</span>
                         <span class="font-bold text-gray-800">MenúIA S.A.</span>
                     </div>
-                    <div class="flex justify-between border-t border-gray-300 pt-2 mt-2">
-                        <span class="text-gray-500">Concepto:</span>
-                        <span class="font-bold text-blue-600 select-all" id="sub-concept-ref">PRO-TIENDA</span>
+                    <div class="flex justify-between border-t border-gray-300 pt-2 mt-2 bg-yellow-50 p-2 rounded border border-yellow-200">
+                        <span class="text-gray-700 font-bold">Concepto (Requerido):</span>
+                        <span class="font-bold text-blue-600 select-all text-right" id="sub-concept-ref">PRO-TIENDA</span>
                     </div>
                 </div>
 
-                <div class="text-xs text-gray-400 text-center">
-                    <p>Una vez realizado el pago, envía tu comprobante por WhatsApp.</p>
+                <div class="text-xs text-gray-500 text-center">
+                    <p class="mb-1"><i class="fa-solid fa-circle-info text-blue-500"></i> Es vital que pongas el concepto exacto para identificar tu pago.</p>
+                    <p>Una vez realizado, envía tu comprobante por WhatsApp.</p>
                 </div>
 
                 <button onclick="window.open('https://wa.me/5211234567890?text=Hola,%20envio%20mi%20comprobante%20de%20pago%20para%20activar%20mi%20tienda.', '_blank')" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl shadow-lg transition flex items-center justify-center gap-2">
@@ -788,7 +789,9 @@
 
         // --- SUBSCRIPTION ---
         function openSubModal() {
-            document.getElementById('sub-concept-ref').innerText = `PRO-${SESSION.slug.toUpperCase()}`;
+            // Generamos el concepto usando el SLUG de la tienda para referencia única
+            const concept = `PAGO ${SESSION.slug.toUpperCase()}`;
+            document.getElementById('sub-concept-ref').innerText = concept;
             document.getElementById('sub-modal').classList.remove('hidden');
         }
 
