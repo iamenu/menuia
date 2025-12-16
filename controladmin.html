@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super Admin - Control Central</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/locale/es.min.js"></script>
+    <style>
+        body { font-family: 'Space Grotesk', sans-serif; background-color: #0f172a; color: #e2e8f0; }
+        .glass-panel { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); }
+        .status-dot { height: 8px; width: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+        .fade-in { animation: fadeIn 0.5s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- LOGIN SCREEN -->
+    <div id="login-screen" class="fixed inset-0 z-50 bg-slate-900 flex items-center justify-center p-4">
+        <div class="bg-slate-800 p-8 rounded-2xl shadow-2xl w-full max-w-md border border-slate-700 text-center">
+            <div class="w-16 h-16 bg-indigo-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-indigo-500/50">
+                <i class="fa-solid fa-shield-halved text-2xl text-white"></i>
+            </div>
+            <h1 class="text-2xl font-bold text-white mb-2">Acceso Restringido</h1>
+            <p class="text-slate-400 mb-6 text-sm">Panel de Control Maestro</p>
+            <form onsubmit="event.preventDefault(); handleLogin();" class="space-y-4">
+                <input type="password" id="admin-pass" placeholder="Llave Maestra" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500 outline-none text-center tracking-widest" autofocus>
+                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-lg transition shadow-lg">Entrar al Sistema</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MAIN DASHBOARD -->
+    <div id="dashboard-screen" class="hidden flex-1 flex flex-col p-4 md:p-8 max-w-7xl mx-auto w-full fade-in">
+        
+        <!-- Header -->
+        <header class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-3xl font-bold text-white tracking-tight">Panel de Control <span class="text-indigo-400">Master</span></h1>
+                <p class="text-slate-400 text-sm mt-1">Monitoreo en tiempo real de la plataforma.</p>
+            </div>
+            <button onclick="location.reload()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-lg border border-slate-700 text-sm font-bold transition">
+                <i class="fa-solid fa-right-from-bracket"></i> Salir
+            </button>
+        </header>
+
+        <!-- Stats Overview -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="glass-panel p-6 rounded-2xl relative overflow-hidden group">
+                <div class="absolute -right-4 -top-4 w-24 h-24 bg-blue-500/10 rounded-full blur-2xl group-hover:bg-blue-500/20 transition"></div>
+                <p class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-2">Total Tiendas</p>
+                <h2 class="text-4xl font-bold text-white" id="stat-total-shops">0</h2>
+            </div>
+            <div class="glass-panel p-6 rounded-2xl relative overflow-hidden group">
+                <div class="absolute -right-4 -top-4 w-24 h-24 bg-green-500/10 rounded-full blur-2xl group-hover:bg-green-500/20 transition"></div>
+                <p class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-2">Activas (PRO)</p>
+                <h2 class="text-4xl font-bold text-green-400" id="stat-active-shops">0</h2>
+            </div>
+            <div class="glass-panel p-6 rounded-2xl relative overflow-hidden group">
+                <div class="absolute -right-4 -top-4 w-24 h-24 bg-orange-500/10 rounded-full blur-2xl group-hover:bg-orange-500/20 transition"></div>
+                <p class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-2">Prueba / Free</p>
+                <h2 class="text-4xl font-bold text-orange-400" id="stat-trial-shops">0</h2>
+            </div>
+            <div class="glass-panel p-6 rounded-2xl relative overflow-hidden group">
+                <div class="absolute -right-4 -top-4 w-24 h-24 bg-purple-500/10 rounded-full blur-2xl group-hover:bg-purple-500/20 transition"></div>
+                <p class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-2">Visitas Totales (Hoy)</p>
+                <h2 class="text-4xl font-bold text-purple-400" id="stat-total-visits">0</h2>
+            </div>
+        </div>
+
+        <!-- Shops Table -->
+        <div class="glass-panel rounded-2xl overflow-hidden flex-1 flex flex-col">
+            <div class="p-6 border-b border-slate-700 flex justify-between items-center bg-slate-800/50">
+                <h3 class="font-bold text-lg text-white"><i class="fa-solid fa-list-ul mr-2 text-indigo-400"></i> Listado de Tiendas</h3>
+                <input type="text" id="search-input" onkeyup="filterTable()" placeholder="Buscar por nombre o slug..." class="bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-indigo-500 w-64">
+            </div>
+            
+            <div class="overflow-x-auto flex-1">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-slate-900/50 text-slate-400 text-xs uppercase font-bold sticky top-0">
+                        <tr>
+                            <th class="p-4">Tienda</th>
+                            <th class="p-4">Estado</th>
+                            <th class="p-4">Tráfico Hoy</th>
+                            <th class="p-4">Inactividad</th>
+                            <th class="p-4">Vence</th>
+                            <th class="p-4 text-right">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="shops-table-body" class="text-sm divide-y divide-slate-700/50">
+                        <!-- Dynamic Rows -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- PAYMENT MODAL -->
+    <div id="payment-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-slate-800 rounded-2xl w-full max-w-md border border-slate-700 shadow-2xl p-6 fade-in">
+            <h3 class="text-xl font-bold text-white mb-2">Registrar Pago Manual</h3>
+            <p class="text-slate-400 text-sm mb-6">Confirma que recibiste la transferencia para activar la tienda <span id="pay-slug-display" class="font-bold text-indigo-400">...</span></p>
+            
+            <input type="hidden" id="pay-slug-input">
+            
+            <div class="space-y-4 mb-6">
+                <label class="block bg-slate-900 p-4 rounded-xl border border-slate-700 cursor-pointer hover:border-indigo-500 transition">
+                    <input type="radio" name="pay-duration" value="1" checked class="accent-indigo-500">
+                    <span class="text-white font-bold ml-2">1 Mes</span>
+                    <span class="text-slate-500 text-xs ml-2">($100 MXN)</span>
+                </label>
+                <label class="block bg-slate-900 p-4 rounded-xl border border-slate-700 cursor-pointer hover:border-indigo-500 transition">
+                    <input type="radio" name="pay-duration" value="6">
+                    <span class="text-white font-bold ml-2">6 Meses</span>
+                    <span class="text-slate-500 text-xs ml-2">($500 MXN)</span>
+                </label>
+                <label class="block bg-slate-900 p-4 rounded-xl border border-slate-700 cursor-pointer hover:border-indigo-500 transition">
+                    <input type="radio" name="pay-duration" value="12">
+                    <span class="text-white font-bold ml-2">1 Año</span>
+                    <span class="text-slate-500 text-xs ml-2">($1000 MXN)</span>
+                </label>
+            </div>
+
+            <div class="flex gap-3">
+                <button onclick="closePaymentModal()" class="flex-1 bg-slate-700 hover:bg-slate-600 text-white font-bold py-3 rounded-xl transition">Cancelar</button>
+                <button onclick="confirmPayment()" class="flex-1 bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-xl transition shadow-lg shadow-green-900/20">
+                    <i class="fa-solid fa-check mr-2"></i> Aprobar Pago
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = "https://menuia.onrender.com";
+        let MASTER_KEY = "";
+        let SHOPS_CACHE = [];
+
+        async function handleLogin() {
+            const pass = document.getElementById('admin-pass').value;
+            const btn = document.querySelector('form button');
+            const originalTxt = btn.innerText;
+            btn.innerText = "Verificando...";
+            
+            // Verificamos intentando listar las tiendas
+            try {
+                const res = await fetch(`${API_URL}/api/superadmin/list`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ masterKey: pass })
+                });
+                
+                if (res.ok) {
+                    MASTER_KEY = pass;
+                    const data = await res.json();
+                    SHOPS_CACHE = data.shops;
+                    initDashboard();
+                } else {
+                    alert("Llave incorrecta 🔒");
+                }
+            } catch (e) {
+                alert("Error de conexión con el servidor");
+            }
+            btn.innerText = originalTxt;
+        }
+
+        function initDashboard() {
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('dashboard-screen').classList.remove('hidden');
+            renderTable(SHOPS_CACHE);
+            renderStats();
+        }
+
+        function renderStats() {
+            document.getElementById('stat-total-shops').innerText = SHOPS_CACHE.length;
+            document.getElementById('stat-active-shops').innerText = SHOPS_CACHE.filter(s => s.subscription?.status === 'active').length;
+            document.getElementById('stat-trial-shops').innerText = SHOPS_CACHE.filter(s => s.subscription?.status !== 'active').length;
+            
+            const totalVisits = SHOPS_CACHE.reduce((acc, curr) => acc + (curr.stats?.visits || 0), 0);
+            document.getElementById('stat-total-visits').innerText = totalVisits;
+        }
+
+        function renderTable(shops) {
+            const tbody = document.getElementById('shops-table-body');
+            tbody.innerHTML = "";
+
+            shops.forEach(shop => {
+                // Cálculo de inactividad
+                const lastUpdate = moment(shop.updatedAt);
+                const inactivityDuration = moment().diff(lastUpdate, 'days');
+                let inactivityLabel = "";
+                
+                if (inactivityDuration === 0) inactivityLabel = `<span class="text-green-400 text-xs font-bold">Activo Hoy</span>`;
+                else if (inactivityDuration < 7) inactivityLabel = `<span class="text-blue-400 text-xs">Hace ${inactivityDuration} días</span>`;
+                else inactivityLabel = `<span class="text-red-400 text-xs font-bold">Inactivo ${inactivityDuration} días</span>`;
+
+                // Estado de Suscripción
+                const isPro = shop.subscription?.status === 'active';
+                const statusBadge = isPro 
+                    ? `<span class="bg-green-500/10 text-green-400 px-2 py-1 rounded text-xs font-bold border border-green-500/20">PRO ACTIVO</span>`
+                    : `<span class="bg-yellow-500/10 text-yellow-400 px-2 py-1 rounded text-xs font-bold border border-yellow-500/20">PRUEBA / FREE</span>`;
+
+                // Fecha de Vencimiento
+                const validUntil = shop.subscription?.validUntil ? moment(shop.subscription.validUntil).format('D MMM YYYY') : 'N/A';
+                
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-800/30 transition group";
+                tr.innerHTML = `
+                    <td class="p-4">
+                        <div class="font-bold text-white">${shop.config?.name || 'Sin Nombre'}</div>
+                        <a href="https://iamenu.github.io/menuia/menu.html?slug=${shop.slug}" target="_blank" class="text-xs text-indigo-400 hover:text-indigo-300 underline">${shop.slug}</a>
+                        <div class="text-[10px] text-slate-500">${shop.config?.businessType || 'General'}</div>
+                    </td>
+                    <td class="p-4">${statusBadge}</td>
+                    <td class="p-4">
+                        <div class="flex items-center gap-4">
+                            <div><span class="text-slate-400 text-[10px] uppercase">Visitas</span><div class="font-bold">${shop.stats?.visits || 0}</div></div>
+                            <div><span class="text-slate-400 text-[10px] uppercase">Pedidos</span><div class="font-bold">${shop.stats?.orders || 0}</div></div>
+                        </div>
+                    </td>
+                    <td class="p-4">${inactivityLabel}</td>
+                    <td class="p-4 text-xs text-slate-300">${validUntil}</td>
+                    <td class="p-4 text-right">
+                        <button onclick="openPaymentModal('${shop.slug}')" class="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded text-xs font-bold shadow transition transform hover:scale-105" title="Registrar Pago">
+                            <i class="fa-solid fa-dollar-sign"></i> Pagar
+                        </button>
+                        <a href="https://wa.me/521${shop.credentials?.contactPhone || ''}" target="_blank" class="bg-green-600 hover:bg-green-500 text-white px-3 py-1.5 rounded text-xs font-bold shadow ml-2 inline-block">
+                            <i class="fa-brands fa-whatsapp"></i>
+                        </a>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function filterTable() {
+            const term = document.getElementById('search-input').value.toLowerCase();
+            const filtered = SHOPS_CACHE.filter(s => 
+                (s.slug && s.slug.toLowerCase().includes(term)) || 
+                (s.config?.name && s.config.name.toLowerCase().includes(term))
+            );
+            renderTable(filtered);
+        }
+
+        // --- PAYMENT LOGIC ---
+        function openPaymentModal(slug) {
+            document.getElementById('pay-slug-input').value = slug;
+            document.getElementById('pay-slug-display').innerText = slug.toUpperCase();
+            document.getElementById('payment-modal').classList.remove('hidden');
+            document.getElementById('payment-modal').classList.add('flex');
+        }
+
+        function closePaymentModal() {
+            document.getElementById('payment-modal').classList.add('hidden');
+            document.getElementById('payment-modal').classList.remove('flex');
+        }
+
+        async function confirmPayment() {
+            const slug = document.getElementById('pay-slug-input').value;
+            const months = document.querySelector('input[name="pay-duration"]:checked').value;
+            const btn = event.currentTarget;
+            const originalHTML = btn.innerHTML;
+            
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Procesando...`;
+            
+            try {
+                const res = await fetch(`${API_URL}/api/superadmin/approve-payment`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ masterKey: MASTER_KEY, slug, months })
+                });
+
+                if (res.ok) {
+                    // Refrescar datos
+                    await refreshData();
+                    closePaymentModal();
+                    alert(`✅ Pago aprobado exitosamente para ${slug}`);
+                } else {
+                    alert("❌ Error al aprobar pago");
+                }
+            } catch (e) {
+                alert("Error de conexión");
+            }
+            btn.innerHTML = originalHTML;
+        }
+
+        async function refreshData() {
+            const res = await fetch(`${API_URL}/api/superadmin/list`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ masterKey: MASTER_KEY })
+            });
+            const data = await res.json();
+            SHOPS_CACHE = data.shops;
+            renderTable(SHOPS_CACHE);
+            renderStats();
+        }
+    </script>
+</body>
+</html>
