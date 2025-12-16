@@ -149,7 +149,7 @@
                     <i class="fa-solid fa-external-link-alt"></i> Ver mi Tienda
                 </a>
                 
-                <!-- ENLACE PANEL COCINA (NUEVO) -->
+                <!-- ENLACE PANEL COCINA -->
                 <div class="mt-2 bg-orange-50 p-2 rounded-lg border border-orange-100 mb-2">
                     <p class="text-[10px] text-orange-800 font-bold mb-1 flex items-center gap-1">
                         <i class="fa-solid fa-fire-burner"></i> Link Cocina:
@@ -459,6 +459,28 @@
                             </div>
                         </div>
 
+                        <!-- NUEVA TARJETA: ALTA DEMANDA -->
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 md:col-span-2 border-l-4 border-orange-500">
+                            <h3 class="font-bold text-gray-700 mb-4 flex items-center gap-2">
+                                <i class="fa-solid fa-fire text-orange-500"></i> Estado del Servicio
+                            </h3>
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="font-bold text-sm text-gray-800">Modo Alta Demanda</p>
+                                    <p class="text-xs text-gray-500">Activa esto cuando tengas muchos pedidos. El bot avisará a los clientes del tiempo de espera.</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="conf-high-demand-active" class="sr-only peer">
+                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-600"></div>
+                                </label>
+                            </div>
+                            <div id="high-demand-input-container" class="mt-4 hidden bg-orange-50 p-3 rounded-lg border border-orange-100">
+                                <label class="block text-xs font-bold text-orange-800 uppercase mb-1">Tiempo de Espera Estimado</label>
+                                <input type="text" id="conf-high-demand-time" placeholder="Ej: 45-60 minutos" class="w-full bg-white border border-orange-200 rounded px-3 py-2 focus:border-orange-500 outline-none text-sm font-bold text-gray-700">
+                                <p class="text-[10px] text-orange-600 mt-1"><i class="fa-solid fa-info-circle"></i> Este mensaje se mostrará a los clientes antes de pedir.</p>
+                            </div>
+                        </div>
+
                         <!-- Card 3: Branding -->
                         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 md:col-span-2">
                             <h3 class="font-bold text-gray-700 mb-4 flex items-center gap-2"><i class="fa-solid fa-image text-purple-500"></i> Imagen de Portada</h3>
@@ -474,13 +496,13 @@
                             </div>
                         </div>
                     </div>
-
-                    <!-- SAVE FLOATING BUTTON -->
-                    <button onclick="saveChanges()" class="fixed bottom-6 right-6 bg-gray-900 text-white px-6 py-4 rounded-full font-bold shadow-2xl hover:bg-black transition transform hover:scale-105 flex items-center gap-2 z-40">
-                        <i class="fa-solid fa-floppy-disk"></i> Guardar Cambios
-                    </button>
                 </div>
             </div>
+            
+            <!-- SAVE FLOATING BUTTON -->
+            <button onclick="saveChanges()" class="fixed bottom-6 right-6 bg-gray-900 text-white px-6 py-4 rounded-full font-bold shadow-2xl hover:bg-black transition transform hover:scale-105 flex items-center gap-2 z-40">
+                <i class="fa-solid fa-floppy-disk"></i> Guardar Cambios
+            </button>
         </main>
     </div>
 
@@ -524,6 +546,14 @@
             if(viewId === 'qr') renderQR('simple');
             if(viewId === 'pos') initPOS();
             if(viewId === 'orders') fetchAndRenderOrders('all'); 
+            
+            // Check global save button visibility
+            const saveBtn = document.querySelector('button[onclick="saveChanges()"]');
+            if(saveBtn) {
+                // Show save button on Settings AND Menu tabs
+                if(viewId === 'settings' || viewId === 'menu') saveBtn.classList.remove('hidden');
+                else saveBtn.classList.add('hidden');
+            }
         }
 
         function switchTab(tab) {
@@ -534,6 +564,9 @@
         window.onload = () => {
             const s = localStorage.getItem('shop_slug'), p = localStorage.getItem('shop_pass');
             if(s && p) { document.getElementById('login-slug').value = s; document.getElementById('login-pass').value = p; }
+            
+            // Setup High Demand toggle listener
+            document.getElementById('conf-high-demand-active').addEventListener('change', toggleHighDemandInput);
         };
 
         async function handleLogin() {
@@ -563,12 +596,17 @@
             const c = SESSION.data.config;
             const stats = SESSION.data.stats || { visits: 0, orders: 0 };
             document.getElementById('dash-owner-name').innerText = SESSION.data.credentials.ownerName || 'Dueño';
+            
+            // Safe count calculation
+            const prodCount = (SESSION.data.menu.promos?.length||0) + (SESSION.data.menu.especiales?.length||0) + 
+                              (SESSION.data.menu.clasicos?.length||0) + (SESSION.data.menu.extras?.length||0);
+            
+            document.getElementById('stat-products-count').innerText = prodCount;
             document.getElementById('stat-visits-count').innerText = stats.visits;
             document.getElementById('stat-orders-count').innerText = stats.orders;
-            const storeUrl = `https://iamenu.github.io/menuia/menu.html?slug=${SESSION.slug}`; // Define variable
-            document.getElementById('sidebar-link-store').href = storeUrl;
             
-            // Add this line:
+            const storeUrl = `https://iamenu.github.io/menuia/menu.html?slug=${SESSION.slug}`;
+            document.getElementById('sidebar-link-store').href = storeUrl;
             const qrLinkElement = document.getElementById('qr-link-text');
             if (qrLinkElement) qrLinkElement.innerText = storeUrl;
             
@@ -581,6 +619,12 @@
             document.getElementById('conf-open').value = c.hours?.open;
             document.getElementById('conf-close').value = c.hours?.close;
             
+            // High Demand init
+            const hd = c.highDemand || false;
+            document.getElementById('conf-high-demand-active').checked = hd;
+            document.getElementById('conf-high-demand-time').value = c.highDemandTime || '';
+            toggleHighDemandInput();
+
             ['promos', 'especiales', 'clasicos', 'extras'].forEach(key => {
                 const title = (c.categoryTitles && c.categoryTitles[key]) ? c.categoryTitles[key] : key.charAt(0).toUpperCase() + key.slice(1);
                 document.getElementById(`cat-title-${key}`).value = title;
@@ -589,6 +633,13 @@
             });
 
             switchView('dashboard');
+        }
+        
+        function toggleHighDemandInput() {
+            const isActive = document.getElementById('conf-high-demand-active').checked;
+            const container = document.getElementById('high-demand-input-container');
+            if(isActive) container.classList.remove('hidden');
+            else container.classList.add('hidden');
         }
 
         socket.on('stats-update', (stats) => {
@@ -810,9 +861,17 @@
             
             SESSION.data.menu.groups.push({ id: 'g-'+Date.now(), name, options: opts }); 
             renderGroups(); closeGroupCreator(); 
+            // Trigger auto-save for groups too
+            saveDataToServer(false);
         }
         
-        function deleteGroup(idx) { if(confirm("¿Borrar?")) { SESSION.data.menu.groups.splice(idx, 1); renderGroups(); } }
+        function deleteGroup(idx) { 
+            if(confirm("¿Borrar?")) { 
+                SESSION.data.menu.groups.splice(idx, 1); 
+                renderGroups(); 
+                saveDataToServer(false);
+            } 
+        }
         
         function openProductModal(idx=-1) { 
             editingIdx = idx; document.getElementById('product-modal').classList.remove('hidden');
@@ -827,47 +886,121 @@
         }
         function closeProductModal() { document.getElementById('product-modal').classList.add('hidden'); }
         function handleImageUpload(i) { if(i.files[0]) { const r=new FileReader(); r.onload=e=>{document.getElementById('prod-img-preview').src=e.target.result;document.getElementById('prod-img-url').value=e.target.result;}; r.readAsDataURL(i.files[0]); } }
-        function saveProductInternal() { const name = document.getElementById('prod-name').value, price = parseFloat(document.getElementById('prod-price').value); if(!name || !price) return alert("Faltan datos"); const item = { id: editingIdx===-1 ? Date.now().toString() : SESSION.data.menu[currentCategory][editingIdx].id, name, description: document.getElementById('prod-desc').value, price, originalPrice: parseFloat(document.getElementById('prod-original').value)||null, image: document.getElementById('prod-img-url').value, tags: document.getElementById('prod-tags').value.split(',').filter(t=>t), groupId: document.getElementById('prod-group-select').value || null }; if(editingIdx===-1) SESSION.data.menu[currentCategory].push(item); else SESSION.data.menu[currentCategory][editingIdx]=item; closeProductModal(); renderMenuGrid(currentCategory); }
-        function deleteProduct(cat, idx) { if(confirm("¿Eliminar?")) { SESSION.data.menu[cat].splice(idx, 1); renderMenuGrid(cat); } }
+        
+        // --- UPDATED SAVE PRODUCT LOGIC (Auto-Saves to DB) ---
+        function saveProductInternal() { 
+            const name = document.getElementById('prod-name').value;
+            const price = parseFloat(document.getElementById('prod-price').value);
+            
+            if(!name || !price) return alert("Faltan datos"); 
+            
+            const item = { 
+                id: editingIdx===-1 ? Date.now().toString() : SESSION.data.menu[currentCategory][editingIdx].id, 
+                name, 
+                description: document.getElementById('prod-desc').value, 
+                price, 
+                originalPrice: parseFloat(document.getElementById('prod-original').value)||null, 
+                image: document.getElementById('prod-img-url').value, 
+                tags: document.getElementById('prod-tags').value.split(',').filter(t=>t), 
+                groupId: document.getElementById('prod-group-select').value || null 
+            }; 
+            
+            if(editingIdx===-1) SESSION.data.menu[currentCategory].push(item); 
+            else SESSION.data.menu[currentCategory][editingIdx]=item; 
+            
+            closeProductModal(); 
+            renderMenuGrid(currentCategory);
+            
+            // Call API to persist changes immediately
+            saveDataToServer(false); // false = silent save (no big alert, maybe toast)
+        }
+
+        function deleteProduct(cat, idx) { 
+            if(confirm("¿Eliminar?")) { 
+                SESSION.data.menu[cat].splice(idx, 1); 
+                renderMenuGrid(cat); 
+                saveDataToServer(false);
+            } 
+        }
+        
         function editProduct(cat, idx) { currentCategory = cat; openProductModal(idx); }
 
-        // --- GLOBAL SAVE (RESTAURADO COMPLETO) ---
-        async function saveChanges() {
-            const cfg = { ...SESSION.data.config };
-            cfg.name = document.getElementById('conf-name').value;
-            cfg.businessType = document.getElementById('conf-type').value;
-            cfg.whatsapp = document.getElementById('conf-whatsapp').value;
-            cfg.address = document.getElementById('conf-address').value;
-            
-            const latInput = document.getElementById('conf-lat').value;
-            const lngInput = document.getElementById('conf-lng').value;
-            if (latInput && lngInput) { cfg.coords = { lat: parseFloat(latInput), lng: parseFloat(lngInput) }; }
-            
-            cfg.hours = { open: parseInt(document.getElementById('conf-open').value), close: parseInt(document.getElementById('conf-close').value) };
-            cfg.heroImage = document.getElementById('conf-hero').value;
+        // --- GLOBAL SAVE FUNCTION (USED BY BOTH BUTTON & AUTO-SAVE) ---
+        async function saveDataToServer(showNotifications = true) {
+             const btn = document.querySelector('button[onclick="saveChanges()"]');
+             let originalText = "";
+             
+             if(showNotifications && btn) {
+                 originalText = btn.innerHTML;
+                 btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Guardando...';
+                 btn.disabled = true;
+             }
 
-            cfg.categoryTitles = {
-                promos: document.getElementById('cat-title-promos').value,
-                especiales: document.getElementById('cat-title-especiales').value,
-                clasicos: document.getElementById('cat-title-clasicos').value,
-                extras: document.getElementById('cat-title-extras').value
-            };
-            
-            // UPDATE UI BUTTONS IMMEDIATELY
-            ['promos', 'especiales', 'clasicos', 'extras'].forEach(key => {
-                const btn = document.getElementById(`btn-cat-${key}`);
-                if (btn) btn.innerText = cfg.categoryTitles[key] || key.toUpperCase();
-            });
+             // We use SESSION.data.config as base, and override with DOM values IF we are in settings view or explicit save
+             // But simpler: just send current SESSION.data structure. 
+             // IMPORTANT: If we are in Menu view, the inputs in Settings view (hidden) might still hold correct values 
+             // because initDashboard populated them. Let's update SESSION config from DOM to be sure before sending.
+             
+             const cfg = { ...SESSION.data.config };
+             // Update config object from DOM inputs
+             cfg.name = document.getElementById('conf-name').value;
+             cfg.businessType = document.getElementById('conf-type').value;
+             cfg.whatsapp = document.getElementById('conf-whatsapp').value;
+             cfg.address = document.getElementById('conf-address').value;
+             
+             const latInput = document.getElementById('conf-lat').value;
+             const lngInput = document.getElementById('conf-lng').value;
+             if (latInput && lngInput) { cfg.coords = { lat: parseFloat(latInput), lng: parseFloat(lngInput) }; }
+             
+             cfg.hours = { open: parseInt(document.getElementById('conf-open').value), close: parseInt(document.getElementById('conf-close').value) };
+             cfg.heroImage = document.getElementById('conf-hero').value;
+             cfg.highDemand = document.getElementById('conf-high-demand-active').checked;
+             cfg.highDemandTime = document.getElementById('conf-high-demand-time').value;
 
-            const btn = event.currentTarget; 
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Guardando...';
-            
-            try {
-                const res = await fetch(`${API_URL}/api/shop/${SESSION.slug}`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ password: SESSION.password, data: { config: cfg, menu: SESSION.data.menu } }) });
-                if (res.ok) { btn.innerHTML = '<i class="fa-solid fa-check"></i> ¡Listo!'; setTimeout(() => btn.innerHTML = originalText, 2000); } 
-                else { btn.innerHTML = 'Error'; }
-            } catch(e) { btn.innerHTML = 'Error de Red'; }
+             cfg.categoryTitles = {
+                 promos: document.getElementById('cat-title-promos').value,
+                 especiales: document.getElementById('cat-title-especiales').value,
+                 clasicos: document.getElementById('cat-title-clasicos').value,
+                 extras: document.getElementById('cat-title-extras').value
+             };
+             
+             // Update session config
+             SESSION.data.config = cfg;
+
+             try {
+                const res = await fetch(`${API_URL}/api/shop/${SESSION.slug}`, { 
+                    method: 'POST', 
+                    headers: {'Content-Type':'application/json'}, 
+                    body: JSON.stringify({ 
+                        password: SESSION.password, 
+                        data: { config: cfg, menu: SESSION.data.menu } 
+                    }) 
+                });
+                
+                if (res.ok) { 
+                    if(showNotifications && btn) {
+                        btn.innerHTML = '<i class="fa-solid fa-check"></i> ¡Listo!'; 
+                        setTimeout(() => { btn.innerHTML = originalText; btn.disabled = false; }, 2000); 
+                    }
+                    // Update category buttons UI in case names changed
+                    ['promos', 'especiales', 'clasicos', 'extras'].forEach(key => {
+                        const btn = document.getElementById(`btn-cat-${key}`);
+                        if (btn) btn.innerText = cfg.categoryTitles[key] || key.toUpperCase();
+                    });
+                    
+                } else { 
+                    if(showNotifications && btn) { btn.innerHTML = 'Error'; btn.disabled = false; }
+                    alert("Error al guardar en servidor.");
+                }
+            } catch(e) { 
+                if(showNotifications && btn) { btn.innerHTML = 'Error Red'; btn.disabled = false; }
+                console.error(e);
+            }
+        }
+
+        // Wrapper for manual button click
+        function saveChanges() {
+            saveDataToServer(true);
         }
         
         // --- HELPERS (RESTAURADOS) ---
