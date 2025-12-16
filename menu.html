@@ -503,6 +503,9 @@
             if(options && options.length > 0) {
                 // Si el item tiene opciones (del grupo o individuales), abrir modal
                 pendingItem = item;
+                // Aseguramos que el precio sea numérico para evitar errores de concatenación
+                pendingItem.price = parseFloat(pendingItem.price); 
+
                 // Guardamos las opciones resueltas temporalmente para usarlas en confirmOptions
                 pendingItem._resolvedOptions = options;
                 
@@ -510,9 +513,9 @@
                 
                 // Renderizar Opciones (Manejando objetos {name, price} o strings antiguos)
                 container.innerHTML = options.map((opt, idx) => {
-                    // Normalizar formato
+                    // Normalizar formato y asegurar tipos
                     const name = typeof opt === 'object' ? opt.name : opt;
-                    const price = typeof opt === 'object' ? (opt.price || 0) : 0;
+                    const price = typeof opt === 'object' ? (parseFloat(opt.price) || 0) : 0; // ParseFloat added safety
                     const priceTxt = price > 0 ? `(+$${price})` : '';
                     
                     return `
@@ -529,8 +532,9 @@
                 updateModalTotal(); // Calcular total inicial
                 toggleOptionsModal(true);
             } else {
-                // Si no, agregar directo
-                addItemToCartInternal(item, []);
+                // Si no, agregar directo (asegurando precio numérico)
+                const itemToAdd = { ...item, price: parseFloat(item.price) };
+                addItemToCartInternal(itemToAdd, []);
             }
         }
 
@@ -538,8 +542,8 @@
         function updateModalTotal() {
             const checks = document.querySelectorAll('.option-check:checked');
             let extra = 0;
-            checks.forEach(c => extra += parseFloat(c.dataset.price));
-            const total = pendingItem.price + extra;
+            checks.forEach(c => extra += parseFloat(c.dataset.price || 0));
+            const total = parseFloat(pendingItem.price) + extra;
             document.getElementById('modal-confirm-btn').innerText = `Agregar por $${total.toFixed(2)}`;
         }
 
@@ -550,15 +554,18 @@
             
             checks.forEach(c => {
                 const name = c.dataset.name;
-                const price = parseFloat(c.dataset.price);
+                const price = parseFloat(c.dataset.price || 0);
                 extraCost += price;
                 // Formato bonito para mostrar en carrito
                 selectedNames.push(price > 0 ? `${name} (+$${price})` : name);
             });
             
             // Creamos una copia del item con el precio actualizado (Base + Extras)
-            // Esto asegura que la lógica del carrito (precio * cantidad) siga funcionando
-            const itemToAdd = { ...pendingItem, price: pendingItem.price + extraCost };
+            // IMPORTANTE: parseFloat asegura que se sume numéricamente, no concatene strings
+            const basePrice = parseFloat(pendingItem.price);
+            const finalPrice = basePrice + extraCost;
+            
+            const itemToAdd = { ...pendingItem, price: finalPrice };
             
             addItemToCartInternal(itemToAdd, selectedNames);
             toggleOptionsModal(false);
@@ -606,6 +613,10 @@
                         + ${i.selectedOptions.join(', ')}
                        </div>` 
                     : '';
+                
+                // Asegurar visualización de precio correcto
+                const displayPrice = parseFloat(i.price).toFixed(2);
+                const subtotal = (i.price * i.qty).toFixed(2);
 
                 return `
                 <div class="flex items-center gap-3 p-3 bg-gray-800 mb-2 rounded border border-gray-700 relative group">
@@ -613,10 +624,10 @@
                     <div class="flex-1">
                         <h4 class="text-sm font-bold text-white leading-tight">${i.name}</h4>
                         ${optsHtml}
-                        <p class="text-xs text-gray-400 mt-0.5">$${i.price.toFixed(2)} c/u</p>
+                        <p class="text-xs text-gray-400 mt-0.5">$${displayPrice} c/u</p>
                     </div>
                     <div class="flex flex-col items-end">
-                        <span class="text-red-400 font-bold mb-1">$${(i.price * i.qty).toFixed(2)}</span>
+                        <span class="text-red-400 font-bold mb-1">$${subtotal}</span>
                         <div class="flex items-center bg-gray-900 rounded-lg">
                             <button onclick="changeQty(${idx}, -1)" class="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-white transition">-</button>
                             <span class="text-xs font-bold w-4 text-center">${i.qty}</span>
@@ -626,7 +637,7 @@
                 </div>`;
             }).join('');
             
-            let total = cart.reduce((a,b)=>a+b.price*b.qty,0);
+            let total = cart.reduce((a,b)=>a + (parseFloat(b.price) * b.qty), 0);
             let shipping = 0;
             if(userLocation && distanceKm <= SHOP_CONFIG.shipping.maxRadius) shipping = (total>=SHOP_CONFIG.shipping.freeThreshold || distanceKm<=SHOP_CONFIG.shipping.freeKm) ? 0 : Math.ceil(distanceKm*SHOP_CONFIG.shipping.costPerKm);
             
