@@ -46,6 +46,7 @@
     <div id="app-loader">
         <i class="fa-solid fa-robot text-6xl text-blue-500 animate-bounce mb-4"></i>
         <p class="text-xl font-bold animate-pulse" id="loader-text">Analizando menú...</p>
+        <button onclick="window.location.reload()" id="retry-btn" class="mt-4 px-4 py-2 bg-gray-700 rounded text-sm hidden hover:bg-gray-600 transition">Reintentar</button>
     </div>
 
     <!-- Header / Navbar -->
@@ -141,7 +142,7 @@
     </div>
 
     <!-- MODAL DE LOGIN USUARIO (CON PASSWORD) -->
-    <div id="user-modal" class="modal fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm px-4">
+    <div id="user-modal" class="modal fixed inset-0 z-[60] flex items-center justify-center bg-black/90 backdrop-blur-sm px-4">
         <div class="bg-gray-800 w-full max-w-sm rounded-2xl border border-gray-700 shadow-2xl overflow-hidden animate-fade-in-up">
             <div class="p-6 text-center">
                 <div class="w-16 h-16 bg-gradient-to-br from-blue-600 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
@@ -160,7 +161,7 @@
                         <input type="tel" id="login-phone" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:border-blue-500 outline-none" required placeholder="Ej: 5512345678">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Contraseña</label>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Contraseña (Para recordar)</label>
                         <input type="password" id="login-pass" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:border-blue-500 outline-none" required placeholder="********">
                     </div>
                     <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg shadow-lg transition">
@@ -247,33 +248,43 @@
 
     <script>
         const API_URL = "https://menuia.onrender.com";
-        const socket = io(API_URL);
+        // Safe Socket Init
+        let socket;
+        try { socket = io(API_URL); } catch(e) { console.warn("Socket no disponible"); }
         
         let SHOP_CONFIG = {}, MENU_DATA = {}, cart = [], userLocation = null, distanceKm = 0;
         let allItems = []; 
         let idleTimer, idleWarningShown = false;
         
-        // --- DETECCIÓN DE SLUG PARA GITHUB PAGES ---
+        // Detección robusta de SLUG
         const urlParams = new URLSearchParams(window.location.search);
-        const SHOP_SLUG = urlParams.get('slug') || window.location.pathname.split('/').pop() || 'sosushi';
+        let pathSlug = window.location.pathname.split('/').pop();
+        if(pathSlug.endsWith('.html')) pathSlug = pathSlug.replace('.html', '');
+        
+        const SHOP_SLUG = urlParams.get('slug') || pathSlug || 'sosushi';
         
         let pendingItem = null;
         let USER_DATA = JSON.parse(localStorage.getItem('menuia_user_data')) || null;
 
-        // --- CONEXIÓN SOCKET.IO CORREGIDA ---
-        socket.on('connect', () => {
-            socket.emit('join-store', SHOP_SLUG);
-        });
-
-        socket.on('shop-updated', async () => {
-            await loadStoreData();
-            showToast("Menú actualizado en tiempo real 🔄");
-        });
+        if(socket) {
+            socket.on('connect', () => socket.emit('join-store', SHOP_SLUG));
+            socket.on('shop-updated', async () => { await loadStoreData(); showToast("Actualizando menú..."); });
+        }
 
         document.addEventListener('DOMContentLoaded', () => {
+            // Safety timeout
+            setTimeout(() => {
+                const l = document.getElementById('app-loader');
+                const t = document.getElementById('loader-text');
+                if(l && l.style.opacity !== '0') {
+                    if(t) t.innerText = "Tarda un poco...";
+                    document.getElementById('retry-btn').classList.remove('hidden');
+                }
+            }, 8000);
+            
             loadStoreData();
             resetIdleTimer();
-            initUser(); // Cargar datos de usuario si existen
+            initUser();
         });
         
         // --- USER AUTH LOGIC ---
@@ -282,6 +293,7 @@
                 document.getElementById('nav-user-name').innerText = `Hola, ${USER_DATA.name.split(' ')[0]}`;
                 document.getElementById('login-name').value = USER_DATA.name;
                 document.getElementById('login-phone').value = USER_DATA.phone;
+                document.getElementById('login-address').value = USER_DATA.address || '';
                 document.getElementById('login-pass').value = USER_DATA.pass || '';
             } else {
                 document.getElementById('nav-user-name').innerText = "Ingresar";
@@ -289,34 +301,45 @@
         }
         
         function toggleUserModal() {
-            const m = document.getElementById('user-modal');
-            m.classList.toggle('active');
+            document.getElementById('user-modal').classList.toggle('active');
         }
         
         function saveUser() {
             const name = document.getElementById('login-name').value;
             const phone = document.getElementById('login-phone').value;
+            const address = document.getElementById('login-address').value;
             const pass = document.getElementById('login-pass').value;
-            
+
             if (name && phone && pass) {
-                USER_DATA = { name, phone, pass };
+                USER_DATA = { name, phone, address, pass };
                 localStorage.setItem('menuia_user_data', JSON.stringify(USER_DATA));
                 initUser();
                 toggleUserModal();
-                showToast("Datos guardados correctamente");
+                showToast("¡Datos guardados! 🎉");
+            } else {
+                alert("Por favor completa nombre, teléfono y contraseña.");
             }
         }
 
+        // --- SHOP LOGIC ---
         async function loadStoreData() {
             try {
-                socket.emit('register-visit', SHOP_SLUG);
+                if(socket) socket.emit('register-visit', SHOP_SLUG);
 
                 const res = await fetch(`${API_URL}/api/shop/${SHOP_SLUG}`);
-                if(!res.ok) throw new Error();
-                const data = await res.json();
-                SHOP_CONFIG = data.config; MENU_DATA = data.menu;
+                if(!res.ok) throw new Error("Tienda no encontrada");
                 
-                allItems = [...MENU_DATA.promos, ...MENU_DATA.especiales, ...MENU_DATA.clasicos, ...MENU_DATA.extras];
+                const data = await res.json();
+                SHOP_CONFIG = data.config || {}; 
+                MENU_DATA = data.menu || {};
+                
+                // Safe Array Spread
+                const promos = MENU_DATA.promos || [];
+                const especiales = MENU_DATA.especiales || [];
+                const clasicos = MENU_DATA.clasicos || [];
+                const extras = MENU_DATA.extras || [];
+                
+                allItems = [...promos, ...especiales, ...clasicos, ...extras];
                 allItems.forEach(item => {
                     if(!item.sales) item.sales = Math.floor(Math.random() * 100); 
                 });
@@ -332,21 +355,30 @@
             } catch (e) { 
                 console.error(e);
                 const loaderText = document.getElementById('loader-text');
-                if(loaderText) loaderText.innerText = "Tienda no disponible"; 
+                if(loaderText) loaderText.innerText = "Tienda no disponible o enlace incorrecto."; 
             }
         }
 
         function applyConfig() {
+            if(!SHOP_CONFIG.name) return; // Prevent crash if empty config
+            
             document.title = SHOP_CONFIG.name;
             document.getElementById('brand-name').innerText = SHOP_CONFIG.name.toUpperCase();
             document.getElementById('hero-title').innerText = SHOP_CONFIG.name.toUpperCase();
-            document.getElementById('hero-img').src = SHOP_CONFIG.heroImage || '';
-            document.getElementById('hours-display').innerText = `Abierto hasta ${SHOP_CONFIG.hours.close}:00 hrs`;
-            document.getElementById('disp-bank-name').innerText = SHOP_CONFIG.bank.name;
-            document.getElementById('disp-bank-clabe').innerText = SHOP_CONFIG.bank.clabe;
+            document.getElementById('hero-img').src = SHOP_CONFIG.heroImage || 'https://via.placeholder.com/800';
+            
+            const closeTime = SHOP_CONFIG.hours?.close || 22;
+            const openTime = SHOP_CONFIG.hours?.open || 9;
+            document.getElementById('hours-display').innerText = `Abierto hasta ${closeTime}:00 hrs`;
+            
+            // Safe Bank Info
+            if(SHOP_CONFIG.bank) {
+                document.getElementById('disp-bank-name').innerText = SHOP_CONFIG.bank.name || 'N/A';
+                document.getElementById('disp-bank-clabe').innerText = SHOP_CONFIG.bank.clabe || 'N/A';
+            }
             
             const h = new Date().getHours();
-            const isOpen = h >= SHOP_CONFIG.hours.open && h < SHOP_CONFIG.hours.close;
+            const isOpen = h >= openTime && h < closeTime;
             const banner = document.getElementById('status-banner');
             const badge = document.getElementById('hero-badge');
             
@@ -359,7 +391,8 @@
                 } else {
                     banner.innerText = "¡ENVIOS DISPONIBLES AHORA!"; 
                     banner.className = "bg-green-600 text-white text-center py-1 text-xs font-bold tracking-wider uppercase transition-colors duration-300";
-                    badge.innerText = `Envío Gratis < ${SHOP_CONFIG.shipping.freeKm}km`;
+                    const freeKm = SHOP_CONFIG.shipping?.freeKm || 0;
+                    badge.innerText = `Envío Gratis < ${freeKm}km`;
                     badge.className = "inline-block bg-green-600 hover:bg-green-500 text-white px-6 py-2 rounded-full text-sm font-bold shadow-lg shadow-green-900/50 cursor-default";
                 }
             } else {
@@ -434,7 +467,11 @@
             }
 
             const h = new Date().getHours();
-            const isOpen = h >= SHOP_CONFIG.hours.open && h < SHOP_CONFIG.hours.close;
+            // Safe access to hours
+            const openTime = SHOP_CONFIG.hours?.open || 9;
+            const closeTime = SHOP_CONFIG.hours?.close || 22;
+            const isOpen = h >= openTime && h < closeTime;
+            
             const safeItem = JSON.stringify(item).replace(/'/g, "&#39;");
 
             const btnHTML = isOpen 
@@ -581,6 +618,7 @@
             if (USER_DATA) {
                 document.getElementById('cust-name').value = USER_DATA.name;
                 document.getElementById('cust-phone').value = USER_DATA.phone;
+                document.getElementById('cust-address').value = USER_DATA.address || '';
             }
             document.getElementById('cart-modal').classList.toggle('active'); 
         }
@@ -722,7 +760,12 @@
             
             let total = cart.reduce((a,b)=>a + (parseFloat(b.price) * b.qty), 0);
             let shipping = 0;
-            if(userLocation && distanceKm <= SHOP_CONFIG.shipping.maxRadius) shipping = (total>=SHOP_CONFIG.shipping.freeThreshold || distanceKm<=SHOP_CONFIG.shipping.freeKm) ? 0 : Math.ceil(distanceKm*SHOP_CONFIG.shipping.costPerKm);
+            if(userLocation && distanceKm <= (SHOP_CONFIG.shipping?.maxRadius || 10)) {
+                const freeKm = SHOP_CONFIG.shipping?.freeKm || 0;
+                const freeThreshold = SHOP_CONFIG.shipping?.freeThreshold || 999999;
+                const costPerKm = SHOP_CONFIG.shipping?.costPerKm || 0;
+                shipping = (total >= freeThreshold || distanceKm <= freeKm) ? 0 : Math.ceil(distanceKm * costPerKm);
+            }
             
             document.getElementById('cart-subtotal').innerText = `$${total.toFixed(2)}`;
             document.getElementById('cart-shipping').innerText = userLocation ? `$${shipping}` : "--";
@@ -752,8 +795,12 @@
             const b = event.target; b.innerText="...";
             navigator.geolocation.getCurrentPosition(p=>{
                 userLocation={lat:p.coords.latitude, lng:p.coords.longitude};
-                const R=6371, dL=(p.coords.latitude-SHOP_CONFIG.coords.lat)*Math.PI/180, dLo=(p.coords.longitude-SHOP_CONFIG.coords.lng)*Math.PI/180;
-                const a = Math.sin(dL/2)*Math.sin(dL/2) + Math.cos(SHOP_CONFIG.coords.lat*Math.PI/180)*Math.cos(p.coords.latitude*Math.PI/180) * Math.sin(dLo/2)*Math.sin(dLo/2);
+                
+                const shopLat = SHOP_CONFIG.coords?.lat || 0;
+                const shopLng = SHOP_CONFIG.coords?.lng || 0;
+
+                const R=6371, dL=(p.coords.latitude-shopLat)*Math.PI/180, dLo=(p.coords.longitude-shopLng)*Math.PI/180;
+                const a = Math.sin(dL/2)*Math.sin(dL/2) + Math.cos(shopLat*Math.PI/180)*Math.cos(p.coords.latitude*Math.PI/180) * Math.sin(dLo/2)*Math.sin(dLo/2);
                 distanceKm = R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
                 
                 document.getElementById('location-result').innerText = `A ${distanceKm.toFixed(1)}km`;
@@ -779,5 +826,11 @@
             m+=`\nTotal: ${document.getElementById('cart-total').innerText}`;
             window.open(`https://wa.me/521${SHOP_CONFIG.whatsapp}?text=${encodeURIComponent(m)}`, '_blank');
             
-            socket.emit('register-order', SHOP_SLUG);
+            if(socket) socket.emit('register-order', SHOP_SLUG);
         }
+
+        function showToast(m) { const t=document.getElementById('toast'); document.getElementById('toast-msg').innerText=m; t.style.opacity=1; t.style.transform='translate(-50%,0)'; setTimeout(()=>{t.style.opacity=0; t.style.transform='translate(-50%,20px)'},2000); }
+        function resetIdleTimer() { clearTimeout(idleTimer); if(!idleWarningShown) idleTimer=setTimeout(()=>{showToast("🤖 ¿Indeciso? ¡Pregúntale al Chef!"); idleWarningShown=true}, 15000); }
+    </script>
+</body>
+</html>
