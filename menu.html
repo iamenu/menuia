@@ -60,6 +60,12 @@
                     <span class="font-bold text-xl tracking-wide text-white" id="brand-name">TIENDA</span>
                 </div>
                 <div class="flex items-center gap-3">
+                    <!-- BOTÓN LOGIN DE USUARIO (CON PASSWORD) -->
+                    <button onclick="toggleUserModal()" class="text-gray-300 hover:text-white transition flex items-center gap-2 bg-gray-800/50 px-3 py-1.5 rounded-full border border-gray-700">
+                        <i class="fa-solid fa-user-circle text-lg"></i>
+                        <span id="nav-user-name" class="text-xs font-bold hidden sm:inline">Ingresar</span>
+                    </button>
+
                     <button onclick="toggleAI()" class="group relative bg-gray-800 hover:bg-gray-700 text-blue-400 border border-blue-900/50 px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-2 transition overflow-hidden">
                         <div class="absolute inset-0 bg-blue-500/10 group-hover:bg-blue-500/20 transition"></div>
                         <i class="fa-solid fa-robot animate-bounce"></i> <span class="hidden sm:inline">IA Chef</span>
@@ -130,6 +136,38 @@
             </div>
             <div class="p-4 bg-gray-900 border-t border-gray-700">
                 <button id="modal-confirm-btn" onclick="confirmOptions()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 rounded-lg transition">Confirmar y Agregar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE LOGIN USUARIO (CON PASSWORD) -->
+    <div id="user-modal" class="modal fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm px-4">
+        <div class="bg-gray-800 w-full max-w-sm rounded-2xl border border-gray-700 shadow-2xl overflow-hidden animate-fade-in-up">
+            <div class="p-6 text-center">
+                <div class="w-16 h-16 bg-gradient-to-br from-blue-600 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+                    <i class="fa-solid fa-user text-3xl text-white"></i>
+                </div>
+                <h3 class="text-xl font-bold text-white mb-2">¡Bienvenido!</h3>
+                <p class="text-sm text-gray-400 mb-6">Crea tu perfil para pedir más rápido.</p>
+                
+                <form onsubmit="event.preventDefault(); saveUser();" class="space-y-4 text-left">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Tu Nombre</label>
+                        <input type="text" id="login-name" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:border-blue-500 outline-none" required placeholder="Ej: Juan Pérez">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Celular / WhatsApp</label>
+                        <input type="tel" id="login-phone" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:border-blue-500 outline-none" required placeholder="Ej: 5512345678">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Contraseña</label>
+                        <input type="password" id="login-pass" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:border-blue-500 outline-none" required placeholder="********">
+                    </div>
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg shadow-lg transition">
+                        Guardar mis datos
+                    </button>
+                </form>
+                <button onclick="toggleUserModal()" class="mt-4 text-xs text-gray-500 hover:text-white underline">Cancelar</button>
             </div>
         </div>
     </div>
@@ -215,11 +253,14 @@
         let allItems = []; 
         let idleTimer, idleWarningShown = false;
         
+        // --- DETECCIÓN DE SLUG PARA GITHUB PAGES ---
         const urlParams = new URLSearchParams(window.location.search);
         const SHOP_SLUG = urlParams.get('slug') || window.location.pathname.split('/').pop() || 'sosushi';
         
         let pendingItem = null;
+        let USER_DATA = JSON.parse(localStorage.getItem('menuia_user_data')) || null;
 
+        // --- CONEXIÓN SOCKET.IO CORREGIDA ---
         socket.on('connect', () => {
             socket.emit('join-store', SHOP_SLUG);
         });
@@ -232,7 +273,39 @@
         document.addEventListener('DOMContentLoaded', () => {
             loadStoreData();
             resetIdleTimer();
+            initUser(); // Cargar datos de usuario si existen
         });
+        
+        // --- USER AUTH LOGIC ---
+        function initUser() {
+            if (USER_DATA) {
+                document.getElementById('nav-user-name').innerText = `Hola, ${USER_DATA.name.split(' ')[0]}`;
+                document.getElementById('login-name').value = USER_DATA.name;
+                document.getElementById('login-phone').value = USER_DATA.phone;
+                document.getElementById('login-pass').value = USER_DATA.pass || '';
+            } else {
+                document.getElementById('nav-user-name').innerText = "Ingresar";
+            }
+        }
+        
+        function toggleUserModal() {
+            const m = document.getElementById('user-modal');
+            m.classList.toggle('active');
+        }
+        
+        function saveUser() {
+            const name = document.getElementById('login-name').value;
+            const phone = document.getElementById('login-phone').value;
+            const pass = document.getElementById('login-pass').value;
+            
+            if (name && phone && pass) {
+                USER_DATA = { name, phone, pass };
+                localStorage.setItem('menuia_user_data', JSON.stringify(USER_DATA));
+                initUser();
+                toggleUserModal();
+                showToast("Datos guardados correctamente");
+            }
+        }
 
         async function loadStoreData() {
             try {
@@ -503,7 +576,14 @@
 
         // --- CARRITO & CHECKOUT ---
         
-        function toggleCart() { document.getElementById('cart-modal').classList.toggle('active'); }
+        function toggleCart() { 
+            // Si el usuario está logueado, prellenar datos
+            if (USER_DATA) {
+                document.getElementById('cust-name').value = USER_DATA.name;
+                document.getElementById('cust-phone').value = USER_DATA.phone;
+            }
+            document.getElementById('cart-modal').classList.toggle('active'); 
+        }
         
         function toggleOptionsModal(show) {
             const m = document.getElementById('options-modal');
@@ -701,9 +781,3 @@
             
             socket.emit('register-order', SHOP_SLUG);
         }
-
-        function showToast(m) { const t=document.getElementById('toast'); document.getElementById('toast-msg').innerText=m; t.style.opacity=1; t.style.transform='translate(-50%,0)'; setTimeout(()=>{t.style.opacity=0; t.style.transform='translate(-50%,20px)'},2000); }
-        function resetIdleTimer() { clearTimeout(idleTimer); if(!idleWarningShown) idleTimer=setTimeout(()=>{showToast("🤖 ¿Indeciso? ¡Pregúntale al Chef!"); idleWarningShown=true}, 15000); }
-    </script>
-</body>
-</html>
