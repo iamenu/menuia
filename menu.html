@@ -17,8 +17,10 @@
         html { scroll-behavior: smooth; }
         .sushi-card { background-color: #1f2937; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); border: 1px solid #374151; }
         .sushi-card:hover { transform: translateY(-8px) scale(1.02); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 10px 10px -5px rgba(0, 0, 0, 0.4); border-color: #ef4444; z-index: 10; }
-        .modal { transition: opacity 0.3s ease-in-out; pointer-events: none; opacity: 0; }
-        .modal.active { pointer-events: all; opacity: 1; }
+        .modal { transition: opacity 0.3s ease-in-out, visibility 0.3s; opacity: 0; visibility: hidden; }
+        .modal.active { opacity: 1; visibility: visible; }
+        .modal-content { transform: scale(0.95); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .modal.active .modal-content { transform: scale(1); }
         .badge-offer { background: linear-gradient(45deg, #f59e0b, #d97706); color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; text-transform: uppercase; position: absolute; top: 10px; left: 10px; z-index: 10; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
         .badge-ai { background: linear-gradient(45deg, #3b82f6, #8b5cf6); color: white; padding: 4px 10px; border-radius: 12px; font-size: 0.65rem; font-weight: bold; text-transform: uppercase; position: absolute; top: 10px; right: 10px; z-index: 10; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.4); display: flex; align-items: center; gap: 4px; animation: pulse-border 2s infinite; backdrop-filter: blur(4px); }
         @keyframes pulse-border { 0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); transform: scale(1); } 50% { transform: scale(1.05); } 100% { box-shadow: 0 0 0 8px rgba(59, 130, 246, 0); transform: scale(1); } }
@@ -61,7 +63,7 @@
                     <span class="font-bold text-xl tracking-wide text-white" id="brand-name">TIENDA</span>
                 </div>
                 <div class="flex items-center gap-3">
-                    <!-- BOTÓN LOGIN DE USUARIO (CON PASSWORD) -->
+                    <!-- BOTÓN LOGIN DE USUARIO (CONECTADO A DB) -->
                     <button onclick="toggleUserModal()" class="text-gray-300 hover:text-white transition flex items-center gap-2 bg-gray-800/50 px-3 py-1.5 rounded-full border border-gray-700">
                         <i class="fa-solid fa-user-circle text-lg"></i>
                         <span id="nav-user-name" class="text-xs font-bold hidden sm:inline">Ingresar</span>
@@ -141,34 +143,76 @@
         </div>
     </div>
 
-    <!-- MODAL DE LOGIN USUARIO (CON PASSWORD) -->
-    <div id="user-modal" class="modal fixed inset-0 z-[60] flex items-center justify-center bg-black/90 backdrop-blur-sm px-4">
-        <div class="bg-gray-800 w-full max-w-sm rounded-2xl border border-gray-700 shadow-2xl overflow-hidden animate-fade-in-up">
-            <div class="p-6 text-center">
-                <div class="w-16 h-16 bg-gradient-to-br from-blue-600 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
-                    <i class="fa-solid fa-user text-3xl text-white"></i>
-                </div>
-                <h3 class="text-xl font-bold text-white mb-2">¡Bienvenido!</h3>
-                <p class="text-sm text-gray-400 mb-6">Crea tu perfil para pedir más rápido.</p>
-                
-                <form onsubmit="event.preventDefault(); saveUser();" class="space-y-4 text-left">
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Tu Nombre</label>
-                        <input type="text" id="login-name" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:border-blue-500 outline-none" required placeholder="Ej: Juan Pérez">
+    <!-- MODAL DE LOGIN USUARIO (CON PASSWORD Y API) -->
+    <div id="user-modal" class="modal fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm px-4">
+        <div class="modal-content bg-white w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden">
+            <!-- Header con pestañas -->
+            <div class="bg-gray-50 border-b border-gray-200 flex">
+                <button onclick="switchAuthTab('login')" id="tab-login" class="flex-1 py-4 text-sm font-bold text-blue-600 border-b-2 border-blue-600 transition">Iniciar Sesión</button>
+                <button onclick="switchAuthTab('register')" id="tab-register" class="flex-1 py-4 text-sm font-medium text-gray-500 hover:text-gray-700 transition">Crear Cuenta</button>
+            </div>
+            
+            <div class="p-6 relative">
+                <button onclick="toggleUserModal()" class="absolute top-2 right-4 text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+
+                <!-- FORMULARIO LOGIN -->
+                <form id="form-login" onsubmit="event.preventDefault(); handleUserLogin();" class="space-y-4">
+                    <div class="text-center mb-4">
+                        <h3 class="text-lg font-bold text-gray-800">¡Hola de nuevo! 👋</h3>
+                        <p class="text-xs text-gray-500">Ingresa tus datos para continuar.</p>
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Celular / WhatsApp</label>
-                        <input type="tel" id="login-phone" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:border-blue-500 outline-none" required placeholder="Ej: 5512345678">
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Celular</label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-2.5 text-gray-400"><i class="fa-solid fa-phone"></i></span>
+                            <input type="tel" id="login-phone" class="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" placeholder="Ej: 5512345678" required>
+                        </div>
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Contraseña (Para recordar)</label>
-                        <input type="password" id="login-pass" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:border-blue-500 outline-none" required placeholder="********">
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Contraseña</label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-2.5 text-gray-400"><i class="fa-solid fa-lock"></i></span>
+                            <input type="password" id="login-pass" class="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" placeholder="********" required>
+                        </div>
                     </div>
-                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg shadow-lg transition">
-                        Guardar mis datos
+                    <button type="submit" class="w-full bg-black hover:bg-gray-800 text-white font-bold py-3 rounded-xl shadow-lg transition">
+                        Entrar
                     </button>
                 </form>
-                <button onclick="toggleUserModal()" class="mt-4 text-xs text-gray-500 hover:text-white underline">Cancelar</button>
+
+                <!-- FORMULARIO REGISTRO -->
+                <form id="form-register" onsubmit="event.preventDefault(); handleUserRegister();" class="space-y-4 hidden">
+                    <div class="text-center mb-4">
+                        <h3 class="text-lg font-bold text-gray-800">Crea tu cuenta</h3>
+                        <p class="text-xs text-gray-500">Pide más rápido guardando tus datos.</p>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Nombre Completo</label>
+                        <input type="text" id="reg-name" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Celular</label>
+                        <input type="tel" id="reg-phone" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Dirección (Para envíos)</label>
+                        <textarea id="reg-address" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" rows="2" required></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Contraseña</label>
+                        <input type="password" id="reg-pass" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" required>
+                    </div>
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow-lg transition">
+                        Registrarme
+                    </button>
+                </form>
+
+                <div id="user-info-panel" class="hidden text-center py-4">
+                    <div class="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl font-bold" id="user-initial">U</div>
+                    <h3 class="font-bold text-lg" id="display-user-name">Usuario</h3>
+                    <p class="text-sm text-gray-500 mb-4" id="display-user-phone">...</p>
+                    <button onclick="logoutUser()" class="text-red-500 font-bold text-xs hover:underline bg-red-50 px-4 py-2 rounded-full">Cerrar Sesión</button>
+                </div>
             </div>
         </div>
     </div>
@@ -195,7 +239,7 @@
                         <textarea id="cust-address" placeholder="Dirección" class="w-full bg-gray-800 p-2 text-sm rounded text-white"></textarea>
                     </div>
                     
-                    <!-- SECCIÓN DE PAGO (RESTAURADA) -->
+                    <!-- SECCIÓN DE PAGO -->
                     <div class="mt-3 mb-2">
                         <p class="text-sm font-bold text-gray-300 mb-2">Método de Pago:</p>
                         <div class="flex gap-2 mb-2">
@@ -241,7 +285,7 @@
         </div>
     </div>
 
-    <!-- Toast -->
+    <!-- Toast Notification -->
     <div id="toast" class="fixed bottom-5 left-1/2 transform -translate-x-1/2 bg-gray-800 border border-gray-700 text-white px-6 py-3 rounded-full opacity-0 pointer-events-none transition-all duration-300 z-[60] flex items-center gap-3 translate-y-10">
         <i class="fa-solid fa-check text-green-500"></i> <span id="toast-msg">Agregado</span>
     </div>
@@ -288,37 +332,123 @@
         });
         
         // --- USER AUTH LOGIC ---
-        function initUser() {
+        function switchAuthTab(tab) {
+            const lForm = document.getElementById('form-login');
+            const rForm = document.getElementById('form-register');
+            const lBtn = document.getElementById('tab-login');
+            const rBtn = document.getElementById('tab-register');
+            
+            if(tab === 'login') {
+                lForm.classList.remove('hidden'); rForm.classList.add('hidden');
+                lBtn.className = "flex-1 py-4 text-sm font-bold text-blue-600 border-b-2 border-blue-600 transition";
+                rBtn.className = "flex-1 py-4 text-sm font-medium text-gray-500 hover:text-gray-700 transition";
+            } else {
+                lForm.classList.add('hidden'); rForm.classList.remove('hidden');
+                rBtn.className = "flex-1 py-4 text-sm font-bold text-blue-600 border-b-2 border-blue-600 transition";
+                lBtn.className = "flex-1 py-4 text-sm font-medium text-gray-500 hover:text-gray-700 transition";
+            }
+        }
+
+        async function handleUserLogin() {
+            const phone = document.getElementById('login-phone').value;
+            const password = document.getElementById('login-pass').value;
+            
+            const btn = document.querySelector('#form-login button');
+            const originalText = btn.innerText;
+            btn.innerText = "Verificando..."; btn.disabled = true;
+
+            try {
+                const res = await fetch(`${API_URL}/api/customer/login`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ phone, password })
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    USER_DATA = data.customer;
+                    // Guardar password para autologin
+                    USER_DATA.password = password; 
+                    localStorage.setItem('menuia_user_data', JSON.stringify(USER_DATA));
+                    updateUserUI();
+                    toggleUserModal();
+                    showToast(`¡Bienvenido de nuevo, ${USER_DATA.name.split(' ')[0]}!`);
+                } else {
+                    alert(data.error || "Credenciales incorrectas");
+                }
+            } catch (e) {
+                alert("Error de conexión");
+            }
+            btn.innerText = originalText; btn.disabled = false;
+        }
+
+        async function handleUserRegister() {
+            const name = document.getElementById('reg-name').value;
+            const phone = document.getElementById('reg-phone').value;
+            const address = document.getElementById('reg-address').value;
+            const password = document.getElementById('reg-pass').value;
+
+            const btn = document.querySelector('#form-register button');
+            const originalText = btn.innerText;
+            btn.innerText = "Creando cuenta..."; btn.disabled = true;
+
+            try {
+                const res = await fetch(`${API_URL}/api/customer/register`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ name, phone, address, password })
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    USER_DATA = { name, phone, address, password };
+                    localStorage.setItem('menuia_user_data', JSON.stringify(USER_DATA));
+                    updateUserUI();
+                    toggleUserModal();
+                    showToast("¡Cuenta creada con éxito!");
+                } else {
+                    alert(data.error || "Error al registrar");
+                }
+            } catch (e) {
+                alert("Error de conexión");
+            }
+            btn.innerText = originalText; btn.disabled = false;
+        }
+
+        function logoutUser() {
+            localStorage.removeItem('menuia_user_data');
+            USER_DATA = null;
+            updateUserUI();
+            showToast("Has cerrado sesión");
+        }
+
+        function updateUserUI() {
+            const loginForm = document.getElementById('form-login');
+            const regForm = document.getElementById('form-register');
+            const infoPanel = document.getElementById('user-info-panel');
+            const tabs = document.querySelector('.bg-gray-50.border-b'); 
+
             if (USER_DATA) {
                 document.getElementById('nav-user-name').innerText = `Hola, ${USER_DATA.name.split(' ')[0]}`;
-                document.getElementById('login-name').value = USER_DATA.name;
-                document.getElementById('login-phone').value = USER_DATA.phone;
-                document.getElementById('login-address').value = USER_DATA.address || '';
-                document.getElementById('login-pass').value = USER_DATA.pass || '';
+                document.getElementById('display-user-name').innerText = USER_DATA.name;
+                document.getElementById('display-user-phone').innerText = USER_DATA.phone;
+                document.getElementById('user-initial').innerText = USER_DATA.name.charAt(0).toUpperCase();
+                
+                loginForm.classList.add('hidden');
+                regForm.classList.add('hidden');
+                if(tabs) tabs.classList.add('hidden');
+                infoPanel.classList.remove('hidden');
             } else {
                 document.getElementById('nav-user-name').innerText = "Ingresar";
+                if(tabs) tabs.classList.remove('hidden');
+                infoPanel.classList.add('hidden');
+                switchAuthTab('login'); 
             }
         }
-        
-        function toggleUserModal() {
-            document.getElementById('user-modal').classList.toggle('active');
-        }
-        
-        function saveUser() {
-            const name = document.getElementById('login-name').value;
-            const phone = document.getElementById('login-phone').value;
-            const address = document.getElementById('login-address').value;
-            const pass = document.getElementById('login-pass').value;
 
-            if (name && phone && pass) {
-                USER_DATA = { name, phone, address, pass };
-                localStorage.setItem('menuia_user_data', JSON.stringify(USER_DATA));
-                initUser();
-                toggleUserModal();
-                showToast("¡Datos guardados! 🎉");
-            } else {
-                alert("Por favor completa nombre, teléfono y contraseña.");
-            }
+        function toggleUserModal() {
+            const m = document.getElementById('user-modal');
+            m.classList.toggle('active');
         }
 
         // --- SHOP LOGIC ---
@@ -360,7 +490,7 @@
         }
 
         function applyConfig() {
-            if(!SHOP_CONFIG.name) return; // Prevent crash if empty config
+            if(!SHOP_CONFIG.name) return; 
             
             document.title = SHOP_CONFIG.name;
             document.getElementById('brand-name').innerText = SHOP_CONFIG.name.toUpperCase();
@@ -371,7 +501,6 @@
             const openTime = SHOP_CONFIG.hours?.open || 9;
             document.getElementById('hours-display').innerText = `Abierto hasta ${closeTime}:00 hrs`;
             
-            // Safe Bank Info
             if(SHOP_CONFIG.bank) {
                 document.getElementById('disp-bank-name').innerText = SHOP_CONFIG.bank.name || 'N/A';
                 document.getElementById('disp-bank-clabe').innerText = SHOP_CONFIG.bank.clabe || 'N/A';
@@ -403,7 +532,7 @@
             }
         }
 
-        // --- RENDER MENU CON TOP VENTAS ---
+        // --- RENDER MENU ---
         function renderMenu(filter) {
             const container = document.getElementById('menu-sections');
             container.innerHTML = '';
@@ -467,7 +596,6 @@
             }
 
             const h = new Date().getHours();
-            // Safe access to hours
             const openTime = SHOP_CONFIG.hours?.open || 9;
             const closeTime = SHOP_CONFIG.hours?.close || 22;
             const isOpen = h >= openTime && h < closeTime;
@@ -501,15 +629,13 @@
             renderMenu(type);
         }
 
-        // --- CHATBOT CON IA CONTEXTUAL ---
+        // --- CHATBOT ---
         let aiScores = {};
-
         function toggleAI() {
             const m = document.getElementById('ai-modal');
             m.classList.toggle('active');
             if(m.classList.contains('active')) startAIChat();
         }
-
         function startAIChat() {
             const c = document.getElementById('chat-container');
             c.innerHTML = '';
@@ -523,63 +649,36 @@
             }
 
             let q1 = "¿Qué tanto hambre tienes?";
-            let opts1 = [
-                {txt: "Mucha 🦁", act: "rate(['grande','combo'], 5); step2()"},
-                {txt: "Poca 🥗", act: "rate(['ligero','individual'], 5); step2()"}
-            ];
+            let opts1 = [{txt: "Mucha 🦁", act: "rate(['grande','combo'], 5); step2()"}, {txt: "Poca 🥗", act: "rate(['ligero','individual'], 5); step2()"}];
 
             if(type.includes('sushi')) {
                 if (!SHOP_CONFIG.highDemand) greeting = "¡Konnichiwa! 🍣 Soy tu Sensei de Sushi."; 
                 q1 = "¿Antojo de algo fresco o empanizado?";
-                opts1 = [
-                    {txt: "Empanizado / Crunch 🍤", act: "rate(['empanizado','crunchy'], 5); step2()"},
-                    {txt: "Fresco / Natural 🥑", act: "rate(['natural','fresco'], 5); step2()"}
-                ];
+                opts1 = [{txt: "Empanizado / Crunch 🍤", act: "rate(['empanizado','crunchy'], 5); step2()"}, {txt: "Fresco / Natural 🥑", act: "rate(['natural','fresco'], 5); step2()"}];
             } else if(type.includes('pizza')) {
                 if (!SHOP_CONFIG.highDemand) greeting = "¡Mamma Mia! 🍕 Soy tu Pizzaiolo IA.";
                 q1 = "¿Cuántos van a comer hoy?";
-                opts1 = [
-                    {txt: "Solo yo (Individual) 👤", act: "rate(['individual','chica'], 5); step2()"},
-                    {txt: "Familia entera 👨‍👩‍👧‍👦", act: "rate(['familiar','grande','combo'], 5); step2()"}
-                ];
+                opts1 = [{txt: "Solo yo (Individual) 👤", act: "rate(['individual','chica'], 5); step2()"}, {txt: "Familia entera 👨‍👩‍👧‍👦", act: "rate(['familiar','grande','combo'], 5); step2()"}];
             } else if(type.includes('tacos')) {
                 if (!SHOP_CONFIG.highDemand) greeting = "¡Qué onda! 🌮 Soy tu Taquero Robot.";
                 q1 = "¿Traes hambre de pastor o asada?";
-                opts1 = [
-                    {txt: "Pastor 🍍", act: "rate(['pastor','adobada'], 5); step2()"},
-                    {txt: "Bistec / Asada 🥩", act: "rate(['asada','bistec'], 5); step2()"}
-                ];
+                opts1 = [{txt: "Pastor 🍍", act: "rate(['pastor','adobada'], 5); step2()"}, {txt: "Bistec / Asada 🥩", act: "rate(['asada','bistec'], 5); step2()"}];
             }
 
             addMsg(greeting, true);
             setTimeout(() => { addMsg(q1, true); addOpts(opts1); }, 600);
         }
-
         function step2() {
             const type = (SHOP_CONFIG.businessType || "").toLowerCase();
             let q = "¿Algún sabor en especial?";
-            let opts = [
-                {txt: "Picante 🔥", act: "rate(['picante','spicy'], 5); showResult()"},
-                {txt: "Clásico 👍", act: "rate(['clasico','tradicional'], 5); showResult()"}
-            ];
-
-            if(type.includes('sushi')) {
-                q = "¿Te gusta el queso crema?";
-                opts = [{txt: "¡Sí, mucho! 🧀", act: "rate(['queso','philadelphia'], 5); showResult()"}, {txt: "No, gracias", act: "showResult()"}];
-            }
-
+            let opts = [{txt: "Picante 🔥", act: "rate(['picante','spicy'], 5); showResult()"}, {txt: "Clásico 👍", act: "rate(['clasico','tradicional'], 5); showResult()"}];
+            if(type.includes('sushi')) { q = "¿Te gusta el queso crema?"; opts = [{txt: "¡Sí, mucho! 🧀", act: "rate(['queso','philadelphia'], 5); showResult()"}, {txt: "No, gracias", act: "showResult()"}]; }
             addMsg(q, true); addOpts(opts);
         }
-
         function showResult() {
             let winner = allItems[0], max = -1;
-            allItems.forEach(i => {
-                const score = (aiScores[i.name]||0) + Math.random(); 
-                if(score > max) { max = score; winner = i; }
-            });
-            
+            allItems.forEach(i => { const score = (aiScores[i.name]||0) + Math.random(); if(score > max) { max = score; winner = i; } });
             const safeWinner = JSON.stringify(winner).replace(/'/g, "&#39;");
-
             addMsg("¡Encontré esto para ti! 👇", true);
             const c = document.getElementById('chat-container');
             const card = document.createElement('div');
@@ -588,33 +687,12 @@
             c.appendChild(card); c.scrollTop = c.scrollHeight;
             addOpts([{txt: "🔄 Buscar otro", act: "startAIChat()"}]);
         }
-
-        function addMsg(txt, bot) {
-            const c = document.getElementById('chat-container');
-            c.innerHTML += `<div class="chat-bubble ${bot?'bot':'user'}">${txt}</div>`;
-            c.scrollTop = c.scrollHeight;
-        }
-        function addOpts(opts) {
-            const c = document.getElementById('chat-container');
-            const d = document.createElement('div'); d.className="chat-options";
-            opts.forEach(o => {
-                const b = document.createElement('button'); b.className="chat-option-btn"; b.innerText=o.txt;
-                b.onclick = () => { d.remove(); addMsg(o.txt, false); eval(o.act); };
-                d.appendChild(b);
-            });
-            c.appendChild(d); c.scrollTop = c.scrollHeight;
-        }
-        function rate(tags, pts) {
-            allItems.forEach(i => {
-                const txt = (i.name + ' ' + i.description + ' ' + (i.tags||[]).join(' ')).toLowerCase();
-                tags.forEach(t => { if(txt.includes(t)) aiScores[i.name] += pts; });
-            });
-        }
+        function addMsg(txt, bot) { const c = document.getElementById('chat-container'); c.innerHTML += `<div class="chat-bubble ${bot?'bot':'user'}">${txt}</div>`; c.scrollTop = c.scrollHeight; }
+        function addOpts(opts) { const c = document.getElementById('chat-container'); const d = document.createElement('div'); d.className="chat-options"; opts.forEach(o => { const b = document.createElement('button'); b.className="chat-option-btn"; b.innerText=o.txt; b.onclick = () => { d.remove(); addMsg(o.txt, false); eval(o.act); }; d.appendChild(b); }); c.appendChild(d); c.scrollTop = c.scrollHeight; }
+        function rate(tags, pts) { allItems.forEach(i => { const txt = (i.name + ' ' + i.description + ' ' + (i.tags||[]).join(' ')).toLowerCase(); tags.forEach(t => { if(txt.includes(t)) aiScores[i.name] += pts; }); }); }
 
         // --- CARRITO & CHECKOUT ---
-        
         function toggleCart() { 
-            // Si el usuario está logueado, prellenar datos
             if (USER_DATA) {
                 document.getElementById('cust-name').value = USER_DATA.name;
                 document.getElementById('cust-phone').value = USER_DATA.phone;
@@ -622,53 +700,28 @@
             }
             document.getElementById('cart-modal').classList.toggle('active'); 
         }
-        
-        function toggleOptionsModal(show) {
-            const m = document.getElementById('options-modal');
-            if(show) m.classList.add('active'); else m.classList.remove('active');
-        }
-
+        function toggleOptionsModal(show) { const m = document.getElementById('options-modal'); if(show) m.classList.add('active'); else m.classList.remove('active'); }
         function addToCart(item) {
             let options = item.options || [];
-            
-            if (item.groupId && MENU_DATA.groups) {
-                const group = MENU_DATA.groups.find(g => g.id === item.groupId);
-                if (group) {
-                    options = group.options;
-                }
-            }
+            if (item.groupId && MENU_DATA.groups) { const group = MENU_DATA.groups.find(g => g.id === item.groupId); if (group) options = group.options; }
 
             if(options && options.length > 0) {
                 pendingItem = item;
                 pendingItem.price = parseFloat(pendingItem.price); 
                 pendingItem._resolvedOptions = options;
-                
                 const container = document.getElementById('options-list');
-                
                 container.innerHTML = options.map((opt, idx) => {
                     const name = typeof opt === 'object' ? opt.name : opt;
                     const price = typeof opt === 'object' ? (parseFloat(opt.price) || 0) : 0; 
                     const priceTxt = price > 0 ? `(+$${price})` : '';
-                    
-                    return `
-                    <label class="flex items-center p-3 bg-gray-900 border border-gray-700 rounded-lg cursor-pointer hover:bg-gray-800 transition justify-between group">
-                        <div class="flex items-center">
-                            <input type="checkbox" value="${idx}" data-price="${price}" data-name="${name}" onchange="updateModalTotal()" class="option-check form-checkbox h-5 w-5 text-blue-600 rounded mr-3">
-                            <span class="text-white font-medium">${name}</span>
-                        </div>
-                        ${price > 0 ? `<span class="text-green-400 font-bold text-sm bg-green-900/30 px-2 py-1 rounded">${priceTxt}</span>` : ''}
-                    </label>
-                    `;
+                    return `<label class="flex items-center p-3 bg-gray-900 border border-gray-700 rounded-lg cursor-pointer hover:bg-gray-800 transition justify-between group"><div class="flex items-center"><input type="checkbox" value="${idx}" data-price="${price}" data-name="${name}" onchange="updateModalTotal()" class="option-check form-checkbox h-5 w-5 text-blue-600 rounded mr-3"><span class="text-white font-medium">${name}</span></div>${price > 0 ? `<span class="text-green-400 font-bold text-sm bg-green-900/30 px-2 py-1 rounded">${priceTxt}</span>` : ''}</label>`;
                 }).join('');
-                
-                updateModalTotal(); 
-                toggleOptionsModal(true);
+                updateModalTotal(); toggleOptionsModal(true);
             } else {
                 const itemToAdd = { ...item, price: parseFloat(item.price) };
                 addItemToCartInternal(itemToAdd, []);
             }
         }
-
         function updateModalTotal() {
             const checks = document.querySelectorAll('.option-check:checked');
             let extra = 0;
@@ -676,47 +729,29 @@
             const total = parseFloat(pendingItem.price) + extra;
             document.getElementById('modal-confirm-btn').innerText = `Agregar por $${total.toFixed(2)}`;
         }
-
         function confirmOptions() {
             const checks = document.querySelectorAll('.option-check:checked');
             const selectedNames = [];
             let extraCost = 0;
-            
             checks.forEach(c => {
                 const name = c.dataset.name;
                 const price = parseFloat(c.dataset.price || 0);
                 extraCost += price;
                 selectedNames.push(price > 0 ? `${name} (+$${price})` : name);
             });
-            
-            const basePrice = parseFloat(pendingItem.price);
-            const finalPrice = basePrice + extraCost;
-            
-            const itemToAdd = { ...pendingItem, price: finalPrice };
-            
+            const itemToAdd = { ...pendingItem, price: parseFloat(pendingItem.price) + extraCost };
             addItemToCartInternal(itemToAdd, selectedNames);
             toggleOptionsModal(false);
         }
-
         function addItemToCartInternal(item, options) {
             const optionsKey = options.sort().join('|');
             const ex = cart.find(i => i.name === item.name && (i.selectedOptions || []).sort().join('|') === optionsKey);
-            
-            if(ex) {
-                ex.qty++;
-            } else {
-                cart.push({...item, qty:1, selectedOptions: options});
-            }
-            
-            updateCart(); 
-            showToast("Agregado"); 
-            confetti({particleCount:30, origin:{y:0.8}});
+            if(ex) ex.qty++; else cart.push({...item, qty:1, selectedOptions: options});
+            updateCart(); showToast("Agregado"); confetti({particleCount:30, origin:{y:0.8}});
         }
-        
         function updateCart() {
             document.getElementById('cart-count').innerText = cart.reduce((a,b)=>a+b.qty,0);
             const c = document.getElementById('cart-items-container');
-            
             if(cart.length === 0) {
                 c.innerHTML = `<div class="text-center text-gray-500 mt-10">Carrito Vacío</div>`;
                 document.getElementById('checkout-form').classList.add('hidden');
@@ -725,98 +760,48 @@
                 document.getElementById('cart-total').innerText = "$0.00";
                 return;
             }
-
             document.getElementById('checkout-btn').disabled = false;
             document.getElementById('checkout-btn').classList.remove('opacity-50', 'cursor-not-allowed');
-
             c.innerHTML = cart.map((i, idx) => {
-                const optsHtml = i.selectedOptions && i.selectedOptions.length > 0 
-                    ? `<div class="text-[10px] text-blue-400 mt-1 font-medium bg-blue-900/30 px-2 py-0.5 rounded inline-block">
-                        + ${i.selectedOptions.join(', ')}
-                       </div>` 
-                    : '';
-                
-                const displayPrice = parseFloat(i.price).toFixed(2);
-                const subtotal = (i.price * i.qty).toFixed(2);
-
-                return `
-                <div class="flex items-center gap-3 p-3 bg-gray-800 mb-2 rounded border border-gray-700 relative group">
-                    <img src="${i.image||'https://via.placeholder.com/100'}" class="w-12 h-12 rounded object-cover bg-gray-700" loading="lazy">
-                    <div class="flex-1">
-                        <h4 class="text-sm font-bold text-white leading-tight">${i.name}</h4>
-                        ${optsHtml}
-                        <p class="text-xs text-gray-400 mt-0.5">$${displayPrice} c/u</p>
-                    </div>
-                    <div class="flex flex-col items-end">
-                        <span class="text-red-400 font-bold mb-1">$${subtotal}</span>
-                        <div class="flex items-center bg-gray-900 rounded-lg">
-                            <button onclick="changeQty(${idx}, -1)" class="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-white transition">-</button>
-                            <span class="text-xs font-bold w-4 text-center">${i.qty}</span>
-                            <button onclick="changeQty(${idx}, 1)" class="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-white transition">+</button>
-                        </div>
-                    </div>
-                </div>`;
+                const optsHtml = i.selectedOptions && i.selectedOptions.length > 0 ? `<div class="text-[10px] text-blue-400 mt-1 font-medium bg-blue-900/30 px-2 py-0.5 rounded inline-block">+ ${i.selectedOptions.join(', ')}</div>` : '';
+                return `<div class="flex items-center gap-3 p-3 bg-gray-800 mb-2 rounded border border-gray-700 relative group"><img src="${i.image||'https://via.placeholder.com/100'}" class="w-12 h-12 rounded object-cover bg-gray-700" loading="lazy"><div class="flex-1"><h4 class="text-sm font-bold text-white leading-tight">${i.name}</h4>${optsHtml}<p class="text-xs text-gray-400 mt-0.5">$${parseFloat(i.price).toFixed(2)} c/u</p></div><div class="flex flex-col items-end"><span class="text-red-400 font-bold mb-1">$${(i.price * i.qty).toFixed(2)}</span><div class="flex items-center bg-gray-900 rounded-lg"><button onclick="changeQty(${idx}, -1)" class="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-white transition">-</button><span class="text-xs font-bold w-4 text-center">${i.qty}</span><button onclick="changeQty(${idx}, 1)" class="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-white transition">+</button></div></div></div>`;
             }).join('');
             
             let total = cart.reduce((a,b)=>a + (parseFloat(b.price) * b.qty), 0);
             let shipping = 0;
             if(userLocation && distanceKm <= (SHOP_CONFIG.shipping?.maxRadius || 10)) {
-                const freeKm = SHOP_CONFIG.shipping?.freeKm || 0;
-                const freeThreshold = SHOP_CONFIG.shipping?.freeThreshold || 999999;
-                const costPerKm = SHOP_CONFIG.shipping?.costPerKm || 0;
-                shipping = (total >= freeThreshold || distanceKm <= freeKm) ? 0 : Math.ceil(distanceKm * costPerKm);
+                shipping = (total >= (SHOP_CONFIG.shipping?.freeThreshold || 999999) || distanceKm <= (SHOP_CONFIG.shipping?.freeKm || 0)) ? 0 : Math.ceil(distanceKm * (SHOP_CONFIG.shipping?.costPerKm || 0));
             }
-            
             document.getElementById('cart-subtotal').innerText = `$${total.toFixed(2)}`;
             document.getElementById('cart-shipping').innerText = userLocation ? `$${shipping}` : "--";
             document.getElementById('cart-total').innerText = `$${(total + shipping).toFixed(2)}`;
             
-            const btn = document.getElementById('checkout-btn');
-            if(cart.length>0) { document.getElementById('checkout-form').classList.remove('hidden'); btn.disabled=false; }
-            else { document.getElementById('checkout-form').classList.add('hidden'); btn.disabled=true; }
+            if(cart.length>0) document.getElementById('checkout-form').classList.remove('hidden');
         }
-
-        function changeQty(index, delta) {
-            const item = cart[index];
-            if(item) {
-                item.qty += delta;
-                if(item.qty <= 0) cart.splice(index, 1); 
-                updateCart();
-            }
-        }
-        
+        function changeQty(index, delta) { const item = cart[index]; if(item) { item.qty += delta; if(item.qty <= 0) cart.splice(index, 1); updateCart(); } }
         function togglePay() {
             const m = document.querySelector('input[name="pay"]:checked').value;
             document.getElementById('pay-cash').classList.toggle('hidden', m!=='efectivo');
             document.getElementById('pay-trans').classList.toggle('hidden', m!=='transferencia');
         }
-
         function getLocation() {
             const b = event.target; b.innerText="...";
             navigator.geolocation.getCurrentPosition(p=>{
                 userLocation={lat:p.coords.latitude, lng:p.coords.longitude};
-                
-                const shopLat = SHOP_CONFIG.coords?.lat || 0;
-                const shopLng = SHOP_CONFIG.coords?.lng || 0;
-
-                const R=6371, dL=(p.coords.latitude-shopLat)*Math.PI/180, dLo=(p.coords.longitude-shopLng)*Math.PI/180;
-                const a = Math.sin(dL/2)*Math.sin(dL/2) + Math.cos(shopLat*Math.PI/180)*Math.cos(p.coords.latitude*Math.PI/180) * Math.sin(dLo/2)*Math.sin(dLo/2);
+                const R=6371, dL=(p.coords.latitude-(SHOP_CONFIG.coords?.lat||0))*Math.PI/180, dLo=(p.coords.longitude-(SHOP_CONFIG.coords?.lng||0))*Math.PI/180;
+                const a = Math.sin(dL/2)*Math.sin(dL/2) + Math.cos((SHOP_CONFIG.coords?.lat||0)*Math.PI/180)*Math.cos(p.coords.latitude*Math.PI/180) * Math.sin(dLo/2)*Math.sin(dLo/2);
                 distanceKm = R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
-                
                 document.getElementById('location-result').innerText = `A ${distanceKm.toFixed(1)}km`;
                 b.innerText="GPS OK"; updateCart();
             }, ()=>alert("Error GPS"));
         }
-
         function handleCheckout() {
             const n = document.getElementById('cust-name').value, p = document.getElementById('cust-phone').value, a = document.getElementById('cust-address').value;
             if(!n || !p || !a) return alert("Faltan datos");
             
             let paymentMethod = "Transferencia";
             const payRadio = document.querySelector('input[name="pay"]:checked');
-            if(payRadio) {
-                paymentMethod = payRadio.value === 'efectivo' ? 'Efectivo' : 'Transferencia';
-            }
+            if(payRadio) { paymentMethod = payRadio.value === 'efectivo' ? 'Efectivo' : 'Transferencia'; }
 
             let m = `*PEDIDO ${SHOP_CONFIG.name}*\nCliente: ${n}\nTel: ${p}\nDir: ${a}\nPago: ${paymentMethod}\n\n`;
             cart.forEach(i=> {
@@ -825,10 +810,8 @@
             });
             m+=`\nTotal: ${document.getElementById('cart-total').innerText}`;
             window.open(`https://wa.me/521${SHOP_CONFIG.whatsapp}?text=${encodeURIComponent(m)}`, '_blank');
-            
             if(socket) socket.emit('register-order', SHOP_SLUG);
         }
-
         function showToast(m) { const t=document.getElementById('toast'); document.getElementById('toast-msg').innerText=m; t.style.opacity=1; t.style.transform='translate(-50%,0)'; setTimeout(()=>{t.style.opacity=0; t.style.transform='translate(-50%,20px)'},2000); }
         function resetIdleTimer() { clearTimeout(idleTimer); if(!idleWarningShown) idleTimer=setTimeout(()=>{showToast("🤖 ¿Indeciso? ¡Pregúntale al Chef!"); idleWarningShown=true}, 15000); }
     </script>
