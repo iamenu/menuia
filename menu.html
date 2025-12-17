@@ -63,7 +63,7 @@
                     <span class="font-bold text-xl tracking-wide text-white" id="brand-name">TIENDA</span>
                 </div>
                 <div class="flex items-center gap-3">
-                    <!-- BOTÓN LOGIN DE USUARIO (CONECTADO A DB) -->
+                    <!-- BOTÓN LOGIN DE USUARIO (CON PASSWORD) -->
                     <button onclick="toggleUserModal()" class="text-gray-300 hover:text-white transition flex items-center gap-2 bg-gray-800/50 px-3 py-1.5 rounded-full border border-gray-700">
                         <i class="fa-solid fa-user-circle text-lg"></i>
                         <span id="nav-user-name" class="text-xs font-bold hidden sm:inline">Ingresar</span>
@@ -165,14 +165,16 @@
                         <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Celular</label>
                         <div class="relative">
                             <span class="absolute left-3 top-2.5 text-gray-400"><i class="fa-solid fa-phone"></i></span>
-                            <input type="tel" id="login-phone" class="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" placeholder="Ej: 5512345678" required>
+                            <!-- Fondo BLANCO, Texto NEGRO -->
+                            <input type="tel" id="login-phone" class="w-full pl-9 pr-3 py-2 bg-white border border-gray-300 rounded-lg px-4 text-black focus:ring-2 focus:ring-blue-500 outline-none text-sm" placeholder="Ej: 5512345678" required>
                         </div>
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Contraseña</label>
                         <div class="relative">
                             <span class="absolute left-3 top-2.5 text-gray-400"><i class="fa-solid fa-lock"></i></span>
-                            <input type="password" id="login-pass" class="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" placeholder="********" required>
+                            <!-- Fondo BLANCO, Texto NEGRO -->
+                            <input type="password" id="login-pass" class="w-full pl-9 pr-3 py-2 bg-white border border-gray-300 rounded-lg px-4 text-black focus:ring-2 focus:ring-blue-500 outline-none text-sm" placeholder="********" required>
                         </div>
                     </div>
                     <button type="submit" class="w-full bg-black hover:bg-gray-800 text-white font-bold py-3 rounded-xl shadow-lg transition">
@@ -188,19 +190,23 @@
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Nombre Completo</label>
-                        <input type="text" id="reg-name" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" required>
+                        <!-- Fondo BLANCO, Texto NEGRO -->
+                        <input type="text" id="reg-name" class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-black focus:ring-2 focus:ring-blue-500 outline-none text-sm" required>
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Celular</label>
-                        <input type="tel" id="reg-phone" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" required>
+                        <!-- Fondo BLANCO, Texto NEGRO -->
+                        <input type="tel" id="reg-phone" class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-black focus:ring-2 focus:ring-blue-500 outline-none text-sm" required>
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Dirección (Para envíos)</label>
-                        <textarea id="reg-address" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" rows="2" required></textarea>
+                        <!-- Fondo BLANCO, Texto NEGRO -->
+                        <textarea id="reg-address" class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-black focus:ring-2 focus:ring-blue-500 outline-none text-sm" rows="2" required></textarea>
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Contraseña</label>
-                        <input type="password" id="reg-pass" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" required>
+                        <!-- Fondo BLANCO, Texto NEGRO -->
+                        <input type="password" id="reg-pass" class="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-black focus:ring-2 focus:ring-blue-500 outline-none text-sm" required>
                     </div>
                     <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow-lg transition">
                         Registrarme
@@ -209,7 +215,7 @@
 
                 <div id="user-info-panel" class="hidden text-center py-4">
                     <div class="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl font-bold" id="user-initial">U</div>
-                    <h3 class="font-bold text-lg" id="display-user-name">Usuario</h3>
+                    <h3 class="font-bold text-lg text-gray-800" id="display-user-name">Usuario</h3>
                     <p class="text-sm text-gray-500 mb-4" id="display-user-phone">...</p>
                     <button onclick="logoutUser()" class="text-red-500 font-bold text-xs hover:underline bg-red-50 px-4 py-2 rounded-full">Cerrar Sesión</button>
                 </div>
@@ -231,27 +237,27 @@
                 <div class="flex justify-between items-center mb-4 text-xl font-bold text-white border-t border-gray-700 pt-2"><span>Total:</span><span id="cart-total" class="text-red-500">$0.00</span></div>
                 
                 <div id="checkout-form" class="hidden space-y-3 mb-4">
-                    <input type="text" id="cust-name" placeholder="Nombre" class="w-full bg-gray-700 p-2 rounded text-white">
-                    <input type="tel" id="cust-phone" placeholder="Teléfono" class="w-full bg-gray-700 p-2 rounded text-white">
-                    <div class="bg-gray-700 p-2 rounded">
+                    <input type="text" id="cust-name" placeholder="Nombre" class="w-full bg-gray-700 p-2 rounded text-white border border-gray-600 focus:border-blue-500 outline-none">
+                    <input type="tel" id="cust-phone" placeholder="Teléfono" class="w-full bg-gray-700 p-2 rounded text-white border border-gray-600 focus:border-blue-500 outline-none">
+                    <div class="bg-gray-700 p-2 rounded border border-gray-600">
                         <button onclick="getLocation()" class="text-xs bg-blue-600 px-2 py-1 rounded w-full mb-2">📍 Usar GPS</button>
-                        <div id="location-result" class="text-xs mb-1"></div>
-                        <textarea id="cust-address" placeholder="Dirección" class="w-full bg-gray-800 p-2 text-sm rounded text-white"></textarea>
+                        <div id="location-result" class="text-xs mb-1 text-gray-300"></div>
+                        <textarea id="cust-address" placeholder="Dirección" class="w-full bg-gray-800 p-2 text-sm rounded text-white border border-gray-600 focus:border-blue-500 outline-none"></textarea>
                     </div>
                     
-                    <!-- SECCIÓN DE PAGO -->
+                    <!-- SECCIÓN DE PAGO (RESTAURADA) -->
                     <div class="mt-3 mb-2">
                         <p class="text-sm font-bold text-gray-300 mb-2">Método de Pago:</p>
                         <div class="flex gap-2 mb-2">
                             <label class="flex-1 cursor-pointer">
                                 <input type="radio" name="pay" value="transferencia" class="peer sr-only" checked onchange="togglePay()">
-                                <div class="bg-gray-700 peer-checked:bg-blue-600 peer-checked:border-blue-400 border border-transparent rounded p-2 text-center text-xs transition">
+                                <div class="bg-gray-700 peer-checked:bg-blue-600 peer-checked:border-blue-400 border border-transparent rounded p-2 text-center text-xs transition text-white">
                                     <i class="fa-solid fa-building-columns mb-1 block"></i> Transferencia
                                 </div>
                             </label>
                             <label class="flex-1 cursor-pointer">
                                 <input type="radio" name="pay" value="efectivo" class="peer sr-only" onchange="togglePay()">
-                                <div class="bg-gray-700 peer-checked:bg-green-600 peer-checked:border-green-400 border border-transparent rounded p-2 text-center text-xs transition">
+                                <div class="bg-gray-700 peer-checked:bg-green-600 peer-checked:border-green-400 border border-transparent rounded p-2 text-center text-xs transition text-white">
                                     <i class="fa-solid fa-money-bill-wave mb-1 block"></i> Efectivo
                                 </div>
                             </label>
@@ -367,7 +373,6 @@
                 
                 if (data.success) {
                     USER_DATA = data.customer;
-                    // Guardar password para autologin
                     USER_DATA.password = password; 
                     localStorage.setItem('menuia_user_data', JSON.stringify(USER_DATA));
                     updateUserUI();
@@ -532,7 +537,7 @@
             }
         }
 
-        // --- RENDER MENU ---
+        // --- RENDER MENU CON TOP VENTAS ---
         function renderMenu(filter) {
             const container = document.getElementById('menu-sections');
             container.innerHTML = '';
@@ -596,10 +601,7 @@
             }
 
             const h = new Date().getHours();
-            const openTime = SHOP_CONFIG.hours?.open || 9;
-            const closeTime = SHOP_CONFIG.hours?.close || 22;
-            const isOpen = h >= openTime && h < closeTime;
-            
+            const isOpen = h >= SHOP_CONFIG.hours.open && h < SHOP_CONFIG.hours.close;
             const safeItem = JSON.stringify(item).replace(/'/g, "&#39;");
 
             const btnHTML = isOpen 
@@ -629,13 +631,15 @@
             renderMenu(type);
         }
 
-        // --- CHATBOT ---
+        // --- CHATBOT CON IA CONTEXTUAL ---
         let aiScores = {};
+
         function toggleAI() {
             const m = document.getElementById('ai-modal');
             m.classList.toggle('active');
             if(m.classList.contains('active')) startAIChat();
         }
+
         function startAIChat() {
             const c = document.getElementById('chat-container');
             c.innerHTML = '';
@@ -649,36 +653,63 @@
             }
 
             let q1 = "¿Qué tanto hambre tienes?";
-            let opts1 = [{txt: "Mucha 🦁", act: "rate(['grande','combo'], 5); step2()"}, {txt: "Poca 🥗", act: "rate(['ligero','individual'], 5); step2()"}];
+            let opts1 = [
+                {txt: "Mucha 🦁", act: "rate(['grande','combo'], 5); step2()"},
+                {txt: "Poca 🥗", act: "rate(['ligero','individual'], 5); step2()"}
+            ];
 
             if(type.includes('sushi')) {
                 if (!SHOP_CONFIG.highDemand) greeting = "¡Konnichiwa! 🍣 Soy tu Sensei de Sushi."; 
                 q1 = "¿Antojo de algo fresco o empanizado?";
-                opts1 = [{txt: "Empanizado / Crunch 🍤", act: "rate(['empanizado','crunchy'], 5); step2()"}, {txt: "Fresco / Natural 🥑", act: "rate(['natural','fresco'], 5); step2()"}];
+                opts1 = [
+                    {txt: "Empanizado / Crunch 🍤", act: "rate(['empanizado','crunchy'], 5); step2()"},
+                    {txt: "Fresco / Natural 🥑", act: "rate(['natural','fresco'], 5); step2()"}
+                ];
             } else if(type.includes('pizza')) {
                 if (!SHOP_CONFIG.highDemand) greeting = "¡Mamma Mia! 🍕 Soy tu Pizzaiolo IA.";
                 q1 = "¿Cuántos van a comer hoy?";
-                opts1 = [{txt: "Solo yo (Individual) 👤", act: "rate(['individual','chica'], 5); step2()"}, {txt: "Familia entera 👨‍👩‍👧‍👦", act: "rate(['familiar','grande','combo'], 5); step2()"}];
+                opts1 = [
+                    {txt: "Solo yo (Individual) 👤", act: "rate(['individual','chica'], 5); step2()"},
+                    {txt: "Familia entera 👨‍👩‍👧‍👦", act: "rate(['familiar','grande','combo'], 5); step2()"}
+                ];
             } else if(type.includes('tacos')) {
                 if (!SHOP_CONFIG.highDemand) greeting = "¡Qué onda! 🌮 Soy tu Taquero Robot.";
                 q1 = "¿Traes hambre de pastor o asada?";
-                opts1 = [{txt: "Pastor 🍍", act: "rate(['pastor','adobada'], 5); step2()"}, {txt: "Bistec / Asada 🥩", act: "rate(['asada','bistec'], 5); step2()"}];
+                opts1 = [
+                    {txt: "Pastor 🍍", act: "rate(['pastor','adobada'], 5); step2()"},
+                    {txt: "Bistec / Asada 🥩", act: "rate(['asada','bistec'], 5); step2()"}
+                ];
             }
 
             addMsg(greeting, true);
             setTimeout(() => { addMsg(q1, true); addOpts(opts1); }, 600);
         }
+
         function step2() {
             const type = (SHOP_CONFIG.businessType || "").toLowerCase();
             let q = "¿Algún sabor en especial?";
-            let opts = [{txt: "Picante 🔥", act: "rate(['picante','spicy'], 5); showResult()"}, {txt: "Clásico 👍", act: "rate(['clasico','tradicional'], 5); showResult()"}];
-            if(type.includes('sushi')) { q = "¿Te gusta el queso crema?"; opts = [{txt: "¡Sí, mucho! 🧀", act: "rate(['queso','philadelphia'], 5); showResult()"}, {txt: "No, gracias", act: "showResult()"}]; }
+            let opts = [
+                {txt: "Picante 🔥", act: "rate(['picante','spicy'], 5); showResult()"},
+                {txt: "Clásico 👍", act: "rate(['clasico','tradicional'], 5); showResult()"}
+            ];
+
+            if(type.includes('sushi')) {
+                q = "¿Te gusta el queso crema?";
+                opts = [{txt: "¡Sí, mucho! 🧀", act: "rate(['queso','philadelphia'], 5); showResult()"}, {txt: "No, gracias", act: "showResult()"}];
+            }
+
             addMsg(q, true); addOpts(opts);
         }
+
         function showResult() {
             let winner = allItems[0], max = -1;
-            allItems.forEach(i => { const score = (aiScores[i.name]||0) + Math.random(); if(score > max) { max = score; winner = i; } });
+            allItems.forEach(i => {
+                const score = (aiScores[i.name]||0) + Math.random(); 
+                if(score > max) { max = score; winner = i; }
+            });
+            
             const safeWinner = JSON.stringify(winner).replace(/'/g, "&#39;");
+
             addMsg("¡Encontré esto para ti! 👇", true);
             const c = document.getElementById('chat-container');
             const card = document.createElement('div');
@@ -687,12 +718,33 @@
             c.appendChild(card); c.scrollTop = c.scrollHeight;
             addOpts([{txt: "🔄 Buscar otro", act: "startAIChat()"}]);
         }
-        function addMsg(txt, bot) { const c = document.getElementById('chat-container'); c.innerHTML += `<div class="chat-bubble ${bot?'bot':'user'}">${txt}</div>`; c.scrollTop = c.scrollHeight; }
-        function addOpts(opts) { const c = document.getElementById('chat-container'); const d = document.createElement('div'); d.className="chat-options"; opts.forEach(o => { const b = document.createElement('button'); b.className="chat-option-btn"; b.innerText=o.txt; b.onclick = () => { d.remove(); addMsg(o.txt, false); eval(o.act); }; d.appendChild(b); }); c.appendChild(d); c.scrollTop = c.scrollHeight; }
-        function rate(tags, pts) { allItems.forEach(i => { const txt = (i.name + ' ' + i.description + ' ' + (i.tags||[]).join(' ')).toLowerCase(); tags.forEach(t => { if(txt.includes(t)) aiScores[i.name] += pts; }); }); }
+
+        function addMsg(txt, bot) {
+            const c = document.getElementById('chat-container');
+            c.innerHTML += `<div class="chat-bubble ${bot?'bot':'user'}">${txt}</div>`;
+            c.scrollTop = c.scrollHeight;
+        }
+        function addOpts(opts) {
+            const c = document.getElementById('chat-container');
+            const d = document.createElement('div'); d.className="chat-options";
+            opts.forEach(o => {
+                const b = document.createElement('button'); b.className="chat-option-btn"; b.innerText=o.txt;
+                b.onclick = () => { d.remove(); addMsg(o.txt, false); eval(o.act); };
+                d.appendChild(b);
+            });
+            c.appendChild(d); c.scrollTop = c.scrollHeight;
+        }
+        function rate(tags, pts) {
+            allItems.forEach(i => {
+                const txt = (i.name + ' ' + i.description + ' ' + (i.tags||[]).join(' ')).toLowerCase();
+                tags.forEach(t => { if(txt.includes(t)) aiScores[i.name] += pts; });
+            });
+        }
 
         // --- CARRITO & CHECKOUT ---
+        
         function toggleCart() { 
+            // Si el usuario está logueado, prellenar datos
             if (USER_DATA) {
                 document.getElementById('cust-name').value = USER_DATA.name;
                 document.getElementById('cust-phone').value = USER_DATA.phone;
@@ -700,28 +752,53 @@
             }
             document.getElementById('cart-modal').classList.toggle('active'); 
         }
-        function toggleOptionsModal(show) { const m = document.getElementById('options-modal'); if(show) m.classList.add('active'); else m.classList.remove('active'); }
+        
+        function toggleOptionsModal(show) {
+            const m = document.getElementById('options-modal');
+            if(show) m.classList.add('active'); else m.classList.remove('active');
+        }
+
         function addToCart(item) {
             let options = item.options || [];
-            if (item.groupId && MENU_DATA.groups) { const group = MENU_DATA.groups.find(g => g.id === item.groupId); if (group) options = group.options; }
+            
+            if (item.groupId && MENU_DATA.groups) {
+                const group = MENU_DATA.groups.find(g => g.id === item.groupId);
+                if (group) {
+                    options = group.options;
+                }
+            }
 
             if(options && options.length > 0) {
                 pendingItem = item;
                 pendingItem.price = parseFloat(pendingItem.price); 
                 pendingItem._resolvedOptions = options;
+                
                 const container = document.getElementById('options-list');
+                
                 container.innerHTML = options.map((opt, idx) => {
                     const name = typeof opt === 'object' ? opt.name : opt;
                     const price = typeof opt === 'object' ? (parseFloat(opt.price) || 0) : 0; 
                     const priceTxt = price > 0 ? `(+$${price})` : '';
-                    return `<label class="flex items-center p-3 bg-gray-900 border border-gray-700 rounded-lg cursor-pointer hover:bg-gray-800 transition justify-between group"><div class="flex items-center"><input type="checkbox" value="${idx}" data-price="${price}" data-name="${name}" onchange="updateModalTotal()" class="option-check form-checkbox h-5 w-5 text-blue-600 rounded mr-3"><span class="text-white font-medium">${name}</span></div>${price > 0 ? `<span class="text-green-400 font-bold text-sm bg-green-900/30 px-2 py-1 rounded">${priceTxt}</span>` : ''}</label>`;
+                    
+                    return `
+                    <label class="flex items-center p-3 bg-gray-900 border border-gray-700 rounded-lg cursor-pointer hover:bg-gray-800 transition justify-between group">
+                        <div class="flex items-center">
+                            <input type="checkbox" value="${idx}" data-price="${price}" data-name="${name}" onchange="updateModalTotal()" class="option-check form-checkbox h-5 w-5 text-blue-600 rounded mr-3">
+                            <span class="text-white font-medium">${name}</span>
+                        </div>
+                        ${price > 0 ? `<span class="text-green-400 font-bold text-sm bg-green-900/30 px-2 py-1 rounded">${priceTxt}</span>` : ''}
+                    </label>
+                    `;
                 }).join('');
-                updateModalTotal(); toggleOptionsModal(true);
+                
+                updateModalTotal(); 
+                toggleOptionsModal(true);
             } else {
                 const itemToAdd = { ...item, price: parseFloat(item.price) };
                 addItemToCartInternal(itemToAdd, []);
             }
         }
+
         function updateModalTotal() {
             const checks = document.querySelectorAll('.option-check:checked');
             let extra = 0;
@@ -729,29 +806,47 @@
             const total = parseFloat(pendingItem.price) + extra;
             document.getElementById('modal-confirm-btn').innerText = `Agregar por $${total.toFixed(2)}`;
         }
+
         function confirmOptions() {
             const checks = document.querySelectorAll('.option-check:checked');
             const selectedNames = [];
             let extraCost = 0;
+            
             checks.forEach(c => {
                 const name = c.dataset.name;
                 const price = parseFloat(c.dataset.price || 0);
                 extraCost += price;
                 selectedNames.push(price > 0 ? `${name} (+$${price})` : name);
             });
-            const itemToAdd = { ...pendingItem, price: parseFloat(pendingItem.price) + extraCost };
+            
+            const basePrice = parseFloat(pendingItem.price);
+            const finalPrice = basePrice + extraCost;
+            
+            const itemToAdd = { ...pendingItem, price: finalPrice };
+            
             addItemToCartInternal(itemToAdd, selectedNames);
             toggleOptionsModal(false);
         }
+
         function addItemToCartInternal(item, options) {
             const optionsKey = options.sort().join('|');
             const ex = cart.find(i => i.name === item.name && (i.selectedOptions || []).sort().join('|') === optionsKey);
-            if(ex) ex.qty++; else cart.push({...item, qty:1, selectedOptions: options});
-            updateCart(); showToast("Agregado"); confetti({particleCount:30, origin:{y:0.8}});
+            
+            if(ex) {
+                ex.qty++;
+            } else {
+                cart.push({...item, qty:1, selectedOptions: options});
+            }
+            
+            updateCart(); 
+            showToast("Agregado"); 
+            confetti({particleCount:30, origin:{y:0.8}});
         }
+        
         function updateCart() {
             document.getElementById('cart-count').innerText = cart.reduce((a,b)=>a+b.qty,0);
             const c = document.getElementById('cart-items-container');
+            
             if(cart.length === 0) {
                 c.innerHTML = `<div class="text-center text-gray-500 mt-10">Carrito Vacío</div>`;
                 document.getElementById('checkout-form').classList.add('hidden');
@@ -760,11 +855,37 @@
                 document.getElementById('cart-total').innerText = "$0.00";
                 return;
             }
+
             document.getElementById('checkout-btn').disabled = false;
             document.getElementById('checkout-btn').classList.remove('opacity-50', 'cursor-not-allowed');
+
             c.innerHTML = cart.map((i, idx) => {
-                const optsHtml = i.selectedOptions && i.selectedOptions.length > 0 ? `<div class="text-[10px] text-blue-400 mt-1 font-medium bg-blue-900/30 px-2 py-0.5 rounded inline-block">+ ${i.selectedOptions.join(', ')}</div>` : '';
-                return `<div class="flex items-center gap-3 p-3 bg-gray-800 mb-2 rounded border border-gray-700 relative group"><img src="${i.image||'https://via.placeholder.com/100'}" class="w-12 h-12 rounded object-cover bg-gray-700" loading="lazy"><div class="flex-1"><h4 class="text-sm font-bold text-white leading-tight">${i.name}</h4>${optsHtml}<p class="text-xs text-gray-400 mt-0.5">$${parseFloat(i.price).toFixed(2)} c/u</p></div><div class="flex flex-col items-end"><span class="text-red-400 font-bold mb-1">$${(i.price * i.qty).toFixed(2)}</span><div class="flex items-center bg-gray-900 rounded-lg"><button onclick="changeQty(${idx}, -1)" class="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-white transition">-</button><span class="text-xs font-bold w-4 text-center">${i.qty}</span><button onclick="changeQty(${idx}, 1)" class="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-white transition">+</button></div></div></div>`;
+                const optsHtml = i.selectedOptions && i.selectedOptions.length > 0 
+                    ? `<div class="text-[10px] text-blue-400 mt-1 font-medium bg-blue-900/30 px-2 py-0.5 rounded inline-block">
+                        + ${i.selectedOptions.join(', ')}
+                       </div>` 
+                    : '';
+                
+                const displayPrice = parseFloat(i.price).toFixed(2);
+                const subtotal = (i.price * i.qty).toFixed(2);
+
+                return `
+                <div class="flex items-center gap-3 p-3 bg-gray-800 mb-2 rounded border border-gray-700 relative group">
+                    <img src="${i.image||'https://via.placeholder.com/100'}" class="w-12 h-12 rounded object-cover bg-gray-700" loading="lazy">
+                    <div class="flex-1">
+                        <h4 class="text-sm font-bold text-white leading-tight">${i.name}</h4>
+                        ${optsHtml}
+                        <p class="text-xs text-gray-400 mt-0.5">$${displayPrice} c/u</p>
+                    </div>
+                    <div class="flex flex-col items-end">
+                        <span class="text-red-400 font-bold mb-1">$${subtotal}</span>
+                        <div class="flex items-center bg-gray-900 rounded-lg">
+                            <button onclick="changeQty(${idx}, -1)" class="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-white transition">-</button>
+                            <span class="text-xs font-bold w-4 text-center">${i.qty}</span>
+                            <button onclick="changeQty(${idx}, 1)" class="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-white transition">+</button>
+                        </div>
+                    </div>
+                </div>`;
             }).join('');
             
             let total = cart.reduce((a,b)=>a + (parseFloat(b.price) * b.qty), 0);
@@ -776,14 +897,26 @@
             document.getElementById('cart-shipping').innerText = userLocation ? `$${shipping}` : "--";
             document.getElementById('cart-total').innerText = `$${(total + shipping).toFixed(2)}`;
             
-            if(cart.length>0) document.getElementById('checkout-form').classList.remove('hidden');
+            const btn = document.getElementById('checkout-btn');
+            if(cart.length>0) { document.getElementById('checkout-form').classList.remove('hidden'); btn.disabled=false; }
+            else { document.getElementById('checkout-form').classList.add('hidden'); btn.disabled=true; }
         }
-        function changeQty(index, delta) { const item = cart[index]; if(item) { item.qty += delta; if(item.qty <= 0) cart.splice(index, 1); updateCart(); } }
+
+        function changeQty(index, delta) {
+            const item = cart[index];
+            if(item) {
+                item.qty += delta;
+                if(item.qty <= 0) cart.splice(index, 1); 
+                updateCart();
+            }
+        }
+        
         function togglePay() {
             const m = document.querySelector('input[name="pay"]:checked').value;
             document.getElementById('pay-cash').classList.toggle('hidden', m!=='efectivo');
             document.getElementById('pay-trans').classList.toggle('hidden', m!=='transferencia');
         }
+
         function getLocation() {
             const b = event.target; b.innerText="...";
             navigator.geolocation.getCurrentPosition(p=>{
@@ -795,6 +928,7 @@
                 b.innerText="GPS OK"; updateCart();
             }, ()=>alert("Error GPS"));
         }
+
         function handleCheckout() {
             const n = document.getElementById('cust-name').value, p = document.getElementById('cust-phone').value, a = document.getElementById('cust-address').value;
             if(!n || !p || !a) return alert("Faltan datos");
@@ -812,6 +946,7 @@
             window.open(`https://wa.me/521${SHOP_CONFIG.whatsapp}?text=${encodeURIComponent(m)}`, '_blank');
             if(socket) socket.emit('register-order', SHOP_SLUG);
         }
+
         function showToast(m) { const t=document.getElementById('toast'); document.getElementById('toast-msg').innerText=m; t.style.opacity=1; t.style.transform='translate(-50%,0)'; setTimeout(()=>{t.style.opacity=0; t.style.transform='translate(-50%,20px)'},2000); }
         function resetIdleTimer() { clearTimeout(idleTimer); if(!idleWarningShown) idleTimer=setTimeout(()=>{showToast("🤖 ¿Indeciso? ¡Pregúntale al Chef!"); idleWarningShown=true}, 15000); }
     </script>
