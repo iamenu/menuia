@@ -39,20 +39,20 @@
                 <div class="hidden md:flex items-center gap-4">
                     <!-- User Login Button -->
                     <button onclick="toggleUserModal()" class="flex items-center gap-2 hover:bg-gray-100 px-3 py-2 rounded-full transition text-gray-700">
-                        <div class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-gray-500">
-                            <i class="fa-solid fa-user"></i>
+                        <div class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-gray-500 overflow-hidden">
+                            <i class="fa-solid fa-user" id="nav-user-icon"></i>
                         </div>
                         <div class="text-left leading-tight">
                             <p class="text-[10px] text-gray-500 font-bold uppercase">Mi Cuenta</p>
-                            <p class="text-sm font-bold" id="nav-user-name">Ingresar</p>
+                            <p class="text-sm font-bold truncate max-w-[100px]" id="nav-user-name">Ingresar</p>
                         </div>
                     </button>
 
                     <div class="h-8 w-px bg-gray-200 mx-2"></div>
 
                     <!-- Business Links -->
-                    <a href="https://iamenu.github.io/menuia/" class="text-xs font-bold text-gray-500 hover:text-blue-600 transition uppercase tracking-wide">Vende aquí</a>
-                    <a href="https://iamenu.github.io/menuia/admin.html" class="bg-black text-white px-5 py-2 rounded-full text-xs font-bold hover:bg-gray-800 transition shadow-lg shadow-gray-200">Soy Negocio</a>
+                    <a href="/register" class="text-xs font-bold text-gray-500 hover:text-blue-600 transition uppercase tracking-wide">Vende aquí</a>
+                    <a href="/admin" class="bg-black text-white px-5 py-2 rounded-full text-xs font-bold hover:bg-gray-800 transition shadow-lg shadow-gray-200">Soy Negocio</a>
                 </div>
 
                 <!-- Mobile Menu Button -->
@@ -168,57 +168,72 @@
     <!-- MODAL DE USUARIO (LOGIN/REGISTRO) -->
     <div id="user-modal" class="modal fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
         <div class="modal-content bg-white w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden">
-            <div class="relative bg-gradient-to-r from-blue-600 to-indigo-700 p-6 text-center text-white">
-                <button onclick="toggleUserModal()" class="absolute top-4 right-4 text-white/70 hover:text-white transition"><i class="fa-solid fa-xmark text-xl"></i></button>
-                <div class="w-16 h-16 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center mx-auto mb-3 shadow-inner">
-                    <i class="fa-solid fa-user text-3xl"></i>
-                </div>
-                <h3 class="text-xl font-bold">¡Hola! 👋</h3>
-                <p class="text-xs text-blue-100">Inicia sesión para pedir más rápido.</p>
+            <!-- Header con pestañas -->
+            <div class="bg-gray-50 border-b border-gray-200 flex">
+                <button onclick="switchAuthTab('login')" id="tab-login" class="flex-1 py-4 text-sm font-bold text-blue-600 border-b-2 border-blue-600 transition">Iniciar Sesión</button>
+                <button onclick="switchAuthTab('register')" id="tab-register" class="flex-1 py-4 text-sm font-medium text-gray-500 hover:text-gray-700 transition">Crear Cuenta</button>
             </div>
             
-            <div class="p-6">
-                <form onsubmit="event.preventDefault(); saveUser();" class="space-y-4">
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Nombre Completo</label>
-                        <div class="relative">
-                            <span class="absolute left-3 top-2.5 text-gray-400"><i class="fa-solid fa-user"></i></span>
-                            <input type="text" id="login-name" class="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm" placeholder="Ej: Juan Pérez" required>
-                        </div>
-                    </div>
+            <div class="p-6 relative">
+                <button onclick="toggleUserModal()" class="absolute top-2 right-4 text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark text-lg"></i></button>
 
+                <!-- FORMULARIO LOGIN -->
+                <form id="form-login" onsubmit="event.preventDefault(); handleUserLogin();" class="space-y-4">
+                    <div class="text-center mb-4">
+                        <h3 class="text-lg font-bold text-gray-800">¡Bienvenido de nuevo!</h3>
+                        <p class="text-xs text-gray-500">Ingresa tus datos para continuar.</p>
+                    </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Celular / WhatsApp</label>
                         <div class="relative">
                             <span class="absolute left-3 top-2.5 text-gray-400"><i class="fa-solid fa-phone"></i></span>
-                            <input type="tel" id="login-phone" class="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm" placeholder="Ej: 5512345678" required>
+                            <input type="tel" id="login-phone" class="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" placeholder="Ej: 5512345678" required>
                         </div>
                     </div>
-                    
                     <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Dirección (Opcional)</label>
-                        <div class="relative">
-                            <span class="absolute left-3 top-2.5 text-gray-400"><i class="fa-solid fa-map-pin"></i></span>
-                            <textarea id="login-address" class="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm" placeholder="Calle, Número, Colonia..." rows="2"></textarea>
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Contraseña (Para recordar)</label>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Contraseña</label>
                         <div class="relative">
                             <span class="absolute left-3 top-2.5 text-gray-400"><i class="fa-solid fa-lock"></i></span>
-                            <input type="password" id="login-pass" class="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm" placeholder="********" required>
+                            <input type="password" id="login-pass" class="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" placeholder="********" required>
                         </div>
-                        <p class="text-[10px] text-gray-400 mt-1 text-right">Se guardará en este dispositivo.</p>
                     </div>
-
-                    <button type="submit" class="w-full bg-gray-900 hover:bg-black text-white font-bold py-3 rounded-xl shadow-lg transition transform active:scale-95">
-                        Guardar y Continuar
+                    <button type="submit" class="w-full bg-black hover:bg-gray-800 text-white font-bold py-3 rounded-xl shadow-lg transition">
+                        Entrar
                     </button>
                 </form>
-                
-                <div class="mt-4 pt-4 border-t border-gray-100 text-center" id="logout-section" style="display:none;">
-                     <button onclick="logoutUser()" class="text-xs text-red-500 font-bold hover:underline">Cerrar Sesión / Borrar Datos</button>
+
+                <!-- FORMULARIO REGISTRO -->
+                <form id="form-register" onsubmit="event.preventDefault(); handleUserRegister();" class="space-y-4 hidden">
+                    <div class="text-center mb-4">
+                        <h3 class="text-lg font-bold text-gray-800">Crea tu cuenta</h3>
+                        <p class="text-xs text-gray-500">Pide más rápido guardando tus datos.</p>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Nombre Completo</label>
+                        <input type="text" id="reg-name" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Celular</label>
+                        <input type="tel" id="reg-phone" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Dirección (Para envíos)</label>
+                        <textarea id="reg-address" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" rows="2" required></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Contraseña</label>
+                        <input type="password" id="reg-pass" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none text-sm" required>
+                    </div>
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow-lg transition">
+                        Registrarme
+                    </button>
+                </form>
+
+                <div id="user-info-panel" class="hidden text-center py-4">
+                    <div class="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl font-bold" id="user-initial">U</div>
+                    <h3 class="font-bold text-lg" id="display-user-name">Usuario</h3>
+                    <p class="text-sm text-gray-500 mb-4" id="display-user-phone">...</p>
+                    <button onclick="logoutUser()" class="text-red-500 font-bold text-xs hover:underline bg-red-50 px-4 py-2 rounded-full">Cerrar Sesión</button>
                 </div>
             </div>
         </div>
@@ -238,61 +253,127 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             loadShops();
-            initUser();
+            updateUserUI();
         });
 
-        // --- USER AUTH LOGIC ---
-        function initUser() {
+        // --- AUTH LOGIC ---
+        function switchAuthTab(tab) {
+            const lForm = document.getElementById('form-login');
+            const rForm = document.getElementById('form-register');
+            const lBtn = document.getElementById('tab-login');
+            const rBtn = document.getElementById('tab-register');
+            
+            if(tab === 'login') {
+                lForm.classList.remove('hidden'); rForm.classList.add('hidden');
+                lBtn.className = "flex-1 py-4 text-sm font-bold text-blue-600 border-b-2 border-blue-600 transition";
+                rBtn.className = "flex-1 py-4 text-sm font-medium text-gray-500 hover:text-gray-700 transition";
+            } else {
+                lForm.classList.add('hidden'); rForm.classList.remove('hidden');
+                rBtn.className = "flex-1 py-4 text-sm font-bold text-blue-600 border-b-2 border-blue-600 transition";
+                lBtn.className = "flex-1 py-4 text-sm font-medium text-gray-500 hover:text-gray-700 transition";
+            }
+        }
+
+        async function handleUserLogin() {
+            const phone = document.getElementById('login-phone').value;
+            const password = document.getElementById('login-pass').value;
+            
+            const btn = document.querySelector('#form-login button');
+            const originalText = btn.innerText;
+            btn.innerText = "Verificando..."; btn.disabled = true;
+
+            try {
+                const res = await fetch(`${API_URL}/api/customer/login`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ phone, password })
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    USER_DATA = data.customer;
+                    // Guardar password también localmente para autologin
+                    USER_DATA.password = password; 
+                    localStorage.setItem('menuia_user_data', JSON.stringify(USER_DATA));
+                    updateUserUI();
+                    toggleUserModal();
+                    showToast(`¡Bienvenido de nuevo, ${USER_DATA.name.split(' ')[0]}!`);
+                } else {
+                    alert(data.error || "Credenciales incorrectas");
+                }
+            } catch (e) {
+                alert("Error de conexión");
+            }
+            btn.innerText = originalText; btn.disabled = false;
+        }
+
+        async function handleUserRegister() {
+            const name = document.getElementById('reg-name').value;
+            const phone = document.getElementById('reg-phone').value;
+            const address = document.getElementById('reg-address').value;
+            const password = document.getElementById('reg-pass').value;
+
+            const btn = document.querySelector('#form-register button');
+            const originalText = btn.innerText;
+            btn.innerText = "Creando cuenta..."; btn.disabled = true;
+
+            try {
+                const res = await fetch(`${API_URL}/api/customer/register`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ name, phone, address, password })
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    USER_DATA = { name, phone, address, password };
+                    localStorage.setItem('menuia_user_data', JSON.stringify(USER_DATA));
+                    updateUserUI();
+                    toggleUserModal();
+                    showToast("¡Cuenta creada con éxito!");
+                } else {
+                    alert(data.error || "Error al registrar");
+                }
+            } catch (e) {
+                alert("Error de conexión");
+            }
+            btn.innerText = originalText; btn.disabled = false;
+        }
+
+        function logoutUser() {
+            localStorage.removeItem('menuia_user_data');
+            USER_DATA = null;
+            updateUserUI();
+            showToast("Has cerrado sesión");
+        }
+
+        function updateUserUI() {
+            const loginForm = document.getElementById('form-login');
+            const regForm = document.getElementById('form-register');
+            const infoPanel = document.getElementById('user-info-panel');
+            const tabs = document.querySelector('.bg-gray-50.border-b'); // Tab container
+
             if (USER_DATA) {
                 document.getElementById('nav-user-name').innerText = `Hola, ${USER_DATA.name.split(' ')[0]}`;
-                // Pre-fill modal fields
-                document.getElementById('login-name').value = USER_DATA.name;
-                document.getElementById('login-phone').value = USER_DATA.phone;
-                document.getElementById('login-address').value = USER_DATA.address || '';
-                document.getElementById('login-pass').value = USER_DATA.pass || '';
-                document.getElementById('logout-section').style.display = 'block';
+                document.getElementById('display-user-name').innerText = USER_DATA.name;
+                document.getElementById('display-user-phone').innerText = USER_DATA.phone;
+                document.getElementById('user-initial').innerText = USER_DATA.name.charAt(0).toUpperCase();
+                
+                loginForm.classList.add('hidden');
+                regForm.classList.add('hidden');
+                if(tabs) tabs.classList.add('hidden');
+                infoPanel.classList.remove('hidden');
             } else {
                 document.getElementById('nav-user-name').innerText = "Ingresar";
-                document.getElementById('logout-section').style.display = 'none';
+                if(tabs) tabs.classList.remove('hidden');
+                infoPanel.classList.add('hidden');
+                switchAuthTab('login'); // Reset to login view
             }
         }
 
         function toggleUserModal() {
             const m = document.getElementById('user-modal');
             m.classList.toggle('active');
-        }
-
-        function saveUser() {
-            const name = document.getElementById('login-name').value;
-            const phone = document.getElementById('login-phone').value;
-            const address = document.getElementById('login-address').value;
-            const pass = document.getElementById('login-pass').value;
-
-            if (name && phone && pass) {
-                USER_DATA = { name, phone, address, pass };
-                localStorage.setItem('menuia_user_data', JSON.stringify(USER_DATA));
-                initUser();
-                toggleUserModal();
-                showToast("¡Datos guardados! 🎉");
-            } else {
-                alert("Por favor completa nombre, teléfono y contraseña.");
-            }
-        }
-
-        function logoutUser() {
-            if(confirm("¿Estás seguro? Se borrarán tus datos guardados en este navegador.")) {
-                localStorage.removeItem('menuia_user_data');
-                USER_DATA = null;
-                // Clear inputs
-                document.getElementById('login-name').value = '';
-                document.getElementById('login-phone').value = '';
-                document.getElementById('login-address').value = '';
-                document.getElementById('login-pass').value = '';
-                
-                initUser();
-                toggleUserModal();
-                showToast("Sesión cerrada");
-            }
         }
 
         // --- SHOP LOGIC ---
@@ -371,11 +452,11 @@
             
             // UI Update
             document.querySelectorAll('.category-pill').forEach(b => {
-                b.classList.remove('active', 'bg-black', 'text-white', 'border-black', 'shadow-md');
+                b.classList.remove('active', 'bg-black', 'text-white', 'border-black');
                 b.classList.add('bg-white', 'text-gray-800', 'border-gray-200');
             });
             
-            btn.classList.add('active', 'bg-black', 'text-white', 'border-black', 'shadow-md');
+            btn.classList.add('active', 'bg-black', 'text-white', 'border-black');
             btn.classList.remove('bg-white', 'text-gray-800', 'border-gray-200');
 
             filterShops();
@@ -399,11 +480,8 @@
         }
 
         function isShopOpen(hours) {
-            if(!hours) return true; // Default open if no hours set
+            if(!hours) return true; 
             const h = new Date().getHours();
-            // Simple check: open hour <= current hour < close hour
-            // Note: This simple logic assumes hours are in 0-23 format and closing is same day (e.g. not 2am next day)
-            // For production, more complex time handling might be needed.
             return h >= (hours.open || 0) && h < (hours.close || 24);
         }
 
@@ -419,4 +497,3 @@
     </script>
 </body>
 </html>
-
