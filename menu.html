@@ -55,6 +55,10 @@
         .step-item.completed .step-label { color: #059669; }
         .pulse-ring { position: absolute; width: 100%; height: 100%; border-radius: 50%; border: 2px solid #2563eb; opacity: 0; animation: ripple 1.5s infinite; }
         @keyframes ripple { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(2); opacity: 0; } }
+
+        /* NUEVA ANIMACIÓN PARA BARRA PREMIUM */
+        @keyframes progress-stripes { from { background-position: 1rem 0; } to { background-position: 0 0; } }
+        .animate-stripes { background-image: linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent); background-size: 1rem 1rem; animation: progress-stripes 1s linear infinite; }
     </style>
 </head>
 <body class="text-gray-100 ai-active" onclick="resetIdleTimer()" onscroll="resetIdleTimer()">
@@ -68,27 +72,43 @@
     <!-- Header / Navbar -->
     <nav class="bg-black/95 backdrop-blur-md shadow-lg fixed w-full z-50 top-0 border-b border-gray-800">
         
-        <!-- BARRA DE RASTREO SUPERIOR (FIXED VISIBILITY) -->
-        <div id="tracker-header" class="hidden bg-gray-900 border-b border-gray-700 w-full animate-fade-in">
-            <div class="max-w-7xl mx-auto px-4 py-2">
+        <!-- NUEVO DISEÑO PREMIUM BARRA RASTREO -->
+        <div id="tracker-header" class="hidden bg-gradient-to-r from-blue-900 via-gray-900 to-blue-900 border-b border-blue-800/50 w-full animate-fade-in shadow-lg relative overflow-hidden">
+            <!-- Textura sutil de fondo -->
+            <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10"></div>
+            
+            <div class="max-w-7xl mx-auto px-4 py-3 relative z-10">
                 <div class="flex items-center justify-between gap-4">
-                    <div class="flex items-center gap-2 overflow-hidden">
-                        <span class="relative flex h-2 w-2">
-                          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                          <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
-                        </span>
+                    <!-- Icono y Estado -->
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-full bg-blue-600/20 border border-blue-500/50 flex items-center justify-center relative shadow-[0_0_15px_rgba(59,130,246,0.3)]">
+                            <i id="header-status-icon" class="fa-solid fa-fire-burner text-blue-400 text-lg animate-pulse"></i>
+                            <div class="absolute inset-0 rounded-full border border-blue-400 opacity-20 animate-ping"></div>
+                        </div>
                         <div class="flex flex-col">
-                            <span class="text-[10px] text-gray-400 font-bold uppercase tracking-wider leading-none" id="header-order-id">PEDIDO #...</span>
-                            <span class="text-xs font-bold text-white leading-tight truncate" id="header-tracker-status">Calculando...</span>
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-bold text-blue-400 uppercase tracking-wider" id="header-order-id">ORDEN #...</span>
+                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30 hidden sm:inline-block" id="header-eta">Actualizado ahora</span>
+                            </div>
+                            <span class="text-sm font-bold text-white leading-tight drop-shadow-md truncate max-w-[200px]" id="header-tracker-status">Cargando estado...</span>
                         </div>
                     </div>
                     
-                    <div class="flex-1 max-w-[150px] sm:max-w-[200px] flex items-center gap-2">
-                        <div class="h-1.5 flex-1 bg-gray-800 rounded-full overflow-hidden">
-                            <div id="header-progress-bar" class="h-full bg-blue-500 transition-all duration-1000 ease-out" style="width: 5%"></div>
+                    <!-- Barra de Progreso Visual -->
+                    <div class="flex-1 max-w-[200px] sm:max-w-xs flex flex-col justify-center gap-1.5">
+                        <div class="flex justify-between text-[10px] text-gray-400 font-medium px-1">
+                            <span>Progreso</span>
+                            <span id="header-progress-text">0%</span>
                         </div>
-                        <button onclick="toggleUserModal()" class="text-[10px] text-blue-400 font-bold hover:text-white whitespace-nowrap">Ver <i class="fa-solid fa-chevron-right ml-0.5"></i></button>
+                        <div class="h-2.5 bg-gray-800/50 rounded-full overflow-hidden border border-gray-700 backdrop-blur-sm">
+                            <div id="header-progress-bar" class="h-full bg-gradient-to-r from-blue-600 to-cyan-500 animate-stripes transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(59,130,246,0.5)]" style="width: 5%"></div>
+                        </div>
                     </div>
+                    
+                    <!-- Boton Ver Detalles -->
+                    <button onclick="toggleUserModal()" class="hidden sm:flex bg-gray-800 hover:bg-gray-700 text-white p-2 rounded-full transition border border-gray-600 hover:border-gray-500 shadow-md">
+                        <i class="fa-solid fa-chevron-down"></i>
+                    </button>
                 </div>
             </div>
         </div>
@@ -410,8 +430,8 @@
             
             // ESCUCHAR NUEVOS PEDIDOS (Sincronización ID Real)
             socket.on('order-created-client', (order) => {
-                // VERIFICACIÓN: El pedido pertenece al usuario si los teléfonos coinciden (si está logueado)
-                // O si es un usuario invitado que acaba de crear el pedido (por lo que ACTIVE_ORDER local existe y coincide)
+                // VERIFICACIÓN: Solo mostramos la barra si el usuario está logueado Y coincide el teléfono
+                // Si es invitado (NO USER_DATA), NO mostramos el tracking, aunque se guarda en local
                 
                 let isMyOrder = false;
 
@@ -420,20 +440,17 @@
                     if (order.customerPhone === USER_DATA.phone) {
                         isMyOrder = true;
                     }
-                } else {
-                    // Si soy invitado (NO USER_DATA), confío en que el pedido temporal que tengo localmente es el mío
-                    if (ACTIVE_ORDER && ACTIVE_ORDER._id.startsWith('TEMP-') && ACTIVE_ORDER.customerPhone === order.customerPhone) {
-                        isMyOrder = true;
-                    }
-                }
+                } 
+                // NOTA: Si es invitado, NO marcamos como isMyOrder para la UI, solo guardamos en background
                 
+                if (order.customerPhone === (USER_DATA ? USER_DATA.phone : (ACTIVE_ORDER ? ACTIVE_ORDER.customerPhone : ''))) {
+                     saveActiveOrder(order); // Guardamos siempre para persistencia
+                }
+
                 if (isMyOrder) {
-                    saveActiveOrder(order);
                     showToast("¡Pedido recibido!");
                     // Si el usuario está viendo el perfil, actualizamos la UI
-                    if(!document.getElementById('user-modal').classList.contains('hidden')) {
-                        updateTrackerUI(order.status);
-                    }
+                    checkActiveOrder();
                 }
             });
 
@@ -441,10 +458,10 @@
             socket.on('order-status-updated', (data) => {
                 // Solo actualizamos si tenemos el pedido activo correcto localmente
                 if (ACTIVE_ORDER && data.orderId === ACTIVE_ORDER._id) {
-                    // VALIDACIÓN ADICIONAL: Si estoy logueado, me aseguro que este pedido siga siendo mio (por teléfono)
-                    if (USER_DATA && ACTIVE_ORDER.customerPhone !== USER_DATA.phone) {
-                        return; // No es mi pedido actual de esta sesión
-                    }
+                    // VALIDACIÓN: Si no hay usuario logueado, no hacemos nada en la UI
+                    if (!USER_DATA) return;
+                    
+                    if (ACTIVE_ORDER.customerPhone !== USER_DATA.phone) return;
 
                     ACTIVE_ORDER.status = data.status;
                     localStorage.setItem('menuia_active_order_' + SHOP_SLUG, JSON.stringify(ACTIVE_ORDER));
@@ -476,19 +493,17 @@
             checkActiveOrder();
         });
 
-        // --- TRACKER LOGIC (CORREGIDO PARA INVITADOS) ---
+        // --- TRACKER LOGIC (CORREGIDO PARA SOLO USUARIOS LOGUEADOS) ---
         function checkActiveOrder() {
-            // Lógica de visibilidad corregida:
+            // Lógica de visibilidad ESTRICTA:
             // 1. Debe haber un pedido activo (ACTIVE_ORDER)
             // 2. El estado NO debe ser 'completed'
-            // 3. SI hay usuario logueado (USER_DATA), el teléfono debe coincidir.
-            // 4. SI NO hay usuario logueado (Invitado), confiamos en la existencia de ACTIVE_ORDER local.
+            // 3. SI O SI debe haber usuario logueado (USER_DATA) y el teléfono debe coincidir.
             
-            const isGuestOrder = ACTIVE_ORDER && !USER_DATA; 
             const isUserOrder = ACTIVE_ORDER && USER_DATA && ACTIVE_ORDER.customerPhone === USER_DATA.phone;
             const isNotCompleted = ACTIVE_ORDER && ACTIVE_ORDER.status !== 'completed';
 
-            const shouldShow = (isGuestOrder || isUserOrder) && isNotCompleted;
+            const shouldShow = isUserOrder && isNotCompleted;
             
             const banner = document.getElementById('tracker-header');
             const card = document.getElementById('active-order-card');
@@ -518,8 +533,9 @@
         }
 
         function updateTrackerUI(status) {
-            // Actualizar UI incluso si es invitado (quitamos el return anticipado)
-            
+            // Si no hay usuario logueado, no actualizamos UI
+            if(!USER_DATA) return;
+
             const steps = ['pending', 'preparing', 'ready', 'delivering'];
             let activeIndex = -1;
             if (status === 'pending') activeIndex = 0;
@@ -531,19 +547,44 @@
             const displayId = `PEDIDO #${(ACTIVE_ORDER.dailyId || ACTIVE_ORDER._id || '...').toString().slice(-6).toUpperCase()}`;
             const statusText = translateStatus(status);
             
-            // 1. Header Banner Update
+            // --- HEADER UPDATE ---
             document.getElementById('header-order-id').innerText = displayId;
             document.getElementById('header-tracker-status').innerText = statusText;
             
             let percentage = 5;
-            if(status === 'pending') percentage = 25;
-            else if(status === 'preparing') percentage = 50;
-            else if(status === 'ready') percentage = 75;
-            else if(status === 'delivering') percentage = 90;
+            let iconClass = "fa-fire-burner";
+            let etaText = "Calculando...";
+
+            if(status === 'pending') { 
+                percentage = 25; 
+                iconClass = "fa-clipboard-check"; 
+                etaText = "Recibido";
+            }
+            else if(status === 'preparing') { 
+                percentage = 50; 
+                iconClass = "fa-fire-burner"; 
+                etaText = "~20 min";
+            }
+            else if(status === 'ready') { 
+                percentage = 75; 
+                iconClass = "fa-box-open"; 
+                etaText = "¡Listo!";
+            }
+            else if(status === 'delivering') { 
+                percentage = 90; 
+                iconClass = "fa-motorcycle"; 
+                etaText = "En camino";
+            }
             
             document.getElementById('header-progress-bar').style.width = `${percentage}%`;
+            document.getElementById('header-progress-text').innerText = `${percentage}%`;
+            document.getElementById('header-eta').innerText = etaText;
+            
+            const iconEl = document.getElementById('header-status-icon');
+            iconEl.className = `fa-solid ${iconClass} text-blue-400 text-lg animate-pulse`;
 
-            // 2. Modal Card Update
+
+            // --- MODAL CARD UPDATE ---
             document.getElementById('tracker-status-text').innerText = statusText;
             document.getElementById('tracker-order-id').innerText = displayId;
             
@@ -1034,4 +1075,4 @@
         function rate(tags,pts){ allItems.forEach(i=>{ const t=(i.name+' '+(i.tags||[]).join(' ')).toLowerCase(); tags.forEach(tag=>{ if(t.includes(tag)) aiScores[i.name]+=pts; }); }); }
     </script>
 </body>
-    </html>
+</html>
