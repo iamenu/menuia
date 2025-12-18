@@ -40,6 +40,11 @@
         .bar-tooltip { position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: #1f2937; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; opacity: 0; pointer-events: none; transition: opacity 0.2s; white-space: nowrap; margin-bottom: 4px; }
         .bar:hover .bar-tooltip { opacity: 1; }
 
+        /* AI Effects */
+        .ai-gradient-text { background: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .ai-loading { animation: aiPulse 1.5s infinite; }
+        @keyframes aiPulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
+
         @media print {
             body * { visibility: hidden; }
             #print-area, #print-area * { visibility: visible; }
@@ -124,7 +129,7 @@
         <aside class="w-64 bg-white border-r border-gray-200 hidden md:flex flex-col z-20">
             <div class="h-16 flex items-center px-6 border-b border-gray-100">
                 <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold mr-3">M</div>
-                <span class="font-bold text-lg tracking-tight">Menú<span class="text-blue-600">IA</span></span>
+                <span class="font-bold text-lg tracking-tight">Menú<span class="ai-gradient-text">IA</span></span>
             </div>
             
             <nav class="flex-1 py-6 px-3 space-y-1">
@@ -160,7 +165,7 @@
         <main class="flex-1 flex flex-col overflow-hidden relative">
             <!-- Mobile Header -->
             <header class="bg-white h-16 border-b border-gray-200 flex md:hidden justify-between items-center px-4 z-20">
-                <div class="font-bold text-lg">Panel Admin</div>
+                <div class="font-bold text-lg">Panel Admin <span class="ai-gradient-text text-xs">AI</span></div>
                 <button onclick="document.querySelector('aside').classList.toggle('hidden'); document.querySelector('aside').classList.toggle('absolute'); document.querySelector('aside').classList.toggle('h-full');" class="text-gray-600"><i class="fa-solid fa-bars text-xl"></i></button>
             </header>
 
@@ -175,6 +180,26 @@
                             <p class="text-gray-500 text-sm">Resumen de actividad y finanzas.</p>
                         </div>
                         <div id="sub-status-badge" class="px-3 py-1 rounded-full text-xs font-bold bg-gray-200 text-gray-600">Plan: Verificando...</div>
+                    </div>
+
+                    <!-- AI INSIGHTS CARD (REAL) -->
+                    <div class="bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 rounded-xl p-6 text-white mb-8 shadow-xl relative overflow-hidden group border border-purple-500/30">
+                        <div class="absolute top-0 right-0 p-4 opacity-10 text-9xl transform group-hover:scale-110 transition duration-700"><i class="fa-solid fa-robot"></i></div>
+                        <div class="relative z-10">
+                            <h3 class="font-bold text-lg mb-2 flex items-center gap-2">
+                                <i class="fa-solid fa-brain text-pink-400"></i> MenúIA Coach (Beta)
+                            </h3>
+                            <div class="flex items-start gap-4">
+                                <div class="flex-1">
+                                    <p class="text-indigo-100 text-sm mb-4 leading-relaxed italic" id="ai-insight-text">
+                                        "Analizando tus patrones de venta reales... Pulsa el botón para obtener una estrategia personalizada de IA."
+                                    </p>
+                                </div>
+                            </div>
+                            <button onclick="refreshAIInsight()" class="bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg text-xs font-bold transition flex items-center gap-2 border border-white/20 backdrop-blur-sm">
+                                <i class="fa-solid fa-wand-magic-sparkles text-yellow-300"></i> Consultar a la IA
+                            </button>
+                        </div>
                     </div>
 
                     <!-- Stats Cards -->
@@ -356,6 +381,32 @@
                             <div id="qr-print-area"></div>
                         </div>
                     </div>
+
+                    <!-- AI SOCIAL GENERATOR (REAL) -->
+                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mt-6">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="font-bold text-gray-700 flex items-center gap-2">
+                                <i class="fa-solid fa-share-nodes text-pink-500"></i> Generador de Redes Sociales (IA)
+                            </h3>
+                            <span class="text-[10px] bg-pink-100 text-pink-600 px-2 py-1 rounded-full font-bold">Beta</span>
+                        </div>
+                        <p class="text-xs text-gray-500 mb-4">Crea copys irresistibles para tus redes sociales en segundos usando Inteligencia Artificial real.</p>
+                        <div class="flex gap-4 mb-4">
+                            <button onclick="generateSocialPost('promo')" class="flex-1 bg-pink-50 text-pink-600 border border-pink-100 py-3 rounded-lg text-xs font-bold hover:bg-pink-100 transition flex justify-center items-center gap-2">
+                                <i class="fa-solid fa-fire"></i> Promo Flash
+                            </button>
+                            <button onclick="generateSocialPost('engaging')" class="flex-1 bg-purple-50 text-purple-600 border border-purple-100 py-3 rounded-lg text-xs font-bold hover:bg-purple-100 transition flex justify-center items-center gap-2">
+                                <i class="fa-solid fa-comments"></i> Pregunta Viral
+                            </button>
+                            <button onclick="generateSocialPost('funny')" class="flex-1 bg-orange-50 text-orange-600 border border-orange-100 py-3 rounded-lg text-xs font-bold hover:bg-orange-100 transition flex justify-center items-center gap-2">
+                                <i class="fa-solid fa-face-laugh-beam"></i> Divertido
+                            </button>
+                        </div>
+                        <div class="relative">
+                            <textarea id="ai-social-result" class="w-full border border-gray-200 rounded-lg p-3 text-sm text-gray-600 h-28 focus:ring-2 focus:ring-pink-200 outline-none transition bg-gray-50" placeholder="El resultado mágico de la IA aparecerá aquí..."></textarea>
+                            <button onclick="copyToClipboard('ai-social-result')" class="absolute bottom-3 right-3 text-gray-400 hover:text-gray-600 text-xs bg-white px-2 py-1 rounded shadow-sm border"><i class="fa-regular fa-copy"></i> Copiar</button>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- VIEW: SETTINGS (COMPLETO) -->
@@ -394,9 +445,10 @@
                                     </div>
                                 </div>
                                 <input type="hidden" id="conf-lat"><input type="hidden" id="conf-lng">
-                                <div class="flex gap-4">
+                                <div class="flex gap-4 items-end">
                                     <div class="flex-1"><label class="text-xs font-bold text-gray-500">Abre (Hora)</label><input type="number" id="conf-open" class="w-full border-b border-gray-300 py-1 text-sm"></div>
                                     <div class="flex-1"><label class="text-xs font-bold text-gray-500">Cierra (Hora)</label><input type="number" id="conf-close" class="w-full border-b border-gray-300 py-1 text-sm"></div>
+                                    <button onclick="optimizeHoursAI()" class="bg-indigo-50 text-indigo-600 p-2 rounded hover:bg-indigo-100 transition text-xs font-bold" title="Optimizar con IA"><i class="fa-solid fa-wand-magic-sparkles"></i></button>
                                 </div>
                             </div>
                         </div>
@@ -533,7 +585,17 @@
     <div id="product-modal" class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden animate-fade-in-up">
             <div class="bg-gray-50 px-6 py-4 border-b flex justify-between items-center"><h3 class="font-bold text-lg text-gray-800">Producto</h3><button onclick="closeProductModal()" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark text-xl"></i></button></div>
-            <div class="p-6 space-y-4 max-h-[70vh] overflow-y-auto"><input type="hidden" id="prod-id"><input type="hidden" id="prod-category"><div><label class="text-xs font-bold text-gray-500 uppercase">Nombre</label><input type="text" id="prod-name" class="w-full border border-gray-300 rounded p-2 text-sm"></div><div><label class="text-xs font-bold text-gray-500 uppercase">Descripción</label><textarea id="prod-desc" class="w-full border border-gray-300 rounded p-2 text-sm h-20"></textarea></div><div class="grid grid-cols-2 gap-4"><div><label class="text-xs font-bold text-gray-500 uppercase">Precio ($)</label><input type="number" id="prod-price" class="w-full border border-gray-300 rounded p-2 text-sm font-bold text-green-700"></div><div><label class="text-xs font-bold text-gray-500 uppercase">Antes (Opc)</label><input type="number" id="prod-original" class="w-full border border-gray-300 rounded p-2 text-sm"></div></div><div class="bg-yellow-50 p-3 rounded-lg border border-yellow-100"><label class="text-xs font-bold text-yellow-700 uppercase">Complementos</label><select id="prod-group-select" class="w-full border border-yellow-200 rounded p-2 text-sm bg-white mt-1"><option value="">-- Sin Complementos --</option></select></div><div class="flex items-center gap-4 bg-gray-50 p-3 rounded-lg border border-gray-100"><img id="prod-img-preview" src="" class="w-16 h-16 rounded object-cover bg-gray-200"><div class="flex-1"><input type="file" onchange="handleImageUpload(this)" class="w-full text-xs text-gray-500"><input type="hidden" id="prod-img-url"></div></div><div><label class="text-xs font-bold text-gray-500 uppercase">Etiquetas</label><input type="text" id="prod-tags" class="w-full border border-gray-300 rounded p-2 text-sm"></div></div>
+            <div class="p-6 space-y-4 max-h-[70vh] overflow-y-auto"><input type="hidden" id="prod-id"><input type="hidden" id="prod-category"><div><label class="text-xs font-bold text-gray-500 uppercase">Nombre</label><input type="text" id="prod-name" class="w-full border border-gray-300 rounded p-2 text-sm"></div>
+                <div>
+                    <label class="text-xs font-bold text-gray-500 uppercase flex justify-between items-center mb-1">
+                        Descripción
+                        <button type="button" onclick="generateAIDesc()" class="text-[10px] bg-gradient-to-r from-purple-500 to-pink-500 text-white px-2 py-1 rounded-full font-bold hover:opacity-90 transition shadow-sm flex items-center gap-1">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> Crear con IA
+                        </button>
+                    </label>
+                    <textarea id="prod-desc" class="w-full border border-gray-300 rounded p-2 text-sm h-20" placeholder="Escribe el nombre del producto y pulsa 'Crear con IA' para generar una descripción automática."></textarea>
+                </div>
+                <div class="grid grid-cols-2 gap-4"><div><label class="text-xs font-bold text-gray-500 uppercase">Precio ($)</label><input type="number" id="prod-price" class="w-full border border-gray-300 rounded p-2 text-sm font-bold text-green-700"></div><div><label class="text-xs font-bold text-gray-500 uppercase">Antes (Opc)</label><input type="number" id="prod-original" class="w-full border border-gray-300 rounded p-2 text-sm"></div></div><div class="bg-yellow-50 p-3 rounded-lg border border-yellow-100"><label class="text-xs font-bold text-yellow-700 uppercase">Complementos</label><select id="prod-group-select" class="w-full border border-yellow-200 rounded p-2 text-sm bg-white mt-1"><option value="">-- Sin Complementos --</option></select></div><div class="flex items-center gap-4 bg-gray-50 p-3 rounded-lg border border-gray-100"><img id="prod-img-preview" src="" class="w-16 h-16 rounded object-cover bg-gray-200"><div class="flex-1"><input type="file" onchange="handleImageUpload(this)" class="w-full text-xs text-gray-500"><input type="hidden" id="prod-img-url"></div></div><div><label class="text-xs font-bold text-gray-500 uppercase">Etiquetas</label><input type="text" id="prod-tags" class="w-full border border-gray-300 rounded p-2 text-sm"></div></div>
             <div class="p-4 bg-gray-50 border-t flex justify-end gap-3"><button onclick="closeProductModal()" class="px-4 py-2 rounded text-gray-500 hover:bg-gray-200 text-sm font-bold">Cancelar</button><button onclick="saveProductInternal()" class="px-6 py-2 rounded bg-blue-600 text-white font-bold text-sm hover:bg-blue-700 shadow">Guardar</button></div>
         </div>
     </div>
@@ -1179,6 +1241,149 @@
         
         function openSubModal() { document.getElementById('sub-concept-ref').innerText = `PRO-${SESSION.slug.toUpperCase()}`; document.getElementById('sub-modal').classList.remove('hidden'); }
         function logout() { localStorage.removeItem('shop_pass'); location.reload(); }
+
+        // --- FUNCIONES AI (REALES) ---
+        
+        // 1. Generador de Descripción
+        async function generateAIDesc() {
+            const name = document.getElementById('prod-name').value;
+            if (!name) return alert("Por favor escribe el nombre del producto primero.");
+            
+            const btn = event.target.closest('button');
+            const originalIcon = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Pensando...';
+            btn.disabled = true;
+
+            try {
+                const res = await fetch(`${API_URL}/api/ai/generate`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ 
+                        slug: SESSION.slug,
+                        task: 'product_description',
+                        context: { productName: name }
+                    })
+                });
+                const data = await res.json();
+                if(data.success) {
+                    document.getElementById('prod-desc').value = data.result;
+                } else {
+                    alert("Error IA: " + (data.error || "No se pudo generar"));
+                }
+            } catch(e) {
+                console.error(e);
+                alert("Error de conexión con el servicio de IA.");
+            }
+            
+            btn.innerHTML = originalIcon;
+            btn.disabled = false;
+        }
+
+        // 2. Generador de Insights Dashboard
+        async function refreshAIInsight() {
+            const textEl = document.getElementById('ai-insight-text');
+            textEl.style.opacity = 0.5;
+            textEl.innerText = "Consultando a la IA...";
+
+            try {
+                const res = await fetch(`${API_URL}/api/ai/generate`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ 
+                        slug: SESSION.slug,
+                        task: 'business_insight',
+                        context: { 
+                            stats: SESSION.data.stats,
+                            businessType: SESSION.data.config.businessType
+                        }
+                    })
+                });
+                const data = await res.json();
+                if(data.success) {
+                    textEl.innerText = `"${data.result}"`;
+                } else {
+                    textEl.innerText = "No pudimos obtener un consejo ahora.";
+                }
+            } catch(e) {
+                textEl.innerText = "Error de conexión.";
+            }
+            textEl.style.opacity = 1;
+        }
+
+        // 3. Generador de Redes Sociales
+        async function generateSocialPost(type) {
+            const shopName = SESSION.data.config.name || "Nuestro Restaurante";
+            const textarea = document.getElementById('ai-social-result');
+            textarea.value = "Generando copy creativo...";
+            
+            let style = "estándar";
+            if(type === 'promo') style = "promocional y urgente";
+            if(type === 'engaging') style = "conversacional y viral para generar comentarios";
+            if(type === 'funny') style = "divertido, con humor y memes";
+
+            try {
+                const res = await fetch(`${API_URL}/api/ai/generate`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ 
+                        slug: SESSION.slug,
+                        task: 'social_post',
+                        context: { 
+                            shopName: shopName,
+                            platform: 'Instagram/Facebook',
+                            style: style
+                        }
+                    })
+                });
+                const data = await res.json();
+                if(data.success) {
+                    textarea.value = data.result;
+                } else {
+                    textarea.value = "Error generando post.";
+                }
+            } catch(e) {
+                textarea.value = "Error de conexión.";
+            }
+        }
+
+        function copyToClipboard(id) {
+            const copyText = document.getElementById(id);
+            copyText.select();
+            document.execCommand("copy");
+            alert("¡Texto copiado! Listo para pegar en Instagram/Facebook.");
+        }
+
+        // 4. Optimizar Horario (Real)
+        async function optimizeHoursAI() {
+            const btn = event.target.closest('button');
+            const original = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+            
+            try {
+                const res = await fetch(`${API_URL}/api/ai/generate`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ 
+                        slug: SESSION.slug,
+                        task: 'optimize_hours',
+                        context: { businessType: SESSION.data.config.businessType }
+                    })
+                });
+                const data = await res.json();
+                
+                if(data.success && data.result) {
+                    alert(`🤖 Análisis de IA completado:\n\nSugerimos abrir a las ${data.result.open}:00 y cerrar a las ${data.result.close}:00.`);
+                    document.getElementById('conf-open').value = data.result.open;
+                    document.getElementById('conf-close').value = data.result.close;
+                } else {
+                    alert("No se pudo optimizar el horario.");
+                }
+            } catch(e) {
+                alert("Error de conexión IA.");
+            }
+            btn.innerHTML = original;
+        }
+
     </script>
 </body>
 </html>
