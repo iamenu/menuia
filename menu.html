@@ -44,15 +44,15 @@
 
         /* ESTILOS DE BARRA DE PROGRESO (TRACKER) */
         .step-item { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; flex: 1; }
-        .step-icon { width: 32px; height: 32px; border-radius: 50%; background: #374151; display: flex; align-items: center; justify-content: center; z-index: 10; border: 2px solid #4b5563; transition: all 0.3s; }
+        .step-icon { width: 32px; height: 32px; border-radius: 50%; background: #e5e7eb; display: flex; align-items: center; justify-content: center; z-index: 10; border: 2px solid #d1d5db; transition: all 0.3s; }
         .step-item.active .step-icon { background: #2563eb; border-color: #60a5fa; box-shadow: 0 0 10px #2563eb; transform: scale(1.1); }
         .step-item.completed .step-icon { background: #059669; border-color: #34d399; }
-        .step-line { position: absolute; top: 16px; left: -50%; width: 100%; height: 2px; background: #374151; z-index: 1; }
+        .step-line { position: absolute; top: 16px; left: -50%; width: 100%; height: 2px; background: #e5e7eb; z-index: 1; }
         .step-item:first-child .step-line { display: none; }
         .step-item.active .step-line, .step-item.completed .step-line { background: #059669; }
-        .step-label { font-size: 0.65rem; color: #9ca3af; margin-top: 4px; text-align: center; font-weight: bold; text-transform: uppercase; transition: color 0.3s; }
-        .step-item.active .step-label { color: #fff; text-shadow: 0 0 5px #2563eb; }
-        .step-item.completed .step-label { color: #34d399; }
+        .step-label { font-size: 0.55rem; color: #9ca3af; margin-top: 4px; text-align: center; font-weight: bold; text-transform: uppercase; transition: color 0.3s; }
+        .step-item.active .step-label { color: #2563eb; text-shadow: 0 0 1px #2563eb; }
+        .step-item.completed .step-label { color: #059669; }
         .pulse-ring { position: absolute; width: 100%; height: 100%; border-radius: 50%; border: 2px solid #2563eb; opacity: 0; animation: ripple 1.5s infinite; }
         @keyframes ripple { 0% { transform: scale(1); opacity: 0.8; } 100% { transform: scale(2); opacity: 0; } }
     </style>
@@ -78,14 +78,11 @@
                 </div>
                 <div class="flex items-center gap-3">
                     <!-- BOTÓN LOGIN DE USUARIO (CON PASSWORD) -->
-                    <button onclick="toggleUserModal()" class="text-gray-300 hover:text-white transition flex items-center gap-2 bg-gray-800/50 px-3 py-1.5 rounded-full border border-gray-700">
+                    <button onclick="toggleUserModal()" class="text-gray-300 hover:text-white transition flex items-center gap-2 bg-gray-800/50 px-3 py-1.5 rounded-full border border-gray-700 hover:border-blue-500 hover:text-blue-400">
                         <i class="fa-solid fa-user-circle text-lg"></i>
                         <span id="nav-user-name" class="text-xs font-bold hidden sm:inline">Ingresar</span>
-                    </button>
-
-                    <!-- BOTÓN DE RASTREO (Se muestra si hay orden activa) -->
-                    <button id="tracker-btn" onclick="toggleTrackerModal(true)" class="hidden bg-green-600 hover:bg-green-500 text-white px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-2 transition animate-pulse">
-                        <i class="fa-solid fa-motorcycle"></i> <span class="hidden sm:inline">Rastrear</span>
+                        <!-- Indicador de Pedido Activo (Punto Rojo) -->
+                        <span id="nav-order-indicator" class="hidden w-2 h-2 bg-green-500 rounded-full animate-pulse absolute top-0 right-0"></span>
                     </button>
 
                     <button onclick="toggleAI()" class="group relative bg-gray-800 hover:bg-gray-700 text-blue-400 border border-blue-900/50 px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-2 transition overflow-hidden">
@@ -226,11 +223,53 @@
                     </button>
                 </form>
 
+                <!-- PANEL USUARIO + RASTREO INTEGRADO -->
                 <div id="user-info-panel" class="hidden text-center py-4">
                     <div class="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl font-bold" id="user-initial">U</div>
                     <h3 class="font-bold text-lg text-gray-800" id="display-user-name">Usuario</h3>
                     <p class="text-sm text-gray-500 mb-4" id="display-user-phone">...</p>
-                    <button onclick="logoutUser()" class="text-red-500 font-bold text-xs hover:underline bg-red-50 px-4 py-2 rounded-full">Cerrar Sesión</button>
+                    
+                    <!-- RASTREO INTEGRADO EN CUENTA DE USUARIO -->
+                    <div id="active-order-card" class="hidden mb-4 bg-gray-50 p-4 rounded-xl border border-gray-200 text-left">
+                        <div class="flex justify-between items-center mb-4">
+                            <h4 class="font-bold text-gray-700 text-xs uppercase flex items-center gap-1"><i class="fa-solid fa-motorcycle text-blue-500"></i> Pedido Activo</h4>
+                            <span class="text-[10px] text-gray-400" id="tracker-order-id">#...</span>
+                        </div>
+                        
+                        <div class="flex justify-between w-full relative mb-4">
+                            <!-- Step 1 -->
+                            <div class="step-item active" id="step-pending">
+                                <div class="step-icon"><i class="fa-solid fa-clipboard-check text-gray-600 text-[10px]"></i><div class="pulse-ring"></div></div>
+                                <div class="step-label">Confirmado</div>
+                                <div class="step-line"></div>
+                            </div>
+                            <!-- Step 2 -->
+                            <div class="step-item" id="step-preparing">
+                                <div class="step-icon"><i class="fa-solid fa-fire-burner text-gray-600 text-[10px]"></i><div class="pulse-ring"></div></div>
+                                <div class="step-label">Cocina</div>
+                                <div class="step-line"></div>
+                            </div>
+                            <!-- Step 3 -->
+                            <div class="step-item" id="step-ready">
+                                <div class="step-icon"><i class="fa-solid fa-box-open text-gray-600 text-[10px]"></i><div class="pulse-ring"></div></div>
+                                <div class="step-label">Listo</div>
+                                <div class="step-line"></div>
+                            </div>
+                            <!-- Step 4 -->
+                            <div class="step-item" id="step-delivering">
+                                <div class="step-icon"><i class="fa-solid fa-motorcycle text-gray-600 text-[10px]"></i><div class="pulse-ring"></div></div>
+                                <div class="step-label">En Camino</div>
+                                <div class="step-line"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white p-2 rounded border border-gray-100 text-center">
+                            <p class="font-bold text-blue-600 text-sm" id="tracker-status-text">Esperando...</p>
+                            <p class="text-[10px] text-gray-400" id="tracker-status-desc">...</p>
+                        </div>
+                    </div>
+
+                    <button onclick="logoutUser()" class="text-red-500 font-bold text-xs hover:underline bg-red-50 px-4 py-2 rounded-full w-full">Cerrar Sesión</button>
                 </div>
             </div>
         </div>
@@ -251,7 +290,15 @@
                 
                 <div id="checkout-form" class="hidden space-y-3 mb-4">
                     <input type="text" id="cust-name" placeholder="Nombre" class="w-full bg-gray-700 p-2 rounded text-white border border-gray-600 focus:border-blue-500 outline-none">
-                    <input type="tel" id="cust-phone" placeholder="Teléfono" class="w-full bg-gray-700 p-2 rounded text-white border border-gray-600 focus:border-blue-500 outline-none">
+                    
+                    <!-- CAMBIO: CAMPO DE TELEFONO BLOQUEADO SI HAY SESION -->
+                    <div class="relative">
+                        <input type="tel" id="cust-phone" placeholder="Teléfono" class="w-full bg-gray-700 p-2 rounded text-white border border-gray-600 focus:border-blue-500 outline-none">
+                        <div id="locked-phone-icon" class="hidden absolute right-3 top-2 text-gray-400 text-xs" title="Vinculado a tu cuenta">
+                            <i class="fa-solid fa-lock"></i>
+                        </div>
+                    </div>
+
                     <div class="bg-gray-700 p-2 rounded border border-gray-600">
                         <button onclick="getLocation()" class="text-xs bg-blue-600 px-2 py-1 rounded w-full mb-2">📍 Usar GPS</button>
                         <div id="location-result" class="text-xs mb-1 text-gray-300"></div>
@@ -285,57 +332,6 @@
                     </div>
                 </div>
                 <button onclick="handleCheckout()" id="checkout-btn" class="w-full bg-green-600 text-white font-bold py-3 rounded-lg">Enviar Pedido (WhatsApp)</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- TRACKER MODAL (NUEVO) -->
-    <div id="tracker-modal" class="modal fixed inset-0 z-[55] flex items-center justify-center bg-black/90 backdrop-blur-sm px-4">
-        <div class="modal-content bg-gray-800 w-full max-w-md rounded-2xl shadow-2xl border border-gray-700 overflow-hidden">
-            <div class="bg-blue-600 p-4 text-white flex justify-between items-center">
-                <div class="flex items-center gap-2">
-                    <i class="fa-solid fa-location-crosshairs animate-pulse"></i>
-                    <div>
-                        <h3 class="font-bold text-sm">Rastrear Pedido</h3>
-                        <p class="text-[10px] text-blue-100" id="tracker-order-id">#...</p>
-                    </div>
-                </div>
-                <button onclick="toggleTrackerModal(false)" class="text-blue-200 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
-            </div>
-            
-            <div class="p-8">
-                <div class="flex justify-between w-full mb-8 relative">
-                    <!-- Step 1 -->
-                    <div class="step-item active" id="step-pending">
-                        <div class="step-icon"><i class="fa-solid fa-clipboard-check text-white text-xs"></i><div class="pulse-ring"></div></div>
-                        <div class="step-label">Confirmado</div>
-                        <div class="step-line"></div>
-                    </div>
-                    <!-- Step 2 -->
-                    <div class="step-item" id="step-preparing">
-                        <div class="step-icon"><i class="fa-solid fa-fire-burner text-white text-xs"></i><div class="pulse-ring"></div></div>
-                        <div class="step-label">Preparando</div>
-                        <div class="step-line"></div>
-                    </div>
-                    <!-- Step 3 -->
-                    <div class="step-item" id="step-ready">
-                        <div class="step-icon"><i class="fa-solid fa-box-open text-white text-xs"></i><div class="pulse-ring"></div></div>
-                        <div class="step-label">Listo</div>
-                        <div class="step-line"></div>
-                    </div>
-                    <!-- Step 4 -->
-                    <div class="step-item" id="step-delivering">
-                        <div class="step-icon"><i class="fa-solid fa-motorcycle text-white text-xs"></i><div class="pulse-ring"></div></div>
-                        <div class="step-label">En Camino</div>
-                        <div class="step-line"></div>
-                    </div>
-                </div>
-
-                <div class="bg-gray-900 p-4 rounded-xl border border-gray-700 text-center">
-                    <p class="text-gray-400 text-xs uppercase font-bold mb-2">Estado Actual</p>
-                    <h2 class="text-xl font-bold text-white mb-1" id="tracker-status-text">Esperando confirmación...</h2>
-                    <p class="text-sm text-gray-500" id="tracker-status-desc">Tu pedido ha sido enviado al restaurante.</p>
-                </div>
             </div>
         </div>
     </div>
@@ -382,36 +378,59 @@
         if(socket) {
             socket.on('connect', () => {
                 socket.emit('join-store', SHOP_SLUG);
-                // Si hay un usuario logueado o un teléfono guardado, unirse a su sala personal si el servidor lo soportara
-                // De momento filtramos por ID en el cliente
             });
             socket.on('shop-updated', async () => { await loadStoreData(); showToast("Actualizando menú..."); });
             
-            // ESCUCHAR NUEVOS PEDIDOS (Para guardar ID si es el nuestro)
+            // ESCUCHAR NUEVOS PEDIDOS (Sincronización ID Real)
             socket.on('order-created-client', (order) => {
-                // Verificar si este pedido nos pertenece.
-                // Puede ser por sesión (USER_DATA) O por el pedido temporal activo que coincida el teléfono.
-                const isMyOrder = (USER_DATA && order.customerPhone === USER_DATA.phone) || 
-                                  (ACTIVE_ORDER && ACTIVE_ORDER.customerPhone === order.customerPhone && ACTIVE_ORDER._id.startsWith('TEMP-'));
+                // VERIFICACIÓN ESTRICTA: El pedido solo pertenece al usuario si los teléfonos coinciden
+                // Si el usuario está logueado, DEBE coincidir con USER_DATA.phone
+                // Si es invitado (ACTIVE_ORDER es TEMP), debe coincidir con el teléfono que ingresó
+                
+                let isMyOrder = false;
+
+                if (USER_DATA) {
+                    // Si estoy logueado, el pedido ES mio si tiene mi teléfono registrado
+                    if (order.customerPhone === USER_DATA.phone) {
+                        isMyOrder = true;
+                    }
+                } else {
+                    // Si soy invitado, uso la lógica de pedido temporal activo
+                    if (ACTIVE_ORDER && ACTIVE_ORDER._id.startsWith('TEMP-') && ACTIVE_ORDER.customerPhone === order.customerPhone) {
+                        isMyOrder = true;
+                    }
+                }
                 
                 if (isMyOrder) {
                     saveActiveOrder(order);
-                    showToast("¡Restaurante recibió tu pedido!");
+                    showToast("¡Pedido recibido!");
+                    // Si el usuario está viendo el perfil, actualizamos la UI
+                    if(!document.getElementById('user-modal').classList.contains('hidden')) {
+                        updateTrackerUI(order.status);
+                    }
                 }
             });
 
             // ESCUCHAR ACTUALIZACIONES DE ESTADO
             socket.on('order-status-updated', (data) => {
+                // Solo actualizamos si tenemos el pedido activo correcto
                 if (ACTIVE_ORDER && data.orderId === ACTIVE_ORDER._id) {
+                    // VALIDACIÓN ADICIONAL: Si estoy logueado, me aseguro que este pedido siga siendo mio (por teléfono)
+                    // Esto evita ver pedidos "viejos" de otros usuarios si se comparte dispositivo, aunque localStorage ayuda.
+                    if (USER_DATA && ACTIVE_ORDER.customerPhone !== USER_DATA.phone) {
+                        return; // No es mi pedido actual de esta sesión
+                    }
+
                     ACTIVE_ORDER.status = data.status;
                     localStorage.setItem('menuia_active_order_' + SHOP_SLUG, JSON.stringify(ACTIVE_ORDER));
-                    updateTrackerUI(data.status);
-                    showToast(`Estado actualizado: ${data.status}`);
                     
-                    // Si el modal no está abierto, mostrar notificación o abrirlo
-                    if (!document.getElementById('tracker-modal').classList.contains('active')) {
-                        // Opcional: Abrir modal automáticamente o poner un punto rojo en el botón
-                        document.getElementById('tracker-btn').classList.add('animate-bounce');
+                    updateTrackerUI(data.status);
+                    showToast(`Tu pedido está: ${translateStatus(data.status)}`);
+                    
+                    // Si hay un cambio y el usuario tiene sesión, mostramos indicador visual
+                    if(USER_DATA) {
+                        const ind = document.getElementById('nav-order-indicator');
+                        if(ind) ind.classList.remove('hidden');
                     }
                 }
             });
@@ -431,72 +450,65 @@
             checkActiveOrder();
         });
 
-        // --- TRACKER LOGIC ---
+        // --- TRACKER LOGIC (AHORA DENTRO DEL PERFIL DE USUARIO) ---
         function checkActiveOrder() {
-            if (ACTIVE_ORDER) {
-                document.getElementById('tracker-btn').classList.remove('hidden');
+            // Solo mostramos rastreo si hay usuario logueado Y pedido activo QUE CORRESPONDA AL USUARIO
+            if (ACTIVE_ORDER && USER_DATA && ACTIVE_ORDER.customerPhone === USER_DATA.phone) {
+                document.getElementById('active-order-card').classList.remove('hidden');
+                document.getElementById('nav-order-indicator').classList.remove('hidden'); 
                 updateTrackerUI(ACTIVE_ORDER.status);
+            } else {
+                document.getElementById('active-order-card').classList.add('hidden');
+                document.getElementById('nav-order-indicator').classList.add('hidden');
             }
         }
 
         function saveActiveOrder(order) {
             ACTIVE_ORDER = order;
             localStorage.setItem('menuia_active_order_' + SHOP_SLUG, JSON.stringify(ACTIVE_ORDER));
-            document.getElementById('tracker-btn').classList.remove('hidden');
-            updateTrackerUI(order.status);
+            checkActiveOrder(); // Re-evaluar visibilidad
         }
 
-        function toggleTrackerModal(show) {
-            const m = document.getElementById('tracker-modal');
-            if(show) {
-                m.classList.add('active');
-                if(ACTIVE_ORDER) updateTrackerUI(ACTIVE_ORDER.status);
-            } else {
-                m.classList.remove('active');
-            }
+        function translateStatus(s) {
+            const map = { 'pending': 'Confirmado', 'preparing': 'En Cocina', 'ready': 'Listo', 'delivering': 'En Camino', 'completed': 'Entregado' };
+            return map[s] || s;
         }
 
         function updateTrackerUI(status) {
-            // Statuses: pending -> preparing -> ready -> delivering -> completed
-            const steps = ['pending', 'preparing', 'ready', 'delivering']; // completed es final
-            
-            // Reset classes
-            steps.forEach(s => {
-                const el = document.getElementById(`step-${s}`);
-                if(el) {
-                    el.classList.remove('active', 'completed');
-                    el.querySelector('.pulse-ring').style.display = 'none';
-                }
-            });
+            // Si no hay usuario logueado, no actualizamos UI (seguridad visual)
+            if(!USER_DATA) return;
 
+            const steps = ['pending', 'preparing', 'ready', 'delivering'];
             let activeIndex = -1;
             if (status === 'pending') activeIndex = 0;
             if (status === 'preparing') activeIndex = 1;
             if (status === 'ready') activeIndex = 2;
             if (status === 'delivering' || status === 'completed') activeIndex = 3;
 
-            // Update UI text
             const txtTitle = document.getElementById('tracker-status-text');
             const txtDesc = document.getElementById('tracker-status-desc');
             const orderIdDisp = document.getElementById('tracker-order-id');
             
             if(ACTIVE_ORDER) orderIdDisp.innerText = `Orden #${(ACTIVE_ORDER.dailyId || ACTIVE_ORDER._id || '...').toString().slice(-6).toUpperCase()}`;
 
-            if(status === 'pending') { txtTitle.innerText = "Pedido Confirmado"; txtDesc.innerText = "Hemos recibido tu orden y la estamos revisando."; }
-            else if(status === 'preparing') { txtTitle.innerText = "En la Cocina 🔥"; txtDesc.innerText = "Nuestros chefs están preparando tus platillos."; }
-            else if(status === 'ready') { txtTitle.innerText = "¡Pedido Listo!"; txtDesc.innerText = "Tu orden está lista para entrega o recolección."; }
-            else if(status === 'delivering') { txtTitle.innerText = "En Camino 🛵"; txtDesc.innerText = "El repartidor va hacia tu ubicación."; }
-            else if(status === 'completed') { txtTitle.innerText = "Entregado ✅"; txtDesc.innerText = "¡Gracias por tu compra! Buen provecho."; }
+            if(status === 'pending') { txtTitle.innerText = "Pedido Confirmado"; txtDesc.innerText = "Hemos recibido tu orden."; }
+            else if(status === 'preparing') { txtTitle.innerText = "En la Cocina 🔥"; txtDesc.innerText = "Preparando tus platillos."; }
+            else if(status === 'ready') { txtTitle.innerText = "¡Pedido Listo!"; txtDesc.innerText = "Listo para entrega/retiro."; }
+            else if(status === 'delivering') { txtTitle.innerText = "En Camino 🛵"; txtDesc.innerText = "El repartidor va en camino."; }
+            else if(status === 'completed') { txtTitle.innerText = "Entregado ✅"; txtDesc.innerText = "¡Gracias por tu compra!"; }
 
-            // Apply classes
             for (let i = 0; i < steps.length; i++) {
                 const s = steps[i];
                 const el = document.getElementById(`step-${s}`);
-                if(i < activeIndex) {
-                    el.classList.add('completed');
-                } else if (i === activeIndex) {
-                    el.classList.add('active');
-                    el.querySelector('.pulse-ring').style.display = 'block';
+                if(el) {
+                    el.classList.remove('active', 'completed');
+                    el.querySelector('.pulse-ring').style.display = 'none';
+                    if(i < activeIndex) {
+                        el.classList.add('completed');
+                    } else if (i === activeIndex) {
+                        el.classList.add('active');
+                        el.querySelector('.pulse-ring').style.display = 'block';
+                    }
                 }
             }
         }
@@ -543,8 +555,9 @@
                     USER_DATA.password = password; 
                     localStorage.setItem('menuia_user_data', JSON.stringify(USER_DATA));
                     updateUserUI();
-                    toggleUserModal();
-                    showToast(`¡Bienvenido de nuevo, ${USER_DATA.name.split(' ')[0]}!`);
+                    // Al loguearse, verificamos si ese usuario tiene pedido activo guardado localmente
+                    checkActiveOrder();
+                    showToast(`¡Hola, ${USER_DATA.name.split(' ')[0]}!`);
                 } else {
                     alert(data.error || "Credenciales incorrectas");
                 }
@@ -573,7 +586,7 @@
                     USER_DATA = { name, phone, address, password };
                     localStorage.setItem('menuia_user_data', JSON.stringify(USER_DATA));
                     updateUserUI();
-                    toggleUserModal();
+                    checkActiveOrder();
                     showToast("¡Cuenta creada con éxito!");
                 } else { alert(data.error || "Error al registrar"); }
             } catch (e) { alert("Error de conexión"); }
@@ -584,6 +597,7 @@
             localStorage.removeItem('menuia_user_data');
             USER_DATA = null;
             updateUserUI();
+            checkActiveOrder(); // Ocultará el rastreo
             showToast("Has cerrado sesión");
         }
 
@@ -769,8 +783,15 @@
         function toggleCart() { 
             if (USER_DATA) {
                 document.getElementById('cust-name').value = USER_DATA.name;
+                // CAMBIO: Forzar telefono del usuario
                 document.getElementById('cust-phone').value = USER_DATA.phone;
+                document.getElementById('cust-phone').readOnly = true;
+                document.getElementById('locked-phone-icon').classList.remove('hidden');
+                
                 document.getElementById('cust-address').value = USER_DATA.address || '';
+            } else {
+                document.getElementById('cust-phone').readOnly = false;
+                document.getElementById('locked-phone-icon').classList.add('hidden');
             }
             document.getElementById('cart-modal').classList.toggle('active'); 
         }
@@ -872,7 +893,11 @@
 
         // --- HANDLER ACTUALIZADO PARA ENVIAR PEDIDO AL BACKEND ---
         function handleCheckout() {
-            const n = document.getElementById('cust-name').value, p = document.getElementById('cust-phone').value, a = document.getElementById('cust-address').value;
+            const n = document.getElementById('cust-name').value;
+            // SI hay usuario, usamos su telefono real, sino el del input
+            const p = (USER_DATA && USER_DATA.phone) ? USER_DATA.phone : document.getElementById('cust-phone').value;
+            
+            const a = document.getElementById('cust-address').value;
             if(!n || !p || !a) return alert("Faltan datos");
             
             let paymentMethod = "Transferencia";
@@ -917,7 +942,13 @@
                     customerPhone: p, // Guardamos el telefono tambien en el local para que la validacion de socket funcione
                     total: total
                 });
-                toggleTrackerModal(true);
+                
+                // SI EL USUARIO ESTÁ LOGUEADO, ABRIR PERFIL PARA VER TRACKING
+                if(USER_DATA) {
+                    toggleUserModal();
+                } else {
+                    showToast("Pedido Enviado. Inicia sesión para rastrear.");
+                }
             }
             toggleCart();
         }
