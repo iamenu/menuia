@@ -149,14 +149,6 @@
                 <a href="#" id="sidebar-link-store" target="_blank" class="flex items-center gap-3 px-4 py-3 bg-blue-50 text-blue-700 rounded-lg text-xs font-bold hover:bg-blue-100 transition mb-2">
                     <i class="fa-solid fa-external-link-alt"></i> Ver mi Tienda
                 </a>
-                
-                <!-- ENLACE PANEL COCINA -->
-                <div class="mt-2 bg-orange-50 p-2 rounded-lg border border-orange-100 mb-2">
-                    <p class="text-[10px] text-orange-800 font-bold mb-1 flex items-center gap-1">
-                        <i class="fa-solid fa-fire-burner"></i> Link Cocina:
-                    </p>
-                    <input type="text" value="https://iamenu.github.io/menuia/kitchen.html" class="w-full text-[10px] bg-white border border-orange-200 rounded px-2 py-1 text-gray-500 cursor-pointer focus:ring-1 focus:ring-orange-300 outline-none" readonly onclick="this.select()">
-                </div>
 
                 <button onclick="logout()" class="w-full flex items-center gap-3 px-4 py-2 text-sm font-medium text-red-500 hover:bg-red-50 rounded-lg transition">
                     <i class="fa-solid fa-sign-out-alt"></i> Cerrar Sesión
@@ -409,6 +401,17 @@
                             </div>
                         </div>
 
+                        <!-- Card: Bank Info (NUEVO) -->
+                        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                            <h3 class="font-bold text-gray-700 mb-4 flex items-center gap-2"><i class="fa-solid fa-building-columns text-emerald-600"></i> Datos Bancarios</h3>
+                            <div class="space-y-4">
+                                <div><label class="text-xs font-bold text-gray-500">Banco</label><input type="text" id="conf-bank-name" placeholder="Ej: BBVA" class="w-full border-b border-gray-300 py-1 focus:border-blue-500 outline-none text-sm font-medium"></div>
+                                <div><label class="text-xs font-bold text-gray-500">CLABE / Cuenta</label><input type="text" id="conf-bank-clabe" placeholder="012345678901234567" class="w-full border-b border-gray-300 py-1 focus:border-blue-500 outline-none text-sm font-medium"></div>
+                                <div><label class="text-xs font-bold text-gray-500">Beneficiario</label><input type="text" id="conf-bank-owner" placeholder="Nombre del Titular" class="w-full border-b border-gray-300 py-1 focus:border-blue-500 outline-none text-sm font-medium"></div>
+                                <p class="text-[10px] text-gray-400 leading-tight">Estos datos aparecerán al cliente al elegir "Transferencia".</p>
+                            </div>
+                        </div>
+
                         <!-- NUEVA TARJETA: ALTA DEMANDA -->
                         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 md:col-span-2 border-l-4 border-orange-500">
                             <h3 class="font-bold text-gray-700 mb-4 flex items-center gap-2">
@@ -644,6 +647,12 @@
             document.getElementById('conf-open').value = c.hours?.open;
             document.getElementById('conf-close').value = c.hours?.close;
             
+            // Cargar Datos Bancarios
+            const bank = c.bankDetails || {};
+            document.getElementById('conf-bank-name').value = bank.name || '';
+            document.getElementById('conf-bank-clabe').value = bank.clabe || '';
+            document.getElementById('conf-bank-owner').value = bank.owner || '';
+
             const hd = c.highDemand || false;
             document.getElementById('conf-high-demand-active').checked = hd;
             document.getElementById('conf-high-demand-time').value = c.highDemandTime || '';
@@ -1068,6 +1077,13 @@
              cfg.highDemandTime = document.getElementById('conf-high-demand-time').value;
              cfg.categoryTitles = { promos: document.getElementById('cat-title-promos').value, especiales: document.getElementById('cat-title-especiales').value, clasicos: document.getElementById('cat-title-clasicos').value, extras: document.getElementById('cat-title-extras').value };
              
+             // Guardar Datos Bancarios
+             cfg.bankDetails = {
+                 name: document.getElementById('conf-bank-name').value,
+                 clabe: document.getElementById('conf-bank-clabe').value,
+                 owner: document.getElementById('conf-bank-owner').value
+             };
+
              SESSION.data.config = cfg;
 
              try {
@@ -1090,13 +1106,57 @@
         async function parseMapLink() {
             const input = document.getElementById('map-link-input').value;
             if(!input) return alert("Ingresa un link de Google Maps");
-            const btn = event.target.closest('button'); const original = btn.innerHTML; btn.innerHTML = '...'; btn.disabled = true;
+            
+            const btn = event.target.closest('button'); 
+            const original = btn.innerHTML; 
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; 
+            btn.disabled = true;
+            
             try {
+                // 1. Intentar obtener datos del servidor
                 const res = await fetch(`${API_URL}/api/utils/parse-map`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ input }) });
                 const data = await res.json();
-                if(data.success) { document.getElementById('conf-lat').value = data.lat; document.getElementById('conf-lng').value = data.lng; alert("Ubicación actualizada ✅"); } else { alert("Error obteniendo coordenadas."); }
-            } catch(e) { alert("Error de conexión"); }
-            btn.innerHTML = original; btn.disabled = false;
+                
+                if(data.success) { 
+                    // Actualizar coordenadas (Hidden fields)
+                    document.getElementById('conf-lat').value = data.lat; 
+                    document.getElementById('conf-lng').value = data.lng; 
+                    
+                    let addressFound = data.address; // La API debería devolver la dirección si logra resolverla
+
+                    // 2. Fallback Cliente: Intentar sacar nombre del lugar del URL si la API falló en eso
+                    if (!addressFound && input.includes('/place/')) {
+                        try {
+                            const parts = input.split('/place/')[1].split('/')[0];
+                            addressFound = decodeURIComponent(parts).replace(/\+/g, ' ');
+                        } catch(e) { console.log("Parsing fallback failed"); }
+                    }
+
+                    // 3. ACTUALIZACIÓN DEL CAMPO DIRECCIÓN
+                    if(addressFound) {
+                        const addrInput = document.getElementById('conf-address');
+                        addrInput.value = addressFound; // <--- ASIGNACIÓN DIRECTA
+                        
+                        // Efecto visual para confirmar cambio
+                        addrInput.classList.add('bg-green-100', 'text-green-800', 'font-bold');
+                        setTimeout(() => addrInput.classList.remove('bg-green-100', 'text-green-800', 'font-bold'), 2000);
+                        
+                        // No mostramos alert de "Dirección sugerida", solo lo hacemos
+                        alert("¡Ubicación y dirección actualizadas!");
+                    } else {
+                        alert("Coordenadas actualizadas. (No se pudo detectar el texto de la dirección, por favor verifícala).");
+                    }
+
+                } else { 
+                    alert("No se pudieron obtener datos del link."); 
+                }
+            } catch(e) { 
+                console.error(e);
+                alert("Error de conexión."); 
+            }
+            
+            btn.innerHTML = original; 
+            btn.disabled = false;
         }
 
         function handleHeroUpload(input) {
