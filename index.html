@@ -490,11 +490,27 @@
 
                 // Location Filter Check
                 let matchesLoc = true;
-                if (window.userLat && window.userLng && s.mockLocation) {
-                    const dist = calculateDistance(window.userLat, window.userLng, s.mockLocation.lat, s.mockLocation.lng);
-                    s.distanceKm = dist.toFixed(1); // Guarda la distancia para mostrarla
-                    if (document.getElementById('btn-location').classList.contains('bg-green-600')) {
-                        matchesLoc = dist <= 10; // 10km radius filter if active
+                if (window.userLat && window.userLng) {
+                    const shopLat = s.config?.coords?.lat;
+                    const shopLng = s.config?.coords?.lng;
+
+                    if (shopLat && shopLng) {
+                        const dist = calculateDistance(window.userLat, window.userLng, shopLat, shopLng);
+                        s.distanceKm = dist.toFixed(1); // Guarda la distancia para mostrarla
+
+                        // Debugging Log
+                        console.log(`[Distancia] ${s.config.name}: ${dist.toFixed(2)} km`);
+
+                        if (document.getElementById('btn-location').classList.contains('bg-green-600')) {
+                            matchesLoc = dist <= 10; // 10km radius filter
+                        }
+                    } else {
+                        // Si la tienda no tiene coordenadas, la mostramos al final o la ocultamos si el filtro es estricto?
+                        // Por ahora permitimos mostrarla pero con distancia desconocida
+                        s.distanceKm = null;
+                        if (document.getElementById('btn-location').classList.contains('bg-green-600')) {
+                            matchesLoc = false; // Ocultar si filtramos por ubicación y no tiene coords
+                        }
                     }
                 }
 
@@ -507,6 +523,21 @@
             }
 
             renderShops(filtered);
+        }
+
+        function initAutoLocation() {
+            // Check if user previously approved location?
+            // For now, we can just trigger the location request nicely, or leave it passive.
+            // Let's check permissions (new API) or just auto-trigger if we want.
+            // To be less intrusive, maybe we DON'T auto trigger popup unless user asks.
+            // But to fix the error, we define it. 
+            // Also, could check if we already have coords in logic.
+
+            // Si queremos que pregunte al entrar:
+            // filterByLocation(); 
+
+            // O solo definimos la función vacía para evitar el error si decidimos que sea manual:
+            console.log("AutoLocation init...");
         }
 
         // --- GEOLOCATION LOGIC ---
@@ -537,17 +568,12 @@
                     btn.classList.add('bg-green-600');
                     btn.innerHTML = '<i class="fa-solid fa-map-location-dot"></i>';
 
-                    status.innerHTML = `✅ Ubicación detectada (Precisión: ${pos.coords.accuracy.toFixed(0)}m). Mostrando restaurantes a 10km.`;
+                    status.innerHTML = `✅ Ubicación detectada (Precisión: ${pos.coords.accuracy.toFixed(0)}m). Buscando en 10km a la redonda.`;
 
-                    // Inject Mock Locations to Shops for Demo
-                    ALL_SHOPS.forEach((s, i) => {
-                        // Mock random locations around user or fixed point for demo
-                        // Using a fixed offset spread to ensure some are "near" and some "far"
-                        s.mockLocation = {
-                            lat: window.userLat + (Math.random() - 0.5) * 0.1,
-                            lng: window.userLng + (Math.random() - 0.5) * 0.1
-                        };
-                    });
+                    // Eliminamos la inyección de datos falsos (Mock Locations)
+                    // Ahora usaremos las coordenadas reales de la tienda (s.config.coords)
+
+                    filterShops();
 
                     filterShops();
                 },
