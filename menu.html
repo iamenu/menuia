@@ -11,6 +11,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 
+    <!-- Leaflet CSS & JS (OpenStreetMap) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
     <style>
         /* TEMA CLARO - LIGHT THEME */
         body {
@@ -686,12 +689,14 @@
                             <span class="text-xs text-gray-500 font-bold uppercase">Dirección</span>
                             <button onclick="getLocation()"
                                 class="text-[10px] bg-blue-100 hover:bg-blue-200 text-blue-700 px-2 py-1 rounded transition border border-blue-200"><i
-                                    class="fa-solid fa-location-crosshairs"></i> Usar GPS</button>
+                                    class="fa-solid fa-map-location-dot"></i> Seleccionar en Mapa</button>
                         </div>
-                        <div id="location-result" class="text-xs mb-2 text-green-600 font-mono"></div>
-                        <textarea id="cust-address" placeholder="Calle, Número, Colonia..."
-                            class="w-full bg-white p-2 text-sm rounded-lg text-slate-800 border border-gray-200 focus:border-blue-500 outline-none resize-none"
-                            rows="2"></textarea>
+                        <div id="location-result" class="text-xs mb-2 text-green-600 font-mono hidden"></div>
+                        <div class="flex gap-2">
+                            <textarea id="cust-address" placeholder="Calle, Número, Colonia..."
+                                class="flex-1 bg-white p-2 text-sm rounded-lg text-slate-800 border border-gray-200 focus:border-blue-500 outline-none resize-none"
+                                rows="2"></textarea>
+                        </div>
                     </div>
 
                     <div class="mt-4">
@@ -730,6 +735,41 @@
                 <button onclick="handleCheckout()" id="checkout-btn"
                     class="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white font-bold py-4 rounded-xl shadow-lg transition transform active:scale-95 flex items-center justify-center gap-2 text-lg">
                     <span>Enviar Pedido</span> <i class="fa-brands fa-whatsapp text-xl"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAP MODAL -->
+    <div id="map-modal"
+        class="modal fixed inset-0 z-[80] flex items-center justify-center bg-black/70 backdrop-blur-sm hidden">
+        <div
+            class="bg-white w-full max-w-lg rounded-2xl overflow-hidden shadow-2xl relative flex flex-col h-[80vh] m-4">
+            <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-white z-10">
+                <h3 class="font-bold text-slate-800"><i class="fa-solid fa-location-dot text-red-500"></i> Confirma tu
+                    ubicación</h3>
+                <button onclick="toggleMapModal(false)"
+                    class="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition"><i
+                        class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div id="osm-map" class="flex-1 w-full bg-gray-100 relative">
+                <!-- Center Pin Overlay -->
+                <div
+                    class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[400] pointer-events-none text-red-600 text-4xl drop-shadow-xl mt-[-20px]">
+                    <i class="fa-solid fa-location-dot"></i>
+                </div>
+                <div
+                    class="absolute bottom-6 left-1/2 -translate-x-1/2 z-[400] bg-white/90 backdrop-blur px-4 py-2 rounded-full shadow-lg text-xs font-bold text-slate-700 whitespace-nowrap border border-gray-200">
+                    Mueve el mapa para ubicar el pin
+                </div>
+            </div>
+            <div class="p-4 border-t border-gray-100 bg-white z-10">
+                <p id="map-address-preview" class="text-xs text-gray-500 mb-3 truncate font-medium">Ubicación no
+                    seleccionada...</p>
+                <div id="map-delivery-status" class="mb-3 text-xs text-center font-bold"></div>
+                <button onclick="confirmMapLocation()" id="btn-confirm-map"
+                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed">
+                    Confirmar Ubicación
                 </button>
             </div>
         </div>
