@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,55 +14,180 @@
     <!-- MOMENT JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/locale/es.min.js"></script>
-    
+    <!-- LEAFLET MAPS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
-        .fade-enter { animation: fadeIn 0.3s ease-in-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
 
-        .nav-item.active { background-color: #eff6ff; color: #2563eb; border-right: 3px solid #2563eb; }
-        .input-field { @apply w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition; }
-        
+        .fade-enter {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #d1d5db;
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #9ca3af;
+        }
+
+        .nav-item.active {
+            background-color: #eff6ff;
+            color: #2563eb;
+            border-right: 3px solid #2563eb;
+        }
+
+        .input-field {
+            @apply w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition;
+        }
+
         /* Filtros Monitor */
-        .filter-btn { transition: all 0.2s; }
-        .filter-btn.active { background-color: #2563eb; color: white; border-color: #2563eb; }
+        .filter-btn {
+            transition: all 0.2s;
+        }
+
+        .filter-btn.active {
+            background-color: #2563eb;
+            color: white;
+            border-color: #2563eb;
+        }
 
         /* Gráfico CSS Simple */
-        .bar-container { display: flex; align-items: flex-end; gap: 8px; height: 100px; }
-        .bar { background-color: #3b82f6; border-radius: 4px 4px 0 0; flex: 1; transition: height 0.5s ease; min-height: 4px; position: relative; }
-        .bar:hover { opacity: 0.8; }
-        .bar-tooltip { position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: #1f2937; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; opacity: 0; pointer-events: none; transition: opacity 0.2s; white-space: nowrap; margin-bottom: 4px; }
-        .bar:hover .bar-tooltip { opacity: 1; }
+        .bar-container {
+            display: flex;
+            align-items: flex-end;
+            gap: 8px;
+            height: 100px;
+        }
+
+        .bar {
+            background-color: #3b82f6;
+            border-radius: 4px 4px 0 0;
+            flex: 1;
+            transition: height 0.5s ease;
+            min-height: 4px;
+            position: relative;
+        }
+
+        .bar:hover {
+            opacity: 0.8;
+        }
+
+        .bar-tooltip {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1f2937;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+            white-space: nowrap;
+            margin-bottom: 4px;
+        }
+
+        .bar:hover .bar-tooltip {
+            opacity: 1;
+        }
 
         /* AI Effects */
-        .ai-gradient-text { background: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .ai-loading { animation: aiPulse 1.5s infinite; }
-        @keyframes aiPulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
+        .ai-gradient-text {
+            background: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .ai-loading {
+            animation: aiPulse 1.5s infinite;
+        }
+
+        @keyframes aiPulse {
+            0% {
+                opacity: 0.6;
+            }
+
+            50% {
+                opacity: 1;
+            }
+
+            100% {
+                opacity: 0.6;
+            }
+        }
 
         @media print {
-            body * { visibility: hidden; }
-            #print-area, #print-area * { visibility: visible; }
-            #print-area { position: absolute; left: 0; top: 0; width: 100%; background: white; padding: 20px; }
+            body * {
+                visibility: hidden;
+            }
+
+            #print-area,
+            #print-area * {
+                visibility: visible;
+            }
+
+            #print-area {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                background: white;
+                padding: 20px;
+            }
         }
     </style>
 </head>
+
 <body class="text-gray-800 h-screen overflow-hidden flex flex-col">
 
     <!-- LOGIN / REGISTER SCREEN -->
     <div id="auth-container" class="fixed inset-0 z-50 bg-gray-50 flex items-center justify-center p-4">
-        <div class="bg-white w-full max-w-4xl h-[600px] rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row fade-enter">
+        <div
+            class="bg-white w-full max-w-4xl h-[600px] rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row fade-enter">
             <!-- Left Side: Image/Brand -->
-            <div class="md:w-1/2 bg-gradient-to-br from-blue-600 to-indigo-700 p-8 flex flex-col justify-center items-center text-white text-center relative overflow-hidden">
-                <div class="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/food.png')]"></div>
+            <div
+                class="md:w-1/2 bg-gradient-to-br from-blue-600 to-indigo-700 p-8 flex flex-col justify-center items-center text-white text-center relative overflow-hidden">
+                <div
+                    class="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/food.png')]">
+                </div>
                 <div class="relative z-10">
-                    <div class="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center text-4xl mb-6 mx-auto shadow-lg">🚀</div>
+                    <div
+                        class="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center text-4xl mb-6 mx-auto shadow-lg">
+                        🚀</div>
                     <h1 class="text-3xl font-bold mb-2">Tu Negocio Digital</h1>
                     <p class="text-blue-100">Gestiona tu menú, recibe pedidos y crece sin límites.</p>
                 </div>
@@ -70,51 +196,70 @@
             <!-- Right Side: Forms -->
             <div class="md:w-1/2 p-8 md:p-12 relative bg-white flex flex-col">
                 <div class="flex border-b mb-8">
-                    <button onclick="switchTab('login')" id="tab-login" class="flex-1 pb-3 text-center font-semibold text-blue-600 border-b-2 border-blue-600 transition">Ingresar</button>
-                    <button onclick="switchTab('register')" id="tab-register" class="flex-1 pb-3 text-center font-semibold text-gray-400 hover:text-gray-600 transition">Registrarse</button>
+                    <button onclick="switchTab('login')" id="tab-login"
+                        class="flex-1 pb-3 text-center font-semibold text-blue-600 border-b-2 border-blue-600 transition">Ingresar</button>
+                    <button onclick="switchTab('register')" id="tab-register"
+                        class="flex-1 pb-3 text-center font-semibold text-gray-400 hover:text-gray-600 transition">Registrarse</button>
                 </div>
 
-                <form id="form-login" class="space-y-5 flex-1 flex flex-col justify-center" onsubmit="event.preventDefault(); handleLogin();">
+                <form id="form-login" class="space-y-5 flex-1 flex flex-col justify-center"
+                    onsubmit="event.preventDefault(); handleLogin();">
                     <div>
                         <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Link de tu Tienda</label>
                         <div class="relative">
                             <span class="absolute left-3 top-2.5 text-gray-400"><i class="fa-solid fa-link"></i></span>
-                            <input type="text" id="login-slug" placeholder="Ej: miburger" class="w-full pl-9 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" required>
+                            <input type="text" id="login-slug" placeholder="Ej: miburger"
+                                class="w-full pl-9 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                                required>
                         </div>
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Contraseña</label>
                         <div class="relative">
                             <span class="absolute left-3 top-2.5 text-gray-400"><i class="fa-solid fa-lock"></i></span>
-                            <input type="password" id="login-pass" class="w-full pl-9 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" required>
+                            <input type="password" id="login-pass"
+                                class="w-full pl-9 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                                required>
                         </div>
                     </div>
-                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow-lg shadow-blue-500/30 transition transform hover:-translate-y-0.5">
+                    <button type="submit"
+                        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow-lg shadow-blue-500/30 transition transform hover:-translate-y-0.5">
                         Iniciar Sesión
                     </button>
                 </form>
 
-                <form id="form-register" class="space-y-4 hidden overflow-y-auto h-full pr-2" onsubmit="event.preventDefault(); handleRegister();">
+                <form id="form-register" class="space-y-4 hidden overflow-y-auto h-full pr-2"
+                    onsubmit="event.preventDefault(); handleRegister();">
                     <div class="grid grid-cols-2 gap-3">
-                        <input type="text" id="reg-slug" placeholder="Link único (ej: tacospepe)" class="col-span-2 w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 outline-none" required pattern="[a-zA-Z0-9-_]+">
-                        <input type="text" id="reg-name" placeholder="Nombre Negocio" class="w-full p-2.5 border border-gray-300 rounded-lg outline-none" required>
-                        <select id="reg-type" class="w-full p-2.5 border border-gray-300 rounded-lg outline-none bg-white">
+                        <input type="text" id="reg-slug" placeholder="Link único (ej: tacospepe)"
+                            class="col-span-2 w-full p-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 outline-none"
+                            required pattern="[a-zA-Z0-9-_]+">
+                        <input type="text" id="reg-name" placeholder="Nombre Negocio"
+                            class="w-full p-2.5 border border-gray-300 rounded-lg outline-none" required>
+                        <select id="reg-type"
+                            class="w-full p-2.5 border border-gray-300 rounded-lg outline-none bg-white">
                             <option value="Comida General">Giro General</option>
                             <option value="Sushi">Sushi</option>
                             <option value="Tacos">Tacos</option>
                             <option value="Pizza">Pizza</option>
                             <option value="Hamburguesas">Burgers</option>
                         </select>
-                        <input type="password" id="reg-pass" placeholder="Contraseña" class="col-span-2 w-full p-2.5 border border-gray-300 rounded-lg outline-none" required>
+                        <input type="password" id="reg-pass" placeholder="Contraseña"
+                            class="col-span-2 w-full p-2.5 border border-gray-300 rounded-lg outline-none" required>
                     </div>
                     <div class="space-y-3 pt-2">
                         <p class="text-xs font-bold text-gray-400 uppercase">Datos de Contacto</p>
-                        <input type="text" id="reg-owner" placeholder="Tu Nombre" class="w-full p-2.5 border border-gray-300 rounded-lg outline-none" required>
-                        <input type="tel" id="reg-phone" placeholder="Teléfono" class="w-full p-2.5 border border-gray-300 rounded-lg outline-none" required>
-                        <input type="tel" id="reg-whatsapp" placeholder="WhatsApp (Obligatorio)" class="w-full p-2.5 border border-gray-300 rounded-lg outline-none" required>
-                        <input type="text" id="reg-address" placeholder="Dirección del Negocio" class="w-full p-2.5 border border-gray-300 rounded-lg outline-none" required>
+                        <input type="text" id="reg-owner" placeholder="Tu Nombre"
+                            class="w-full p-2.5 border border-gray-300 rounded-lg outline-none" required>
+                        <input type="tel" id="reg-phone" placeholder="Teléfono"
+                            class="w-full p-2.5 border border-gray-300 rounded-lg outline-none" required>
+                        <input type="tel" id="reg-whatsapp" placeholder="WhatsApp (Obligatorio)"
+                            class="w-full p-2.5 border border-gray-300 rounded-lg outline-none" required>
+                        <input type="text" id="reg-address" placeholder="Dirección del Negocio"
+                            class="w-full p-2.5 border border-gray-300 rounded-lg outline-none" required>
                     </div>
-                    <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl shadow-lg shadow-green-500/30 mt-2">
+                    <button type="submit"
+                        class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl shadow-lg shadow-green-500/30 mt-2">
                         Crear Cuenta Gratis
                     </button>
                 </form>
@@ -124,38 +269,46 @@
 
     <!-- APP LAYOUT -->
     <div id="dashboard-container" class="hidden flex h-full bg-gray-100">
-        
+
         <!-- SIDEBAR -->
         <aside class="w-64 bg-white border-r border-gray-200 hidden md:flex flex-col z-20">
             <div class="h-16 flex items-center px-6 border-b border-gray-100">
-                <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold mr-3">M</div>
+                <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold mr-3">M
+                </div>
                 <span class="font-bold text-lg tracking-tight">Menú<span class="ai-gradient-text">IA</span></span>
             </div>
-            
+
             <nav class="flex-1 py-6 px-3 space-y-1">
-                <button onclick="switchView('dashboard')" class="nav-item w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition active">
+                <button onclick="switchView('dashboard')"
+                    class="nav-item w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition active">
                     <i class="fa-solid fa-chart-pie w-5 text-center"></i> Resumen
                 </button>
-                <button onclick="switchView('orders')" class="nav-item w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition">
+                <button onclick="switchView('orders')"
+                    class="nav-item w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition">
                     <i class="fa-solid fa-clipboard-list w-5 text-center"></i> Monitor Pedidos
                 </button>
-                <button onclick="switchView('menu')" class="nav-item w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition">
+                <button onclick="switchView('menu')"
+                    class="nav-item w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition">
                     <i class="fa-solid fa-utensils w-5 text-center"></i> Mi Menú
                 </button>
-                <button onclick="switchView('qr')" class="nav-item w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition">
+                <button onclick="switchView('qr')"
+                    class="nav-item w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition">
                     <i class="fa-solid fa-qrcode w-5 text-center"></i> Marketing & QR
                 </button>
-                <button onclick="switchView('settings')" class="nav-item w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition">
+                <button onclick="switchView('settings')"
+                    class="nav-item w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition">
                     <i class="fa-solid fa-gear w-5 text-center"></i> Configuración
                 </button>
             </nav>
 
             <div class="p-4 border-t border-gray-100">
-                <a href="#" id="sidebar-link-store" target="_blank" class="flex items-center gap-3 px-4 py-3 bg-blue-50 text-blue-700 rounded-lg text-xs font-bold hover:bg-blue-100 transition mb-2">
+                <a href="#" id="sidebar-link-store" target="_blank"
+                    class="flex items-center gap-3 px-4 py-3 bg-blue-50 text-blue-700 rounded-lg text-xs font-bold hover:bg-blue-100 transition mb-2">
                     <i class="fa-solid fa-external-link-alt"></i> Ver mi Tienda
                 </a>
 
-                <button onclick="logout()" class="w-full flex items-center gap-3 px-4 py-2 text-sm font-medium text-red-500 hover:bg-red-50 rounded-lg transition">
+                <button onclick="logout()"
+                    class="w-full flex items-center gap-3 px-4 py-2 text-sm font-medium text-red-500 hover:bg-red-50 rounded-lg transition">
                     <i class="fa-solid fa-sign-out-alt"></i> Cerrar Sesión
                 </button>
             </div>
@@ -164,27 +317,37 @@
         <!-- MAIN CONTENT -->
         <main class="flex-1 flex flex-col overflow-hidden relative">
             <!-- Mobile Header -->
-            <header class="bg-white h-16 border-b border-gray-200 flex md:hidden justify-between items-center px-4 z-20">
+            <header
+                class="bg-white h-16 border-b border-gray-200 flex md:hidden justify-between items-center px-4 z-20">
                 <div class="font-bold text-lg">Panel Admin <span class="ai-gradient-text text-xs">AI</span></div>
-                <button onclick="document.querySelector('aside').classList.toggle('hidden'); document.querySelector('aside').classList.toggle('absolute'); document.querySelector('aside').classList.toggle('h-full');" class="text-gray-600"><i class="fa-solid fa-bars text-xl"></i></button>
+                <button
+                    onclick="document.querySelector('aside').classList.toggle('hidden'); document.querySelector('aside').classList.toggle('absolute'); document.querySelector('aside').classList.toggle('h-full');"
+                    class="text-gray-600"><i class="fa-solid fa-bars text-xl"></i></button>
             </header>
 
             <!-- Scrollable Content -->
             <div class="flex-1 overflow-y-auto p-4 md:p-8 relative bg-gray-100">
-                
+
                 <!-- VIEW: DASHBOARD (RESUMEN & FINANZAS) -->
                 <div id="view-dashboard" class="view-section fade-enter">
                     <div class="flex justify-between items-end mb-6">
                         <div>
-                            <h2 class="text-2xl font-bold text-gray-800">Hola, <span id="dash-owner-name">Dueño</span> 👋</h2>
+                            <h2 class="text-2xl font-bold text-gray-800">Hola, <span id="dash-owner-name">Dueño</span>
+                                👋</h2>
                             <p class="text-gray-500 text-sm">Resumen de actividad y finanzas.</p>
                         </div>
-                        <div id="sub-status-badge" class="px-3 py-1 rounded-full text-xs font-bold bg-gray-200 text-gray-600">Plan: Verificando...</div>
+                        <div id="sub-status-badge"
+                            class="px-3 py-1 rounded-full text-xs font-bold bg-gray-200 text-gray-600">Plan:
+                            Verificando...</div>
                     </div>
 
                     <!-- AI INSIGHTS CARD (REAL) -->
-                    <div class="bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 rounded-xl p-6 text-white mb-8 shadow-xl relative overflow-hidden group border border-purple-500/30">
-                        <div class="absolute top-0 right-0 p-4 opacity-10 text-9xl transform group-hover:scale-110 transition duration-700"><i class="fa-solid fa-robot"></i></div>
+                    <div
+                        class="bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 rounded-xl p-6 text-white mb-8 shadow-xl relative overflow-hidden group border border-purple-500/30">
+                        <div
+                            class="absolute top-0 right-0 p-4 opacity-10 text-9xl transform group-hover:scale-110 transition duration-700">
+                            <i class="fa-solid fa-robot"></i>
+                        </div>
                         <div class="relative z-10">
                             <h3 class="font-bold text-lg mb-2 flex items-center gap-2">
                                 <i class="fa-solid fa-brain text-pink-400"></i> MenúIA Coach (Beta)
@@ -192,11 +355,13 @@
                             <div class="flex items-start gap-4">
                                 <div class="flex-1">
                                     <p class="text-indigo-100 text-sm mb-4 leading-relaxed italic" id="ai-insight-text">
-                                        "Analizando tus patrones de venta reales... Pulsa el botón para obtener una estrategia personalizada de IA."
+                                        "Analizando tus patrones de venta reales... Pulsa el botón para obtener una
+                                        estrategia personalizada de IA."
                                     </p>
                                 </div>
                             </div>
-                            <button onclick="refreshAIInsight()" class="bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg text-xs font-bold transition flex items-center gap-2 border border-white/20 backdrop-blur-sm">
+                            <button onclick="refreshAIInsight()"
+                                class="bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg text-xs font-bold transition flex items-center gap-2 border border-white/20 backdrop-blur-sm">
                                 <i class="fa-solid fa-wand-magic-sparkles text-yellow-300"></i> Consultar a la IA
                             </button>
                         </div>
@@ -206,49 +371,79 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                         <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
                             <div class="flex items-center gap-4">
-                                <div class="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xl"><i class="fa-solid fa-eye"></i></div>
-                                <div><p class="text-gray-400 text-xs font-bold uppercase">Visitas Hoy</p><h3 class="text-2xl font-bold text-gray-800" id="stat-visits-count">0</h3></div>
+                                <div
+                                    class="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xl">
+                                    <i class="fa-solid fa-eye"></i>
+                                </div>
+                                <div>
+                                    <p class="text-gray-400 text-xs font-bold uppercase">Visitas Hoy</p>
+                                    <h3 class="text-2xl font-bold text-gray-800" id="stat-visits-count">0</h3>
+                                </div>
                             </div>
                         </div>
                         <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
                             <div class="flex items-center gap-4">
-                                <div class="w-12 h-12 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-xl"><i class="fa-brands fa-whatsapp"></i></div>
-                                <div><p class="text-gray-400 text-xs font-bold uppercase">Pedidos Hoy</p><h3 class="text-2xl font-bold text-gray-800" id="stat-orders-count">0</h3></div>
+                                <div
+                                    class="w-12 h-12 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-xl">
+                                    <i class="fa-brands fa-whatsapp"></i>
+                                </div>
+                                <div>
+                                    <p class="text-gray-400 text-xs font-bold uppercase">Pedidos Hoy</p>
+                                    <h3 class="text-2xl font-bold text-gray-800" id="stat-orders-count">0</h3>
+                                </div>
                             </div>
                         </div>
                         <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
                             <div class="flex items-center gap-4">
-                                <div class="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-xl"><i class="fa-solid fa-money-bill-wave"></i></div>
-                                <div><p class="text-gray-400 text-xs font-bold uppercase">Ventas Hoy</p><h3 class="text-2xl font-bold text-emerald-600" id="stat-sales-today">$0.00</h3></div>
+                                <div
+                                    class="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-xl">
+                                    <i class="fa-solid fa-money-bill-wave"></i>
+                                </div>
+                                <div>
+                                    <p class="text-gray-400 text-xs font-bold uppercase">Ventas Hoy</p>
+                                    <h3 class="text-2xl font-bold text-emerald-600" id="stat-sales-today">$0.00</h3>
+                                </div>
                             </div>
                         </div>
                         <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
                             <div class="flex items-center gap-4">
-                                <div class="w-12 h-12 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xl"><i class="fa-solid fa-calendar-check"></i></div>
-                                <div><p class="text-gray-400 text-xs font-bold uppercase">Ventas Mes</p><h3 class="text-2xl font-bold text-indigo-600" id="stat-sales-month">$0.00</h3></div>
+                                <div
+                                    class="w-12 h-12 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-xl">
+                                    <i class="fa-solid fa-calendar-check"></i>
+                                </div>
+                                <div>
+                                    <p class="text-gray-400 text-xs font-bold uppercase">Ventas Mes</p>
+                                    <h3 class="text-2xl font-bold text-indigo-600" id="stat-sales-month">$0.00</h3>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    
+
                     <!-- Finance Chart Area -->
                     <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 mb-8">
-                        <h3 class="font-bold text-gray-700 mb-4 text-sm uppercase tracking-wide border-b pb-2">📊 Rendimiento Semanal (Ventas)</h3>
+                        <h3 class="font-bold text-gray-700 mb-4 text-sm uppercase tracking-wide border-b pb-2">📊
+                            Rendimiento Semanal (Ventas)</h3>
                         <div class="bar-container w-full" id="finance-chart">
                             <!-- Bars will be injected here -->
-                            <div class="w-full text-center text-gray-400 text-xs pt-10">Calculando datos financieros...</div>
+                            <div class="w-full text-center text-gray-400 text-xs pt-10">Calculando datos financieros...
+                            </div>
                         </div>
-                        <div class="flex justify-between mt-2 text-xs text-gray-400 font-medium px-1" id="finance-labels">
+                        <div class="flex justify-between mt-2 text-xs text-gray-400 font-medium px-1"
+                            id="finance-labels">
                             <!-- Labels -->
                         </div>
                     </div>
 
                     <!-- CTA Subscription -->
-                    <div id="sub-pay-container" class="hidden bg-gradient-to-r from-gray-900 to-gray-800 rounded-2xl p-6 text-white flex flex-col md:flex-row justify-between items-center gap-4 shadow-xl">
+                    <div id="sub-pay-container"
+                        class="hidden bg-gradient-to-r from-gray-900 to-gray-800 rounded-2xl p-6 text-white flex flex-col md:flex-row justify-between items-center gap-4 shadow-xl">
                         <div>
                             <h3 class="font-bold text-lg mb-1">🚀 Desbloquea todo el potencial</h3>
-                            <p class="text-gray-300 text-sm">Tu prueba gratuita está activa. Pásate a PRO por solo $100/mes.</p>
+                            <p class="text-gray-300 text-sm">Tu prueba gratuita está activa. Pásate a PRO por solo
+                                $100/mes.</p>
                         </div>
-                        <button onclick="openSubModal()" class="bg-white text-gray-900 px-6 py-2.5 rounded-full font-bold text-sm hover:bg-gray-100 transition shadow-lg flex items-center gap-2">
+                        <button onclick="openSubModal()"
+                            class="bg-white text-gray-900 px-6 py-2.5 rounded-full font-bold text-sm hover:bg-gray-100 transition shadow-lg flex items-center gap-2">
                             <i class="fa-solid fa-crown text-yellow-500"></i> Activar PRO
                         </button>
                     </div>
@@ -257,16 +452,20 @@
                 <!-- VIEW: ORDERS MONITOR (MODIFICADO) -->
                 <div id="view-orders" class="view-section hidden fade-enter">
                     <h2 class="text-2xl font-bold text-gray-800 mb-6">Gestión de Pedidos</h2>
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col h-[calc(100vh-150px)]">
+                    <div
+                        class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col h-[calc(100vh-150px)]">
                         <div class="p-4 border-b border-gray-100 flex gap-2 overflow-x-auto bg-gray-50">
-                            <button onclick="renderOrdersTable('active')" id="btn-monitor-active" class="filter-btn active px-4 py-2 text-xs font-bold rounded-full border border-blue-200 text-blue-700">
+                            <button onclick="renderOrdersTable('active')" id="btn-monitor-active"
+                                class="filter-btn active px-4 py-2 text-xs font-bold rounded-full border border-blue-200 text-blue-700">
                                 <i class="fa-solid fa-pulse mr-1"></i> Monitor Activo
                             </button>
-                            <button onclick="renderOrdersTable('history')" id="btn-monitor-history" class="filter-btn px-4 py-2 text-xs font-bold rounded-full bg-white hover:bg-gray-100 text-gray-500 border border-gray-200">
+                            <button onclick="renderOrdersTable('history')" id="btn-monitor-history"
+                                class="filter-btn px-4 py-2 text-xs font-bold rounded-full bg-white hover:bg-gray-100 text-gray-500 border border-gray-200">
                                 <i class="fa-solid fa-clock-rotate-left mr-1"></i> Historial Semanal
                             </button>
                         </div>
-                        <div class="flex-1 overflow-y-auto p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="orders-list-container">
+                        <div class="flex-1 overflow-y-auto p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
+                            id="orders-list-container">
                             <div class="text-center text-gray-400 mt-10 w-full col-span-full">Cargando pedidos...</div>
                         </div>
                     </div>
@@ -280,7 +479,9 @@
                             <p class="text-gray-500 text-sm">Organiza tus productos, categorías y complementos.</p>
                         </div>
                         <div class="flex gap-2">
-                            <button onclick="openProductModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg font-bold text-sm shadow-md transition flex items-center gap-2"><i class="fa-solid fa-plus"></i> Nuevo Producto</button>
+                            <button onclick="openProductModal()"
+                                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg font-bold text-sm shadow-md transition flex items-center gap-2"><i
+                                    class="fa-solid fa-plus"></i> Nuevo Producto</button>
                         </div>
                     </div>
 
@@ -289,45 +490,78 @@
                         <div class="space-y-6">
                             <!-- Categories Card -->
                             <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
-                                <h3 class="font-bold text-gray-700 mb-4 text-sm uppercase tracking-wide border-b pb-2">📂 Categorías (Editar Nombres)</h3>
+                                <h3 class="font-bold text-gray-700 mb-4 text-sm uppercase tracking-wide border-b pb-2">
+                                    📂 Categorías (Editar Nombres)</h3>
                                 <div class="space-y-3">
-                                    <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-red-500"></div><input type="text" id="cat-title-promos" class="w-full text-sm border-none bg-transparent focus:ring-2 focus:ring-blue-100 rounded px-2 font-medium text-gray-700 hover:bg-gray-50" placeholder="Nombre Cat 1"></div>
-                                    <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-yellow-500"></div><input type="text" id="cat-title-especiales" class="w-full text-sm border-none bg-transparent focus:ring-2 focus:ring-blue-100 rounded px-2 font-medium text-gray-700 hover:bg-gray-50" placeholder="Nombre Cat 2"></div>
-                                    <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-green-500"></div><input type="text" id="cat-title-clasicos" class="w-full text-sm border-none bg-transparent focus:ring-2 focus:ring-blue-100 rounded px-2 font-medium text-gray-700 hover:bg-gray-50" placeholder="Nombre Cat 3"></div>
-                                    <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-blue-500"></div><input type="text" id="cat-title-extras" class="w-full text-sm border-none bg-transparent focus:ring-2 focus:ring-blue-100 rounded px-2 font-medium text-gray-700 hover:bg-gray-50" placeholder="Nombre Cat 4"></div>
-                                    <p class="text-[10px] text-gray-400 mt-2">* Edita los nombres y guarda cambios para actualizar.</p>
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-3 h-3 rounded-full bg-red-500"></div><input type="text"
+                                            id="cat-title-promos"
+                                            class="w-full text-sm border-none bg-transparent focus:ring-2 focus:ring-blue-100 rounded px-2 font-medium text-gray-700 hover:bg-gray-50"
+                                            placeholder="Nombre Cat 1">
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-3 h-3 rounded-full bg-yellow-500"></div><input type="text"
+                                            id="cat-title-especiales"
+                                            class="w-full text-sm border-none bg-transparent focus:ring-2 focus:ring-blue-100 rounded px-2 font-medium text-gray-700 hover:bg-gray-50"
+                                            placeholder="Nombre Cat 2">
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-3 h-3 rounded-full bg-green-500"></div><input type="text"
+                                            id="cat-title-clasicos"
+                                            class="w-full text-sm border-none bg-transparent focus:ring-2 focus:ring-blue-100 rounded px-2 font-medium text-gray-700 hover:bg-gray-50"
+                                            placeholder="Nombre Cat 3">
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-3 h-3 rounded-full bg-blue-500"></div><input type="text"
+                                            id="cat-title-extras"
+                                            class="w-full text-sm border-none bg-transparent focus:ring-2 focus:ring-blue-100 rounded px-2 font-medium text-gray-700 hover:bg-gray-50"
+                                            placeholder="Nombre Cat 4">
+                                    </div>
+                                    <p class="text-[10px] text-gray-400 mt-2">* Edita los nombres y guarda cambios para
+                                        actualizar.</p>
                                 </div>
                             </div>
 
                             <!-- Groups Card -->
                             <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
                                 <div class="flex justify-between items-center mb-4 border-b pb-2">
-                                    <h3 class="font-bold text-gray-700 text-sm uppercase tracking-wide">🧩 Complementos</h3>
-                                    <button onclick="openGroupCreator()" class="text-xs bg-blue-50 hover:bg-blue-100 text-blue-600 px-2 py-1 rounded font-bold transition flex items-center gap-1"><i class="fa-solid fa-plus"></i> Nuevo</button>
+                                    <h3 class="font-bold text-gray-700 text-sm uppercase tracking-wide">🧩 Complementos
+                                    </h3>
+                                    <button onclick="openGroupCreator()"
+                                        class="text-xs bg-blue-50 hover:bg-blue-100 text-blue-600 px-2 py-1 rounded font-bold transition flex items-center gap-1"><i
+                                            class="fa-solid fa-plus"></i> Nuevo</button>
                                 </div>
-                                
+
                                 <!-- CREATOR FORM -->
-                                <div id="group-creator" class="hidden bg-gray-50 p-3 rounded-lg mb-3 border border-gray-200 animate-fade-in-up">
+                                <div id="group-creator"
+                                    class="hidden bg-gray-50 p-3 rounded-lg mb-3 border border-gray-200 animate-fade-in-up">
                                     <div class="flex justify-between items-center mb-2">
                                         <span class="text-xs font-bold text-gray-500 uppercase">Crear Grupo</span>
-                                        <button onclick="closeGroupCreator()" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-times"></i></button>
+                                        <button onclick="closeGroupCreator()"
+                                            class="text-gray-400 hover:text-gray-600"><i
+                                                class="fa-solid fa-times"></i></button>
                                     </div>
-                                    
-                                    <input type="text" id="new-group-name" placeholder="Nombre (ej: Elige tus Salsas)" class="w-full text-sm border border-gray-300 rounded p-2 mb-2 font-bold text-gray-700 outline-none focus:border-blue-500">
-                                    
+
+                                    <input type="text" id="new-group-name" placeholder="Nombre (ej: Elige tus Salsas)"
+                                        class="w-full text-sm border border-gray-300 rounded p-2 mb-2 font-bold text-gray-700 outline-none focus:border-blue-500">
+
                                     <!-- Dynamic Options List -->
                                     <div class="mb-2">
-                                        <label class="text-[10px] font-bold text-gray-400 uppercase mb-1 block">Opciones (Nombre - Precio Extra)</label>
-                                        <div id="new-group-options-list" class="space-y-2 max-h-40 overflow-y-auto pr-1">
+                                        <label class="text-[10px] font-bold text-gray-400 uppercase mb-1 block">Opciones
+                                            (Nombre - Precio Extra)</label>
+                                        <div id="new-group-options-list"
+                                            class="space-y-2 max-h-40 overflow-y-auto pr-1">
                                             <!-- Rows added via JS -->
                                         </div>
                                     </div>
 
-                                    <button onclick="addOptionRow()" class="w-full bg-white border border-dashed border-blue-300 text-blue-500 text-xs py-1.5 rounded mb-3 hover:bg-blue-50 transition font-bold flex items-center justify-center gap-1">
+                                    <button onclick="addOptionRow()"
+                                        class="w-full bg-white border border-dashed border-blue-300 text-blue-500 text-xs py-1.5 rounded mb-3 hover:bg-blue-50 transition font-bold flex items-center justify-center gap-1">
                                         <i class="fa-solid fa-plus-circle"></i> Agregar Opción
                                     </button>
 
-                                    <button onclick="saveGroup()" class="w-full bg-gray-900 text-white text-xs py-2 rounded font-bold hover:bg-black transition shadow-sm">
+                                    <button onclick="saveGroup()"
+                                        class="w-full bg-gray-900 text-white text-xs py-2 rounded font-bold hover:bg-black transition shadow-sm">
                                         Guardar Grupo
                                     </button>
                                 </div>
@@ -343,10 +577,14 @@
                             <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 h-full">
                                 <!-- Tabs for Products -->
                                 <div class="flex gap-2 overflow-x-auto border-b border-gray-100 pb-1 mb-4 no-scrollbar">
-                                    <button onclick="renderMenuGrid('promos')" id="btn-cat-promos" class="px-4 py-2 text-sm font-bold text-blue-600 border-b-2 border-blue-600 whitespace-nowrap">Promos</button>
-                                    <button onclick="renderMenuGrid('especiales')" id="btn-cat-especiales" class="px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-800 whitespace-nowrap">Especiales</button>
-                                    <button onclick="renderMenuGrid('clasicos')" id="btn-cat-clasicos" class="px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-800 whitespace-nowrap">Clásicos</button>
-                                    <button onclick="renderMenuGrid('extras')" id="btn-cat-extras" class="px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-800 whitespace-nowrap">Extras</button>
+                                    <button onclick="renderMenuGrid('promos')" id="btn-cat-promos"
+                                        class="px-4 py-2 text-sm font-bold text-blue-600 border-b-2 border-blue-600 whitespace-nowrap">Promos</button>
+                                    <button onclick="renderMenuGrid('especiales')" id="btn-cat-especiales"
+                                        class="px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-800 whitespace-nowrap">Especiales</button>
+                                    <button onclick="renderMenuGrid('clasicos')" id="btn-cat-clasicos"
+                                        class="px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-800 whitespace-nowrap">Clásicos</button>
+                                    <button onclick="renderMenuGrid('extras')" id="btn-cat-extras"
+                                        class="px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-800 whitespace-nowrap">Extras</button>
                                 </div>
 
                                 <div id="menu-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -360,24 +598,44 @@
                 <!-- VIEW: MARKETING (QR) -->
                 <div id="view-qr" class="view-section hidden fade-enter">
                     <h2 class="text-2xl font-bold text-gray-800 mb-6">Marketing y QR</h2>
-                    
-                    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-8 flex flex-col md:flex-row gap-8 items-center">
+
+                    <div
+                        class="bg-white rounded-xl shadow-sm border border-gray-100 p-8 flex flex-col md:flex-row gap-8 items-center">
                         <div class="flex-1 space-y-4">
                             <h3 class="font-bold text-lg text-gray-700">Diseño de Material POP</h3>
-                            <div class="grid grid-cols-3 gap-2">
-                                <button onclick="renderQR('simple')" class="p-2 border rounded hover:bg-gray-50 text-xs font-bold">Minimalista</button>
-                                <button onclick="renderQR('card')" class="p-2 border border-blue-200 bg-blue-50 text-blue-700 rounded text-xs font-bold">Tarjeta</button>
-                                <button onclick="renderQR('poster')" class="p-2 border border-gray-800 bg-gray-900 text-white rounded text-xs font-bold">Poster</button>
+                            <div class="grid grid-cols-2 gap-2">
+                                <button onclick="renderQR('simple')"
+                                    class="p-2 border rounded hover:bg-gray-50 text-xs font-bold text-gray-600"><i
+                                        class="fa-solid fa-qrcode"></i> Básico</button>
+                                <button onclick="renderQR('card')"
+                                    class="p-2 border border-blue-200 bg-blue-50 text-blue-700 rounded text-xs font-bold"><i
+                                        class="fa-solid fa-address-card"></i> Tarjeta</button>
+                                <button onclick="renderQR('poster')"
+                                    class="p-2 border border-gray-800 bg-gray-900 text-white rounded text-xs font-bold"><i
+                                        class="fa-solid fa-poster"></i> Poster</button>
+                                <button onclick="renderQR('stand')"
+                                    class="p-2 border border-orange-200 bg-orange-50 text-orange-700 rounded text-xs font-bold"><i
+                                        class="fa-solid fa-utensils"></i> Mesa (Stand)</button>
+                                <button onclick="renderQR('story')"
+                                    class="p-2 border border-pink-200 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded text-xs font-bold"><i
+                                        class="fa-brands fa-instagram"></i> Instagram</button>
+                                <button onclick="renderQR('elegant')"
+                                    class="p-2 border border-yellow-600 bg-black text-yellow-400 rounded text-xs font-bold"><i
+                                        class="fa-solid fa-crown"></i> Elegante</button>
                             </div>
 
                             <div class="bg-gray-50 p-3 rounded text-xs break-all border">
-                                <span class="font-bold">Tu Link:</span> <span id="qr-link-text" class="text-blue-600">...</span>
+                                <span class="font-bold">Tu Link:</span> <span id="qr-link-text"
+                                    class="text-blue-600">...</span>
                             </div>
 
-                            <button onclick="window.print()" class="bg-gray-800 text-white px-6 py-3 rounded-lg font-bold w-full hover:bg-gray-700 transition"><i class="fa-solid fa-print mr-2"></i> Imprimir Diseño</button>
+                            <button onclick="window.print()"
+                                class="bg-gray-800 text-white px-6 py-3 rounded-lg font-bold w-full hover:bg-gray-700 transition"><i
+                                    class="fa-solid fa-print mr-2"></i> Imprimir Diseño</button>
                         </div>
 
-                        <div class="flex-1 flex justify-center items-center bg-gray-100 rounded-xl p-6 border-2 border-dashed border-gray-300 w-full min-h-[350px]">
+                        <div
+                            class="flex-1 flex justify-center items-center bg-gray-100 rounded-xl p-6 border-2 border-dashed border-gray-300 w-full min-h-[350px]">
                             <div id="qr-print-area"></div>
                         </div>
                     </div>
@@ -388,23 +646,32 @@
                             <h3 class="font-bold text-gray-700 flex items-center gap-2">
                                 <i class="fa-solid fa-share-nodes text-pink-500"></i> Generador de Redes Sociales (IA)
                             </h3>
-                            <span class="text-[10px] bg-pink-100 text-pink-600 px-2 py-1 rounded-full font-bold">Beta</span>
+                            <span
+                                class="text-[10px] bg-pink-100 text-pink-600 px-2 py-1 rounded-full font-bold">Beta</span>
                         </div>
-                        <p class="text-xs text-gray-500 mb-4">Crea copys irresistibles para tus redes sociales en segundos usando Inteligencia Artificial real.</p>
+                        <p class="text-xs text-gray-500 mb-4">Crea copys irresistibles para tus redes sociales en
+                            segundos usando Inteligencia Artificial real.</p>
                         <div class="flex gap-4 mb-4">
-                            <button onclick="generateSocialPost('promo')" class="flex-1 bg-pink-50 text-pink-600 border border-pink-100 py-3 rounded-lg text-xs font-bold hover:bg-pink-100 transition flex justify-center items-center gap-2">
+                            <button onclick="generateSocialPost('promo')"
+                                class="flex-1 bg-pink-50 text-pink-600 border border-pink-100 py-3 rounded-lg text-xs font-bold hover:bg-pink-100 transition flex justify-center items-center gap-2">
                                 <i class="fa-solid fa-fire"></i> Promo Flash
                             </button>
-                            <button onclick="generateSocialPost('engaging')" class="flex-1 bg-purple-50 text-purple-600 border border-purple-100 py-3 rounded-lg text-xs font-bold hover:bg-purple-100 transition flex justify-center items-center gap-2">
+                            <button onclick="generateSocialPost('engaging')"
+                                class="flex-1 bg-purple-50 text-purple-600 border border-purple-100 py-3 rounded-lg text-xs font-bold hover:bg-purple-100 transition flex justify-center items-center gap-2">
                                 <i class="fa-solid fa-comments"></i> Pregunta Viral
                             </button>
-                            <button onclick="generateSocialPost('funny')" class="flex-1 bg-orange-50 text-orange-600 border border-orange-100 py-3 rounded-lg text-xs font-bold hover:bg-orange-100 transition flex justify-center items-center gap-2">
+                            <button onclick="generateSocialPost('funny')"
+                                class="flex-1 bg-orange-50 text-orange-600 border border-orange-100 py-3 rounded-lg text-xs font-bold hover:bg-orange-100 transition flex justify-center items-center gap-2">
                                 <i class="fa-solid fa-face-laugh-beam"></i> Divertido
                             </button>
                         </div>
                         <div class="relative">
-                            <textarea id="ai-social-result" class="w-full border border-gray-200 rounded-lg p-3 text-sm text-gray-600 h-28 focus:ring-2 focus:ring-pink-200 outline-none transition bg-gray-50" placeholder="El resultado mágico de la IA aparecerá aquí..."></textarea>
-                            <button onclick="copyToClipboard('ai-social-result')" class="absolute bottom-3 right-3 text-gray-400 hover:text-gray-600 text-xs bg-white px-2 py-1 rounded shadow-sm border"><i class="fa-regular fa-copy"></i> Copiar</button>
+                            <textarea id="ai-social-result"
+                                class="w-full border border-gray-200 rounded-lg p-3 text-sm text-gray-600 h-28 focus:ring-2 focus:ring-pink-200 outline-none transition bg-gray-50"
+                                placeholder="El resultado mágico de la IA aparecerá aquí..."></textarea>
+                            <button onclick="copyToClipboard('ai-social-result')"
+                                class="absolute bottom-3 right-3 text-gray-400 hover:text-gray-600 text-xs bg-white px-2 py-1 rounded shadow-sm border"><i
+                                    class="fa-regular fa-copy"></i> Copiar</button>
                         </div>
                     </div>
                 </div>
@@ -412,90 +679,156 @@
                 <!-- VIEW: SETTINGS (COMPLETO) -->
                 <div id="view-settings" class="view-section hidden fade-enter">
                     <h2 class="text-2xl font-bold text-gray-800 mb-6">Configuración de Tienda</h2>
-                    
+
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <!-- Card 1: Basic Info -->
                         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                            <h3 class="font-bold text-gray-700 mb-4 flex items-center gap-2"><i class="fa-solid fa-store text-blue-500"></i> Datos Generales</h3>
+                            <h3 class="font-bold text-gray-700 mb-4 flex items-center gap-2"><i
+                                    class="fa-solid fa-store text-blue-500"></i> Datos Generales</h3>
                             <div class="space-y-4">
-                                <div><label class="text-xs font-bold text-gray-500">Nombre del Negocio</label><input type="text" id="conf-name" class="w-full border-b border-gray-300 py-1 focus:border-blue-500 outline-none text-sm font-medium"></div>
+                                <div><label class="text-xs font-bold text-gray-500">Nombre del Negocio</label><input
+                                        type="text" id="conf-name"
+                                        class="w-full border-b border-gray-300 py-1 focus:border-blue-500 outline-none text-sm font-medium">
+                                </div>
                                 <div>
                                     <label class="text-xs font-bold text-gray-500">Giro (IA)</label>
-                                    <select id="conf-type" class="w-full border-b border-gray-300 py-1 bg-transparent text-sm">
-                                        <option value="Sushi">Sushi</option><option value="Tacos">Tacos</option><option value="Pizza">Pizza</option><option value="Hamburguesas">Burgers</option><option value="Cafeteria">Café</option><option value="Comida General">Otro</option>
+                                    <select id="conf-type"
+                                        class="w-full border-b border-gray-300 py-1 bg-transparent text-sm">
+                                        <option value="Sushi">Sushi</option>
+                                        <option value="Tacos">Tacos</option>
+                                        <option value="Pizza">Pizza</option>
+                                        <option value="Hamburguesas">Burgers</option>
+                                        <option value="Cafeteria">Café</option>
+                                        <option value="Comida General">Otro</option>
                                     </select>
                                 </div>
-                                <div><label class="text-xs font-bold text-gray-500">WhatsApp Pedidos</label><input type="text" id="conf-whatsapp" class="w-full border-b border-gray-300 py-1 focus:border-blue-500 outline-none text-sm font-medium"></div>
+                                <div><label class="text-xs font-bold text-gray-500">WhatsApp Pedidos</label><input
+                                        type="text" id="conf-whatsapp"
+                                        class="w-full border-b border-gray-300 py-1 focus:border-blue-500 outline-none text-sm font-medium">
+                                </div>
                             </div>
                         </div>
 
                         <!-- Card 2: Location & Hours -->
                         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                            <h3 class="font-bold text-gray-700 mb-4 flex items-center gap-2"><i class="fa-solid fa-map-location-dot text-green-500"></i> Ubicación y Horario</h3>
+                            <h3 class="font-bold text-gray-700 mb-4 flex items-center gap-2"><i
+                                    class="fa-solid fa-map-location-dot text-green-500"></i> Ubicación y Horario</h3>
                             <div class="space-y-4">
                                 <div>
                                     <label class="text-xs font-bold text-gray-500">Dirección</label>
-                                    <input type="text" id="conf-address" class="w-full border-b border-gray-300 py-1 text-sm">
+                                    <input type="text" id="conf-address"
+                                        class="w-full border-b border-gray-300 py-1 text-sm">
                                 </div>
-                                <div class="bg-green-50 p-3 rounded-lg border border-green-100">
-                                    <label class="text-xs font-bold text-green-700">Link Google Maps (Autodetectar)</label>
-                                    <div class="flex gap-2 mt-1">
-                                        <input type="text" id="map-link-input" placeholder="https://maps.app.goo.gl/..." class="w-full text-xs p-1 border rounded">
-                                        <button onclick="parseMapLink()" class="bg-green-600 text-white px-3 rounded text-xs font-bold">Buscar</button>
+                                <div class="bg-blue-50 p-3 rounded-lg border border-blue-100">
+                                    <label class="text-xs font-bold text-blue-700">Ubicación Exacta (Mapa)</label>
+                                    <div class="flex gap-2 mt-2">
+                                        <button onclick="openMapModal()"
+                                            class="w-full bg-blue-600 text-white px-3 py-2 rounded-lg text-xs font-bold hover:bg-blue-700 transition flex items-center justify-center gap-2">
+                                            <i class="fa-solid fa-map-location-dot"></i> Seleccionar en Mapa
+                                        </button>
                                     </div>
+                                    <p class="text-[10px] text-blue-500 mt-1 leading-tight" id="location-coords-text">
+                                        <i class="fa-solid fa-info-circle"></i> Define dónde está tu tienda para
+                                        calcular envíos.
+                                    </p>
                                 </div>
                                 <input type="hidden" id="conf-lat"><input type="hidden" id="conf-lng">
                                 <div class="flex gap-4 items-end">
-                                    <div class="flex-1"><label class="text-xs font-bold text-gray-500">Abre (Hora)</label><input type="number" id="conf-open" class="w-full border-b border-gray-300 py-1 text-sm"></div>
-                                    <div class="flex-1"><label class="text-xs font-bold text-gray-500">Cierra (Hora)</label><input type="number" id="conf-close" class="w-full border-b border-gray-300 py-1 text-sm"></div>
-                                    <button onclick="optimizeHoursAI()" class="bg-indigo-50 text-indigo-600 p-2 rounded hover:bg-indigo-100 transition text-xs font-bold" title="Optimizar con IA"><i class="fa-solid fa-wand-magic-sparkles"></i></button>
+                                    <div class="flex-1"><label class="text-xs font-bold text-gray-500">Abre
+                                            (Hora)</label><input type="number" id="conf-open"
+                                            class="w-full border-b border-gray-300 py-1 text-sm"></div>
+                                    <div class="flex-1"><label class="text-xs font-bold text-gray-500">Cierra
+                                            (Hora)</label><input type="number" id="conf-close"
+                                            class="w-full border-b border-gray-300 py-1 text-sm"></div>
+                                    <button onclick="optimizeHoursAI()"
+                                        class="bg-indigo-50 text-indigo-600 p-2 rounded hover:bg-indigo-100 transition text-xs font-bold"
+                                        title="Optimizar con IA"><i
+                                            class="fa-solid fa-wand-magic-sparkles"></i></button>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Card: Bank Info (NUEVO) -->
                         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                            <h3 class="font-bold text-gray-700 mb-4 flex items-center gap-2"><i class="fa-solid fa-building-columns text-emerald-600"></i> Datos Bancarios</h3>
+                            <h3 class="font-bold text-gray-700 mb-4 flex items-center gap-2"><i
+                                    class="fa-solid fa-building-columns text-emerald-600"></i> Datos Bancarios</h3>
                             <div class="space-y-4">
-                                <div><label class="text-xs font-bold text-gray-500">Banco</label><input type="text" id="conf-bank-name" placeholder="Ej: BBVA" class="w-full border-b border-gray-300 py-1 focus:border-blue-500 outline-none text-sm font-medium"></div>
-                                <div><label class="text-xs font-bold text-gray-500">CLABE / Cuenta</label><input type="text" id="conf-bank-clabe" placeholder="012345678901234567" class="w-full border-b border-gray-300 py-1 focus:border-blue-500 outline-none text-sm font-medium"></div>
-                                <div><label class="text-xs font-bold text-gray-500">Beneficiario</label><input type="text" id="conf-bank-owner" placeholder="Nombre del Titular" class="w-full border-b border-gray-300 py-1 focus:border-blue-500 outline-none text-sm font-medium"></div>
-                                <p class="text-[10px] text-gray-400 leading-tight">Estos datos aparecerán al cliente al elegir "Transferencia".</p>
+                                <div><label class="text-xs font-bold text-gray-500">Banco</label><input type="text"
+                                        id="conf-bank-name" placeholder="Ej: BBVA"
+                                        class="w-full border-b border-gray-300 py-1 focus:border-blue-500 outline-none text-sm font-medium">
+                                </div>
+                                <div><label class="text-xs font-bold text-gray-500">CLABE / Cuenta</label><input
+                                        type="text" id="conf-bank-clabe" placeholder="012345678901234567"
+                                        class="w-full border-b border-gray-300 py-1 focus:border-blue-500 outline-none text-sm font-medium">
+                                </div>
+                                <div><label class="text-xs font-bold text-gray-500">Beneficiario</label><input
+                                        type="text" id="conf-bank-owner" placeholder="Nombre del Titular"
+                                        class="w-full border-b border-gray-300 py-1 focus:border-blue-500 outline-none text-sm font-medium">
+                                </div>
+                                <p class="text-[10px] text-gray-400 leading-tight">Estos datos aparecerán al cliente al
+                                    elegir "Transferencia".</p>
                             </div>
                         </div>
 
                         <!-- NUEVA TARJETA: ALTA DEMANDA -->
-                        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 md:col-span-2 border-l-4 border-orange-500">
+                        <div
+                            class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 md:col-span-2 border-l-4 border-orange-500">
                             <h3 class="font-bold text-gray-700 mb-4 flex items-center gap-2">
                                 <i class="fa-solid fa-fire text-orange-500"></i> Estado del Servicio
                             </h3>
+                            <div class="flex items-center justify-between mb-4 pb-4 border-b border-orange-200">
+                                <div>
+                                    <p class="font-bold text-sm text-gray-800">Estado de Tienda</p>
+                                    <p class="text-xs text-gray-500">Apaga para cerrar la tienda y bloquear pedidos.</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="conf-is-open" class="sr-only peer" checked>
+                                    <div
+                                        class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-green-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600">
+                                    </div>
+                                    <span class="ml-3 text-xs font-bold text-gray-700"
+                                        id="conf-is-open-label">Abierto</span>
+                                </label>
+                            </div>
+
                             <div class="flex items-center justify-between">
                                 <div>
                                     <p class="font-bold text-sm text-gray-800">Modo Alta Demanda</p>
-                                    <p class="text-xs text-gray-500">Activa esto cuando tengas muchos pedidos. El bot avisará a los clientes del tiempo de espera.</p>
+                                    <p class="text-xs text-gray-500">Activa esto cuando tengas muchos pedidos. El bot
+                                        avisará a los clientes del tiempo de espera.</p>
                                 </div>
                                 <label class="relative inline-flex items-center cursor-pointer">
                                     <input type="checkbox" id="conf-high-demand-active" class="sr-only peer">
-                                    <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-600"></div>
+                                    <div
+                                        class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-600">
+                                    </div>
                                 </label>
                             </div>
-                            <div id="high-demand-input-container" class="mt-4 hidden bg-orange-50 p-3 rounded-lg border border-orange-100">
-                                <label class="block text-xs font-bold text-orange-800 uppercase mb-1">Tiempo de Espera Estimado</label>
-                                <input type="text" id="conf-high-demand-time" placeholder="Ej: 45-60 minutos" class="w-full bg-white border border-orange-200 rounded px-3 py-2 focus:border-orange-500 outline-none text-sm font-bold text-gray-700">
-                                <p class="text-[10px] text-orange-600 mt-1"><i class="fa-solid fa-info-circle"></i> Este mensaje se mostrará a los clientes antes de pedir.</p>
+                            <div id="high-demand-input-container"
+                                class="mt-4 hidden bg-orange-50 p-3 rounded-lg border border-orange-100">
+                                <label class="block text-xs font-bold text-orange-800 uppercase mb-1">Tiempo de Espera
+                                    Estimado</label>
+                                <input type="text" id="conf-high-demand-time" placeholder="Ej: 45-60 minutos"
+                                    class="w-full bg-white border border-orange-200 rounded px-3 py-2 focus:border-orange-500 outline-none text-sm font-bold text-gray-700">
+                                <p class="text-[10px] text-orange-600 mt-1"><i class="fa-solid fa-info-circle"></i> Este
+                                    mensaje se mostrará a los clientes antes de pedir.</p>
                             </div>
                         </div>
 
                         <!-- Card 3: Branding -->
                         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 md:col-span-2">
-                            <h3 class="font-bold text-gray-700 mb-4 flex items-center gap-2"><i class="fa-solid fa-image text-purple-500"></i> Imagen de Portada</h3>
+                            <h3 class="font-bold text-gray-700 mb-4 flex items-center gap-2"><i
+                                    class="fa-solid fa-image text-purple-500"></i> Imagen de Portada</h3>
                             <div class="flex items-center gap-4">
                                 <div class="w-32 h-20 bg-gray-100 rounded-lg overflow-hidden border relative group">
                                     <img id="hero-preview" src="" class="w-full h-full object-cover">
-                                    <div class="absolute inset-0 bg-black/30 hidden group-hover:flex items-center justify-center text-white text-xs">Cambiar</div>
+                                    <div
+                                        class="absolute inset-0 bg-black/30 hidden group-hover:flex items-center justify-center text-white text-xs">
+                                        Cambiar</div>
                                 </div>
                                 <div class="flex-1">
-                                    <input type="file" onchange="handleHeroUpload(this)" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100">
+                                    <input type="file" onchange="handleHeroUpload(this)"
+                                        class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100">
                                     <input type="hidden" id="conf-hero">
                                 </div>
                             </div>
@@ -503,35 +836,80 @@
                     </div>
                 </div>
             </div>
-            
+
             <!-- SAVE FLOATING BUTTON -->
-            <button onclick="saveChanges()" class="fixed bottom-6 right-6 bg-gray-900 text-white px-6 py-4 rounded-full font-bold shadow-2xl hover:bg-black transition transform hover:scale-105 flex items-center gap-2 z-40">
+            <button onclick="saveChanges()"
+                class="fixed bottom-6 right-6 bg-gray-900 text-white px-6 py-4 rounded-full font-bold shadow-2xl hover:bg-black transition transform hover:scale-105 flex items-center gap-2 z-40">
                 <i class="fa-solid fa-floppy-disk"></i> Guardar Cambios
             </button>
         </main>
     </div>
 
+    <!-- MAP MODAL -->
+    <div id="map-modal"
+        class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div
+            class="bg-white rounded-2xl w-full max-w-2xl h-[90vh] md:h-[600px] shadow-2xl flex flex-col overflow-hidden animate-fade-in-up relative">
+            <div
+                class="bg-gradient-to-r from-blue-600 to-indigo-700 p-4 flex justify-between items-center text-white shrink-0">
+                <div>
+                    <h3 class="font-bold text-lg"><i class="fa-solid fa-location-dot mr-2"></i>Ubica tu Negocio</h3>
+                    <p class="text-xs text-blue-100">Arrastra el pin rojo a la entrada de tu tienda.</p>
+                </div>
+                <button onclick="closeMapModal()"
+                    class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center hover:bg-white/30 transition">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="relative flex-1 bg-gray-100">
+                <div id="map-picker" class="w-full h-full z-0"></div>
+                <button onclick="detectAdminLocation()"
+                    class="absolute bottom-4 right-4 z-[9999] bg-white text-gray-700 p-3 rounded-full shadow-lg hover:bg-gray-50 hover:text-blue-600 transition border border-gray-200"
+                    title="Usar mi ubicación actual">
+                    <i class="fa-solid fa-location-crosshairs text-xl"></i>
+                </button>
+            </div>
+
+            <div
+                class="p-4 bg-white border-t border-gray-200 shrink-0 flex flex-col md:flex-row gap-4 items-center justify-between">
+                <div class="text-xs text-gray-500 flex-1">
+                    <p class="font-bold text-gray-800" id="map-selected-address">...</p>
+                    <p>Lat: <span id="map-lat">0</span>, Lng: <span id="map-lng">0</span></p>
+                </div>
+                <button onclick="confirmMapLocation()"
+                    class="w-full md:w-auto bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-green-500/30 transition transform hover:-translate-y-0.5">
+                    <i class="fa-solid fa-check-circle mr-2"></i> Confirmar Ubicación
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Modals (Producto, Suscripción) -->
-    
+
     <!-- ORDER DETAIL MODAL -->
-    <div id="order-detail-modal" class="fixed inset-0 z-50 hidden bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col h-full max-h-[85vh] animate-fade-in-up">
+    <div id="order-detail-modal"
+        class="fixed inset-0 z-50 hidden bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <div
+            class="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col h-full max-h-[85vh] animate-fade-in-up">
             <!-- Modal Header -->
-            <div class="bg-gradient-to-r from-gray-900 to-gray-800 px-6 py-4 border-b border-gray-700 flex justify-between items-center text-white">
+            <div
+                class="bg-gradient-to-r from-gray-900 to-gray-800 px-6 py-4 border-b border-gray-700 flex justify-between items-center text-white">
                 <div>
                     <h3 class="font-bold text-xl flex items-center gap-2">
                         <i class="fa-solid fa-receipt"></i> <span id="detail-order-id">Pedido #0</span>
                     </h3>
                     <p class="text-xs text-gray-400" id="detail-order-date">...</p>
                 </div>
-                <button onclick="document.getElementById('order-detail-modal').classList.add('hidden')" class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition">
+                <button onclick="document.getElementById('order-detail-modal').classList.add('hidden')"
+                    class="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
 
             <!-- Modal Content -->
             <div class="flex-1 overflow-y-auto p-6 bg-gray-50 space-y-6">
-                
+
                 <!-- Status & Payment -->
                 <div class="flex gap-4">
                     <div class="flex-1 bg-white p-3 rounded-xl border border-gray-200 shadow-sm">
@@ -546,17 +924,22 @@
 
                 <!-- Customer Info -->
                 <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-                    <h4 class="font-bold text-gray-700 text-sm mb-3 border-b pb-2 flex items-center gap-2"><i class="fa-solid fa-user text-blue-500"></i> Cliente</h4>
+                    <h4 class="font-bold text-gray-700 text-sm mb-3 border-b pb-2 flex items-center gap-2"><i
+                            class="fa-solid fa-user text-blue-500"></i> Cliente</h4>
                     <div class="space-y-2 text-sm">
-                        <div class="flex"><span class="text-gray-500 w-20">Nombre:</span> <span class="font-bold text-gray-800" id="detail-cust-name">...</span></div>
-                        <div class="flex"><span class="text-gray-500 w-20">Teléfono:</span> <span class="font-bold text-gray-800" id="detail-cust-phone">...</span></div>
-                        <div class="flex items-start"><span class="text-gray-500 w-20">Dirección:</span> <span class="font-bold text-gray-800 flex-1" id="detail-cust-address">...</span></div>
+                        <div class="flex"><span class="text-gray-500 w-20">Nombre:</span> <span
+                                class="font-bold text-gray-800" id="detail-cust-name">...</span></div>
+                        <div class="flex"><span class="text-gray-500 w-20">Teléfono:</span> <span
+                                class="font-bold text-gray-800" id="detail-cust-phone">...</span></div>
+                        <div class="flex items-start"><span class="text-gray-500 w-20">Dirección:</span> <span
+                                class="font-bold text-gray-800 flex-1" id="detail-cust-address">...</span></div>
                     </div>
                 </div>
 
                 <!-- Items List -->
                 <div class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-                    <h4 class="font-bold text-gray-700 text-sm mb-3 border-b pb-2 flex items-center gap-2"><i class="fa-solid fa-utensils text-orange-500"></i> Productos</h4>
+                    <h4 class="font-bold text-gray-700 text-sm mb-3 border-b pb-2 flex items-center gap-2"><i
+                            class="fa-solid fa-utensils text-orange-500"></i> Productos</h4>
                     <div id="detail-items-list" class="space-y-3">
                         <!-- Items rendered here -->
                     </div>
@@ -570,38 +953,102 @@
             <!-- Footer Actions -->
             <div class="p-4 bg-white border-t border-gray-200 flex flex-col gap-3">
                 <p class="text-xs font-bold text-gray-400 uppercase text-center mb-1">Cambiar Estado del Pedido</p>
-                <div class="grid grid-cols-5 gap-2"> 
-                    <button onclick="updateOrderStatus('pending')" class="status-btn px-2 py-2 rounded-lg border text-[10px] font-bold text-center hover:bg-gray-50 border-gray-300 text-gray-500">Pendiente</button>
-                    <button onclick="updateOrderStatus('preparing')" class="status-btn px-2 py-2 rounded-lg border text-[10px] font-bold text-center hover:bg-orange-50 border-orange-200 text-orange-600">Cocina</button>
-                    <button onclick="updateOrderStatus('ready')" class="status-btn px-2 py-2 rounded-lg border text-[10px] font-bold text-center hover:bg-blue-50 border-blue-200 text-blue-600">Listo</button>
-                    <button onclick="updateOrderStatus('delivering')" class="status-btn px-2 py-2 rounded-lg border text-[10px] font-bold text-center hover:bg-purple-50 border-purple-200 text-purple-600">En Camino</button>
-                    <button onclick="updateOrderStatus('completed')" class="status-btn px-2 py-2 rounded-lg border text-[10px] font-bold text-center hover:bg-green-50 border-green-200 text-green-600">Entregado</button>
+                <div class="grid grid-cols-5 gap-2">
+                    <button onclick="updateOrderStatus('pending')"
+                        class="status-btn px-2 py-2 rounded-lg border text-[10px] font-bold text-center hover:bg-gray-50 border-gray-300 text-gray-500">Pendiente</button>
+                    <button onclick="updateOrderStatus('preparing')"
+                        class="status-btn px-2 py-2 rounded-lg border text-[10px] font-bold text-center hover:bg-orange-50 border-orange-200 text-orange-600">Cocina</button>
+                    <button onclick="updateOrderStatus('ready')"
+                        class="status-btn px-2 py-2 rounded-lg border text-[10px] font-bold text-center hover:bg-blue-50 border-blue-200 text-blue-600">Listo</button>
+                    <button onclick="updateOrderStatus('delivering')"
+                        class="status-btn px-2 py-2 rounded-lg border text-[10px] font-bold text-center hover:bg-purple-50 border-purple-200 text-purple-600">En
+                        Camino</button>
+                    <button onclick="updateOrderStatus('completed')"
+                        class="status-btn px-2 py-2 rounded-lg border text-[10px] font-bold text-center hover:bg-green-50 border-green-200 text-green-600">Entregado</button>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Otros Modals (Product, Sub) -->
-    <div id="product-modal" class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div id="product-modal"
+        class="fixed inset-0 z-50 hidden bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden animate-fade-in-up">
-            <div class="bg-gray-50 px-6 py-4 border-b flex justify-between items-center"><h3 class="font-bold text-lg text-gray-800">Producto</h3><button onclick="closeProductModal()" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark text-xl"></i></button></div>
-            <div class="p-6 space-y-4 max-h-[70vh] overflow-y-auto"><input type="hidden" id="prod-id"><input type="hidden" id="prod-category"><div><label class="text-xs font-bold text-gray-500 uppercase">Nombre</label><input type="text" id="prod-name" class="w-full border border-gray-300 rounded p-2 text-sm"></div>
+            <div class="bg-gray-50 px-6 py-4 border-b flex justify-between items-center">
+                <h3 class="font-bold text-lg text-gray-800">Producto</h3><button onclick="closeProductModal()"
+                    class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            <div class="p-6 space-y-4 max-h-[70vh] overflow-y-auto"><input type="hidden" id="prod-id"><input
+                    type="hidden" id="prod-category">
+                <div><label class="text-xs font-bold text-gray-500 uppercase">Nombre</label><input type="text"
+                        id="prod-name" class="w-full border border-gray-300 rounded p-2 text-sm"></div>
                 <div>
                     <label class="text-xs font-bold text-gray-500 uppercase flex justify-between items-center mb-1">
                         Descripción
-                        <button type="button" onclick="generateAIDesc()" class="text-[10px] bg-gradient-to-r from-purple-500 to-pink-500 text-white px-2 py-1 rounded-full font-bold hover:opacity-90 transition shadow-sm flex items-center gap-1">
+                        <button type="button" onclick="generateAIDesc()"
+                            class="text-[10px] bg-gradient-to-r from-purple-500 to-pink-500 text-white px-2 py-1 rounded-full font-bold hover:opacity-90 transition shadow-sm flex items-center gap-1">
                             <i class="fa-solid fa-wand-magic-sparkles"></i> Crear con IA
                         </button>
                     </label>
-                    <textarea id="prod-desc" class="w-full border border-gray-300 rounded p-2 text-sm h-20" placeholder="Escribe el nombre del producto y pulsa 'Crear con IA' para generar una descripción automática."></textarea>
+                    <textarea id="prod-desc" class="w-full border border-gray-300 rounded p-2 text-sm h-20"
+                        placeholder="Escribe el nombre del producto y pulsa 'Crear con IA' para generar una descripción automática."></textarea>
                 </div>
-                <div class="grid grid-cols-2 gap-4"><div><label class="text-xs font-bold text-gray-500 uppercase">Precio ($)</label><input type="number" id="prod-price" class="w-full border border-gray-300 rounded p-2 text-sm font-bold text-green-700"></div><div><label class="text-xs font-bold text-gray-500 uppercase">Antes (Opc)</label><input type="number" id="prod-original" class="w-full border border-gray-300 rounded p-2 text-sm"></div></div><div class="bg-yellow-50 p-3 rounded-lg border border-yellow-100"><label class="text-xs font-bold text-yellow-700 uppercase">Complementos</label><select id="prod-group-select" class="w-full border border-yellow-200 rounded p-2 text-sm bg-white mt-1"><option value="">-- Sin Complementos --</option></select></div><div class="flex items-center gap-4 bg-gray-50 p-3 rounded-lg border border-gray-100"><img id="prod-img-preview" src="" class="w-16 h-16 rounded object-cover bg-gray-200"><div class="flex-1"><input type="file" onchange="handleImageUpload(this)" class="w-full text-xs text-gray-500"><input type="hidden" id="prod-img-url"></div></div><div><label class="text-xs font-bold text-gray-500 uppercase">Etiquetas</label><input type="text" id="prod-tags" class="w-full border border-gray-300 rounded p-2 text-sm"></div></div>
-            <div class="p-4 bg-gray-50 border-t flex justify-end gap-3"><button onclick="closeProductModal()" class="px-4 py-2 rounded text-gray-500 hover:bg-gray-200 text-sm font-bold">Cancelar</button><button onclick="saveProductInternal()" class="px-6 py-2 rounded bg-blue-600 text-white font-bold text-sm hover:bg-blue-700 shadow">Guardar</button></div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div><label class="text-xs font-bold text-gray-500 uppercase">Precio ($)</label><input type="number"
+                            id="prod-price"
+                            class="w-full border border-gray-300 rounded p-2 text-sm font-bold text-green-700"></div>
+                    <div><label class="text-xs font-bold text-gray-500 uppercase">Antes (Opc)</label><input
+                            type="number" id="prod-original" class="w-full border border-gray-300 rounded p-2 text-sm">
+                    </div>
+                </div>
+                <div class="bg-yellow-50 p-3 rounded-lg border border-yellow-100"><label
+                        class="text-xs font-bold text-yellow-700 uppercase">Complementos</label><select
+                        id="prod-group-select"
+                        class="w-full border border-yellow-200 rounded p-2 text-sm bg-white mt-1">
+                        <option value="">-- Sin Complementos --</option>
+                    </select></div>
+                <div class="flex items-center gap-4 bg-gray-50 p-3 rounded-lg border border-gray-100"><img
+                        id="prod-img-preview" src="" class="w-16 h-16 rounded object-cover bg-gray-200">
+                    <div class="flex-1"><input type="file" onchange="handleImageUpload(this)"
+                            class="w-full text-xs text-gray-500"><input type="hidden" id="prod-img-url"></div>
+                </div>
+                <div><label class="text-xs font-bold text-gray-500 uppercase">Etiquetas</label><input type="text"
+                        id="prod-tags" class="w-full border border-gray-300 rounded p-2 text-sm"></div>
+            </div>
+            <div class="p-4 bg-gray-50 border-t flex justify-end gap-3"><button onclick="closeProductModal()"
+                    class="px-4 py-2 rounded text-gray-500 hover:bg-gray-200 text-sm font-bold">Cancelar</button><button
+                    onclick="saveProductInternal()"
+                    class="px-6 py-2 rounded bg-blue-600 text-white font-bold text-sm hover:bg-blue-700 shadow">Guardar</button>
+            </div>
         </div>
     </div>
 
-    <div id="sub-modal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden animate-fade-in-up"><div class="bg-gradient-to-r from-gray-900 to-gray-800 p-6 text-white text-center"><h3 class="text-2xl font-bold mb-2">🚀 Plan PRO</h3><p class="text-gray-300 text-sm">Transferencia Bancaria</p></div><div class="p-6 space-y-4"><p class="text-sm text-gray-600 text-center">Realiza una transferencia de <span class="font-bold text-gray-800">$100 MXN</span>:</p><div class="bg-gray-100 p-4 rounded-xl border border-gray-200 text-sm space-y-2"><div class="flex justify-between"><span class="text-gray-500">Banco:</span><span class="font-bold text-gray-800">BBVA / STP</span></div><div class="flex justify-between"><span class="text-gray-500">CLABE:</span><span class="font-bold text-gray-800 select-all">123456789012345678</span></div><div class="flex justify-between"><span class="text-gray-500">Beneficiario:</span><span class="font-bold text-gray-800">MenúIA S.A.</span></div><div class="flex justify-between border-t border-gray-300 pt-2 mt-2 bg-yellow-50 p-2 rounded border border-yellow-200"><span class="text-gray-700 font-bold">Concepto:</span><span class="font-bold text-blue-600 select-all text-right" id="sub-concept-ref">PRO-TIENDA</span></div></div><button onclick="document.getElementById('sub-modal').classList.add('hidden')" class="w-full text-gray-400 text-sm hover:text-gray-600 py-2">Cerrar</button></div></div>
+    <div id="sub-modal"
+        class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden animate-fade-in-up">
+            <div class="bg-gradient-to-r from-gray-900 to-gray-800 p-6 text-white text-center">
+                <h3 class="text-2xl font-bold mb-2">🚀 Plan PRO</h3>
+                <p class="text-gray-300 text-sm">Transferencia Bancaria</p>
+            </div>
+            <div class="p-6 space-y-4">
+                <p class="text-sm text-gray-600 text-center">Realiza una transferencia de <span
+                        class="font-bold text-gray-800">$100 MXN</span>:</p>
+                <div class="bg-gray-100 p-4 rounded-xl border border-gray-200 text-sm space-y-2">
+                    <div class="flex justify-between"><span class="text-gray-500">Banco:</span><span
+                            class="font-bold text-gray-800">BBVA / STP</span></div>
+                    <div class="flex justify-between"><span class="text-gray-500">CLABE:</span><span
+                            class="font-bold text-gray-800 select-all">123456789012345678</span></div>
+                    <div class="flex justify-between"><span class="text-gray-500">Beneficiario:</span><span
+                            class="font-bold text-gray-800">MenúIA S.A.</span></div>
+                    <div
+                        class="flex justify-between border-t border-gray-300 pt-2 mt-2 bg-yellow-50 p-2 rounded border border-yellow-200">
+                        <span class="text-gray-700 font-bold">Concepto:</span><span
+                            class="font-bold text-blue-600 select-all text-right" id="sub-concept-ref">PRO-TIENDA</span>
+                    </div>
+                </div><button onclick="document.getElementById('sub-modal').classList.add('hidden')"
+                    class="w-full text-gray-400 text-sm hover:text-gray-600 py-2">Cerrar</button>
+            </div>
+        </div>
     </div>
 
     <div id="print-area" class="hidden"></div>
@@ -609,11 +1056,11 @@
     <script>
         const API_URL = "https://menuia.onrender.com";
         const socket = io(API_URL);
-        
+
         let SESSION = { slug: null, password: null, data: null };
         let currentCategory = 'promos';
-        let ordersHistory = []; 
-        let currentDetailOrder = null; 
+        let ordersHistory = [];
+        let currentDetailOrder = null;
         let currentOrderFilter = 'active'; // Default view
 
         function switchView(viewId) {
@@ -621,28 +1068,28 @@
             document.getElementById(`view-${viewId}`).classList.remove('hidden');
             document.querySelectorAll('.nav-item').forEach(btn => btn.classList.remove('active', 'bg-blue-50', 'text-blue-600', 'border-r-2', 'border-blue-600'));
             const activeBtn = Array.from(document.querySelectorAll('.nav-item')).find(b => b.getAttribute('onclick').includes(viewId));
-            if(activeBtn) { activeBtn.classList.add('active'); activeBtn.classList.remove('text-gray-600', 'hover:bg-gray-50'); }
+            if (activeBtn) { activeBtn.classList.add('active'); activeBtn.classList.remove('text-gray-600', 'hover:bg-gray-50'); }
 
-            if(viewId === 'menu') { renderGroups(); renderMenuGrid(currentCategory); }
-            if(viewId === 'qr') renderQR('simple');
-            if(viewId === 'orders') fetchAndRenderOrders(currentOrderFilter);
-            if(viewId === 'dashboard') updateFinances();
-            
+            if (viewId === 'menu') { renderGroups(); renderMenuGrid(currentCategory); }
+            if (viewId === 'qr') renderQR('simple');
+            if (viewId === 'orders') fetchAndRenderOrders(currentOrderFilter);
+            if (viewId === 'dashboard') updateFinances();
+
             const saveBtn = document.querySelector('button[onclick="saveChanges()"]');
-            if(saveBtn) {
-                if(viewId === 'settings' || viewId === 'menu') saveBtn.classList.remove('hidden');
+            if (saveBtn) {
+                if (viewId === 'settings' || viewId === 'menu') saveBtn.classList.remove('hidden');
                 else saveBtn.classList.add('hidden');
             }
         }
 
         function switchTab(tab) {
             const l = document.getElementById('form-login'), r = document.getElementById('form-register');
-            if(tab==='login') { l.classList.remove('hidden'); r.classList.add('hidden'); } else { l.classList.add('hidden'); r.classList.remove('hidden'); }
+            if (tab === 'login') { l.classList.remove('hidden'); r.classList.add('hidden'); } else { l.classList.add('hidden'); r.classList.remove('hidden'); }
         }
 
         window.onload = () => {
             const s = localStorage.getItem('shop_slug'), p = localStorage.getItem('shop_pass');
-            if(s && p) { document.getElementById('login-slug').value = s; document.getElementById('login-pass').value = p; }
+            if (s && p) { document.getElementById('login-slug').value = s; document.getElementById('login-pass').value = p; }
             document.getElementById('conf-high-demand-active').addEventListener('change', toggleHighDemandInput);
         };
 
@@ -650,18 +1097,18 @@
             const slug = document.getElementById('login-slug').value.trim().toLowerCase();
             const password = document.getElementById('login-pass').value;
             try {
-                const res = await fetch(`${API_URL}/api/admin/get`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ slug, password }) });
-                if(res.ok) {
+                const res = await fetch(`${API_URL}/api/admin/get`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ slug, password }) });
+                if (res.ok) {
                     SESSION = { slug, password, data: await res.json() };
-                    if(!SESSION.data.menu) SESSION.data.menu = { promos: [], especiales: [], clasicos: [], extras: [], groups: [] };
-                    if(!SESSION.data.menu.groups) SESSION.data.menu.groups = []; 
-                    if(!SESSION.data.stats) SESSION.data.stats = { visits: 0, orders: 0 }; 
-                    
+                    if (!SESSION.data.menu) SESSION.data.menu = { promos: [], especiales: [], clasicos: [], extras: [], groups: [] };
+                    if (!SESSION.data.menu.groups) SESSION.data.menu.groups = [];
+                    if (!SESSION.data.stats) SESSION.data.stats = { visits: 0, orders: 0 };
+
                     localStorage.setItem('shop_slug', slug); localStorage.setItem('shop_pass', password);
                     socket.emit('join-store', slug);
                     initDashboard();
                 } else alert("Credenciales incorrectas");
-            } catch(e) { alert("Error de conexión"); }
+            } catch (e) { alert("Error de conexión"); }
         }
 
         async function handleRegister() { alert("Usa el formulario de registro existente."); }
@@ -672,34 +1119,34 @@
             const c = SESSION.data.config;
             const stats = SESSION.data.stats || { visits: 0, orders: 0 };
             document.getElementById('dash-owner-name').innerText = SESSION.data.credentials.ownerName || 'Dueño';
-            
+
             // Sub Status Logic
             const subStatus = SESSION.data.subscription?.status || 'trial';
             const badge = document.getElementById('sub-status-badge');
-            if(subStatus === 'active' || subStatus === 'pro_monthly' || subStatus === 'pro_manual') {
+            if (subStatus === 'active' || subStatus === 'pro_monthly' || subStatus === 'pro_manual') {
                 badge.className = "px-3 py-1 rounded-full text-xs font-bold bg-yellow-100 text-yellow-800 border border-yellow-200";
                 badge.innerHTML = '<i class="fa-solid fa-crown mr-1"></i> Plan PRO';
             } else if (subStatus === 'trial') {
-                 badge.className = "px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-800 border border-blue-200";
-                 badge.innerText = 'Prueba Gratis';
+                badge.className = "px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-800 border border-blue-200";
+                badge.innerText = 'Prueba Gratis';
             } else {
-                 badge.className = "px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-800 border border-red-200";
-                 badge.innerText = 'Expirado';
+                badge.className = "px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-800 border border-red-200";
+                badge.innerText = 'Expirado';
             }
-            
+
             // Initial Stats
             document.getElementById('stat-visits-count').innerText = stats.visits;
             document.getElementById('stat-orders-count').innerText = stats.orders;
-            
+
             // Products Count
-            const prodCount = (SESSION.data.menu.promos?.length||0) + (SESSION.data.menu.especiales?.length||0) + 
-                              (SESSION.data.menu.clasicos?.length||0) + (SESSION.data.menu.extras?.length||0);
-            
+            const prodCount = (SESSION.data.menu.promos?.length || 0) + (SESSION.data.menu.especiales?.length || 0) +
+                (SESSION.data.menu.clasicos?.length || 0) + (SESSION.data.menu.extras?.length || 0);
+
             const storeUrl = `https://iamenu.github.io/menuia/menu.html?slug=${SESSION.slug}`;
             document.getElementById('sidebar-link-store').href = storeUrl;
             const qrLinkElement = document.getElementById('qr-link-text');
             if (qrLinkElement) qrLinkElement.innerText = storeUrl;
-            
+
             document.getElementById('conf-name').value = c.name || '';
             document.getElementById('conf-type').value = c.businessType || 'Comida General';
             document.getElementById('conf-address').value = c.address || '';
@@ -708,7 +1155,7 @@
             document.getElementById('hero-preview').src = c.heroImage || '';
             document.getElementById('conf-open').value = c.hours?.open;
             document.getElementById('conf-close').value = c.hours?.close;
-            
+
             // Cargar Datos Bancarios
             const bank = c.bankDetails || {};
             document.getElementById('conf-bank-name').value = bank.name || '';
@@ -717,6 +1164,14 @@
 
             const hd = c.highDemand || false;
             document.getElementById('conf-high-demand-active').checked = hd;
+
+            // Init Open/Close
+            const isOpen = c.isOpen !== false; // Default true if undefined
+            const openToggle = document.getElementById('conf-is-open');
+            openToggle.checked = isOpen;
+            updateOpenLabel(isOpen);
+            openToggle.addEventListener('change', (e) => updateOpenLabel(e.target.checked));
+
             document.getElementById('conf-high-demand-time').value = c.highDemandTime || '';
             toggleHighDemandInput();
 
@@ -724,23 +1179,34 @@
                 const title = (c.categoryTitles && c.categoryTitles[key]) ? c.categoryTitles[key] : key.charAt(0).toUpperCase() + key.slice(1);
                 document.getElementById(`cat-title-${key}`).value = title;
                 const menuBtn = document.getElementById(`btn-cat-${key}`);
-                if(menuBtn) menuBtn.innerText = title;
+                if (menuBtn) menuBtn.innerText = title;
             });
 
             // Initial Finance Load
             updateFinances();
             switchView('dashboard');
         }
-        
+
         function toggleHighDemandInput() {
             const isActive = document.getElementById('conf-high-demand-active').checked;
             const container = document.getElementById('high-demand-input-container');
-            if(isActive) container.classList.remove('hidden');
+            if (isActive) container.classList.remove('hidden');
             else container.classList.add('hidden');
         }
 
+        function updateOpenLabel(isOpen) {
+            const lbl = document.getElementById('conf-is-open-label');
+            if (isOpen) {
+                lbl.innerText = "Abierto";
+                lbl.className = "ml-3 text-xs font-bold text-green-600";
+            } else {
+                lbl.innerText = "Cerrado";
+                lbl.className = "ml-3 text-xs font-bold text-red-600";
+            }
+        }
+
         socket.on('stats-update', (stats) => {
-            if(stats) {
+            if (stats) {
                 document.getElementById('stat-visits-count').innerText = stats.visits;
                 document.getElementById('stat-orders-count').innerText = stats.orders;
                 // Refresh finances on new order
@@ -749,35 +1215,35 @@
         });
 
         socket.on('new-order-saved', () => {
-            if(!document.getElementById('view-orders').classList.contains('hidden')) {
+            if (!document.getElementById('view-orders').classList.contains('hidden')) {
                 fetchAndRenderOrders(currentOrderFilter);
             }
-             // Also refresh finances
-             updateFinances();
+            // Also refresh finances
+            updateFinances();
         });
 
         // --- FINANCE LOGIC ---
         async function updateFinances() {
             // Fetch latest orders to calculate finance
             try {
-                const res = await fetch(`${API_URL}/api/orders/list`, { 
-                    method: 'POST', 
-                    headers: {'Content-Type': 'application/json'}, 
-                    body: JSON.stringify({ slug: SESSION.slug, password: SESSION.password }) 
+                const res = await fetch(`${API_URL}/api/orders/list`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ slug: SESSION.slug, password: SESSION.password })
                 });
                 const data = await res.json();
-                
-                if(data.success) {
+
+                if (data.success) {
                     const orders = data.orders;
                     const today = moment().startOf('day');
                     const startOfMonth = moment().startOf('month');
-                    
+
                     let salesToday = 0;
                     let salesMonth = 0;
-                    
+
                     // Daily Sales Map (Last 7 days)
                     const last7Days = {};
-                    for(let i=6; i>=0; i--) {
+                    for (let i = 6; i >= 0; i--) {
                         const d = moment().subtract(i, 'days').format('ddd'); // Mon, Tue...
                         last7Days[d] = 0;
                     }
@@ -786,15 +1252,15 @@
                         // Only count if not cancelled (assuming we don't have cancelled status yet, but strictly logic)
                         // Using 'completed', 'delivering', 'ready', 'preparing', 'pending' are all valid sales unless cancelled
                         // Let's assume all non-cancelled orders count as sales for now
-                        
+
                         const orderDate = moment(o.createdAt);
                         // Clean currency string "$150.00" -> 150.00
-                        const amount = parseFloat((o.total || "0").replace(/[^0-9.-]+/g,""));
-                        
-                        if(orderDate.isSameOrAfter(today)) {
+                        const amount = parseFloat((o.total || "0").replace(/[^0-9.-]+/g, ""));
+
+                        if (orderDate.isSameOrAfter(today)) {
                             salesToday += amount;
                         }
-                        if(orderDate.isSameOrAfter(startOfMonth)) {
+                        if (orderDate.isSameOrAfter(startOfMonth)) {
                             salesMonth += amount;
                         }
 
@@ -807,11 +1273,11 @@
 
                     document.getElementById('stat-sales-today').innerText = `$${salesToday.toFixed(2)}`;
                     document.getElementById('stat-sales-month').innerText = `$${salesMonth.toFixed(2)}`;
-                    
+
                     // Render Chart
                     renderFinanceChart(last7Days);
                 }
-            } catch(e) {
+            } catch (e) {
                 console.error("Error updating finances", e);
             }
         }
@@ -829,7 +1295,7 @@
             days.forEach((day, index) => {
                 const val = values[index];
                 const heightPct = (val / maxVal) * 100;
-                
+
                 // Bar
                 const bar = document.createElement('div');
                 bar.className = 'bar';
@@ -848,35 +1314,35 @@
         // --- ORDERS MONITOR (ACTUALIZADO) ---
         async function fetchAndRenderOrders(filter) {
             currentOrderFilter = filter;
-            
+
             // Actualizar botones de filtro
-            document.getElementById('btn-monitor-active').className = filter === 'active' 
-                ? "filter-btn active px-4 py-2 text-xs font-bold rounded-full border border-blue-200 text-blue-700 bg-blue-100" 
+            document.getElementById('btn-monitor-active').className = filter === 'active'
+                ? "filter-btn active px-4 py-2 text-xs font-bold rounded-full border border-blue-200 text-blue-700 bg-blue-100"
                 : "filter-btn px-4 py-2 text-xs font-bold rounded-full bg-white hover:bg-gray-100 text-gray-500 border border-gray-200";
-            
-            document.getElementById('btn-monitor-history').className = filter === 'history' 
-                ? "filter-btn active px-4 py-2 text-xs font-bold rounded-full border border-blue-200 text-blue-700 bg-blue-100" 
+
+            document.getElementById('btn-monitor-history').className = filter === 'history'
+                ? "filter-btn active px-4 py-2 text-xs font-bold rounded-full border border-blue-200 text-blue-700 bg-blue-100"
                 : "filter-btn px-4 py-2 text-xs font-bold rounded-full bg-white hover:bg-gray-100 text-gray-500 border border-gray-200";
 
             const container = document.getElementById('orders-list-container');
             container.innerHTML = `<div class="text-center text-gray-400 mt-10 col-span-full"><i class="fa-solid fa-spinner fa-spin"></i> Cargando...</div>`;
             try {
-                const res = await fetch(`${API_URL}/api/orders/list`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ slug: SESSION.slug, password: SESSION.password }) });
+                const res = await fetch(`${API_URL}/api/orders/list`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ slug: SESSION.slug, password: SESSION.password }) });
                 const data = await res.json();
-                if(data.success) { ordersHistory = data.orders; renderOrders(filter); }
-            } catch(e) { container.innerHTML = `<div class="text-center text-red-400 mt-10 col-span-full">Error cargando pedidos</div>`; }
+                if (data.success) { ordersHistory = data.orders; renderOrders(filter); }
+            } catch (e) { container.innerHTML = `<div class="text-center text-red-400 mt-10 col-span-full">Error cargando pedidos</div>`; }
         }
         function renderOrdersTable(f) { fetchAndRenderOrders(f); }
-        
+
         function renderOrders(f) {
             const c = document.getElementById('orders-list-container');
             let orders = [];
 
             // Lógica de Filtros Estricta
-            if(f === 'active') {
+            if (f === 'active') {
                 // Monitor: Solo pedidos NO completados
                 orders = ordersHistory.filter(o => o.status !== 'completed');
-            } else if(f === 'history') {
+            } else if (f === 'history') {
                 // Historial: Solo Completados de la semana actual (Lunes a Lunes)
                 const startOfWeek = moment().startOf('isoWeek'); // Lunes 00:00 de esta semana
                 orders = ordersHistory.filter(o => {
@@ -885,24 +1351,24 @@
                     return isCompleted && isRecent;
                 });
             }
-            
-            if(orders.length===0) { 
+
+            if (orders.length === 0) {
                 c.innerHTML = `<div class="text-center text-gray-400 mt-10 col-span-full flex flex-col items-center gap-2">
                     <i class="fa-solid fa-clipboard-check text-4xl opacity-20"></i>
                     <p>No hay pedidos en esta sección.</p>
-                </div>`; 
-                return; 
+                </div>`;
+                return;
             }
-            
+
             // RENDERING CARDS MINIMALISTAS
             c.innerHTML = orders.map(o => {
                 let badgeClass = 'bg-gray-100 text-gray-600';
                 let statusIcon = 'fa-circle-question';
-                if(o.status === 'pending') { badgeClass = 'bg-yellow-100 text-yellow-700 border-yellow-200'; statusIcon = 'fa-clock'; }
-                if(o.status === 'preparing') { badgeClass = 'bg-orange-100 text-orange-700 border-orange-200'; statusIcon = 'fa-fire-burner'; }
-                if(o.status === 'ready') { badgeClass = 'bg-blue-100 text-blue-700 border-blue-200'; statusIcon = 'fa-box-open'; }
-                if(o.status === 'delivering') { badgeClass = 'bg-purple-100 text-purple-700 border-purple-200'; statusIcon = 'fa-motorcycle'; } 
-                if(o.status === 'completed') { badgeClass = 'bg-green-100 text-green-700 border-green-200'; statusIcon = 'fa-check-circle'; }
+                if (o.status === 'pending') { badgeClass = 'bg-yellow-100 text-yellow-700 border-yellow-200'; statusIcon = 'fa-clock'; }
+                if (o.status === 'preparing') { badgeClass = 'bg-orange-100 text-orange-700 border-orange-200'; statusIcon = 'fa-fire-burner'; }
+                if (o.status === 'ready') { badgeClass = 'bg-blue-100 text-blue-700 border-blue-200'; statusIcon = 'fa-box-open'; }
+                if (o.status === 'delivering') { badgeClass = 'bg-purple-100 text-purple-700 border-purple-200'; statusIcon = 'fa-motorcycle'; }
+                if (o.status === 'completed') { badgeClass = 'bg-green-100 text-green-700 border-green-200'; statusIcon = 'fa-check-circle'; }
 
                 const safeOrder = JSON.stringify(o).replace(/"/g, '&quot;');
 
@@ -939,26 +1405,26 @@
         function openOrderDetails(order) {
             currentDetailOrder = order;
             const m = document.getElementById('order-detail-modal');
-            
+
             document.getElementById('detail-order-id').innerText = `Pedido #${order.dailyId || '?'}`;
             document.getElementById('detail-order-date').innerText = moment(order.createdAt).format('LLLL');
-            
+
             // Status Badge
             const statusMap = {
                 'pending': '<span class="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-xs font-bold border border-yellow-200">Pendiente</span>',
                 'preparing': '<span class="bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-xs font-bold border border-orange-200">En Cocina</span>',
                 'ready': '<span class="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-bold border border-blue-200">Listo para Entrega</span>',
-                'delivering': '<span class="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-xs font-bold border border-purple-200">En Camino</span>', 
+                'delivering': '<span class="bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-xs font-bold border border-purple-200">En Camino</span>',
                 'completed': '<span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold border border-green-200">Completado/Entregado</span>'
             };
             document.getElementById('detail-status-badge').innerHTML = statusMap[order.status] || order.status;
             document.getElementById('detail-payment').innerText = order.paymentMethod || 'N/A';
-            
+
             // Customer
             document.getElementById('detail-cust-name').innerText = order.ref || 'Cliente General';
             document.getElementById('detail-cust-phone').innerText = order.customerPhone || 'N/A';
             document.getElementById('detail-cust-address').innerText = order.address || 'Recoger en Tienda / N/A';
-            
+
             // Items
             const itemsList = document.getElementById('detail-items-list');
             if (order.items && order.items.length > 0) {
@@ -977,9 +1443,9 @@
             } else {
                 itemsList.innerHTML = '<p class="text-gray-400 text-center text-sm">Sin artículos registrados</p>';
             }
-            
+
             document.getElementById('detail-total').innerText = order.total || '$0.00';
-            
+
             // Active button highlight
             document.querySelectorAll('.status-btn').forEach(b => {
                 if (b.getAttribute('onclick').includes(`'${order.status}'`)) {
@@ -994,15 +1460,15 @@
 
         async function updateOrderStatus(newStatus) {
             if (!currentDetailOrder) return;
-            
+
             const btn = event.target;
             const originalText = btn.innerText;
             btn.innerText = "...";
-            
+
             try {
                 const res = await fetch(`${API_URL}/api/orders/update-status`, {
                     method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         slug: SESSION.slug,
                         password: SESSION.password,
@@ -1010,7 +1476,7 @@
                         status: newStatus
                     })
                 });
-                
+
                 if (res.ok) {
                     currentDetailOrder.status = newStatus;
                     // Si se completa y estamos en vista activa, se "borrará" visualmente al refrescar
@@ -1030,9 +1496,10 @@
         }
 
         // --- MENU LOGIC ---
-        function renderMenuGrid(cat) { currentCategory=cat; 
-            document.querySelectorAll('[id^="btn-cat-"]').forEach(b => { if(b.id === `btn-cat-${cat}`) b.className = "px-4 py-2 text-sm font-bold text-blue-600 border-b-2 border-blue-600 whitespace-nowrap"; else b.className = "px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-800 whitespace-nowrap"; });
-            
+        function renderMenuGrid(cat) {
+            currentCategory = cat;
+            document.querySelectorAll('[id^="btn-cat-"]').forEach(b => { if (b.id === `btn-cat-${cat}`) b.className = "px-4 py-2 text-sm font-bold text-blue-600 border-b-2 border-blue-600 whitespace-nowrap"; else b.className = "px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-800 whitespace-nowrap"; });
+
             if (!SESSION.data.menu || !SESSION.data.menu[cat]) {
                 document.getElementById('menu-grid').innerHTML = '<div class="text-center text-gray-400">Sin productos</div>';
                 return;
@@ -1041,14 +1508,14 @@
             const items = SESSION.data.menu[cat] || [];
             document.getElementById('menu-grid').innerHTML = items.map((item, idx) => `<div class="bg-white border border-gray-100 rounded-xl p-3 flex gap-3 hover:shadow-md transition group"><img src="${item.image || 'https://via.placeholder.com/80'}" class="w-20 h-20 rounded-lg object-cover bg-gray-100"><div class="flex-1 min-w-0"><h4 class="font-bold text-gray-800 truncate">${item.name}</h4><div class="flex justify-between items-center mt-2"><span class="font-bold text-green-600">$${item.price}</span><div class="flex gap-2 opacity-0 group-hover:opacity-100 transition"><button onclick="editProduct('${cat}', ${idx})" class="text-blue-500 hover:bg-blue-50 p-1.5 rounded"><i class="fa-solid fa-pen"></i></button><button onclick="deleteProduct('${cat}', ${idx})" class="text-red-500 hover:bg-red-50 p-1.5 rounded"><i class="fa-solid fa-trash"></i></button></div></div></div></div>`).join('');
         }
-        
+
         function openGroupCreator() { document.getElementById('group-creator').classList.remove('hidden'); document.getElementById('new-group-name').value = ''; document.getElementById('new-group-options-list').innerHTML = ''; addOptionRow(); }
         function closeGroupCreator() { document.getElementById('group-creator').classList.add('hidden'); }
-        
-        function addOptionRow() { 
-            const d = document.createElement('div'); d.className = "flex gap-2 mb-2 items-center option-row"; d.innerHTML = `<input type="text" placeholder="Ej: Queso" class="flex-1 text-xs border border-gray-300 rounded p-1.5 option-name"><input type="number" placeholder="$0" class="w-16 text-xs border border-gray-300 rounded p-1.5 option-price" min="0"><button onclick="this.parentElement.remove()" class="text-red-400 px-1"><i class="fa-solid fa-times"></i></button>`; document.getElementById('new-group-options-list').appendChild(d); 
+
+        function addOptionRow() {
+            const d = document.createElement('div'); d.className = "flex gap-2 mb-2 items-center option-row"; d.innerHTML = `<input type="text" placeholder="Ej: Queso" class="flex-1 text-xs border border-gray-300 rounded p-1.5 option-name"><input type="number" placeholder="$0" class="w-16 text-xs border border-gray-300 rounded p-1.5 option-price" min="0"><button onclick="this.parentElement.remove()" class="text-red-400 px-1"><i class="fa-solid fa-times"></i></button>`; document.getElementById('new-group-options-list').appendChild(d);
         }
-        
+
         function renderGroups() {
             if (!SESSION.data.menu || !SESSION.data.menu.groups) {
                 document.getElementById('groups-list').innerHTML = `<div class="text-gray-400 text-xs text-center py-2 italic">Sin grupos aún.</div>`;
@@ -1056,7 +1523,7 @@
             }
 
             const groups = SESSION.data.menu.groups;
-            if(groups.length === 0) { document.getElementById('groups-list').innerHTML = `<div class="text-gray-400 text-xs text-center py-2 italic">Sin grupos aún.</div>`; return; }
+            if (groups.length === 0) { document.getElementById('groups-list').innerHTML = `<div class="text-gray-400 text-xs text-center py-2 italic">Sin grupos aún.</div>`; return; }
             document.getElementById('groups-list').innerHTML = groups.map((g, idx) => `
                 <div class="bg-white p-3 rounded-lg border border-gray-100 shadow-sm relative group">
                     <div class="flex justify-between items-start mb-1">
@@ -1066,124 +1533,125 @@
                 </div>`).join('');
         }
 
-        function saveGroup() { 
-            const name = document.getElementById('new-group-name').value; 
-            const opts = Array.from(document.querySelectorAll('.option-row')).map(r => ({ name: r.querySelector('.option-name').value, price: parseFloat(r.querySelector('.option-price').value)||0 })).filter(o => o.name); 
-            if(!name || opts.length===0) return alert("Faltan datos"); 
-            
-            if(!SESSION.data.menu.groups) SESSION.data.menu.groups = [];
-            
-            SESSION.data.menu.groups.push({ id: 'g-'+Date.now(), name, options: opts }); 
-            renderGroups(); closeGroupCreator(); 
+        function saveGroup() {
+            const name = document.getElementById('new-group-name').value;
+            const opts = Array.from(document.querySelectorAll('.option-row')).map(r => ({ name: r.querySelector('.option-name').value, price: parseFloat(r.querySelector('.option-price').value) || 0 })).filter(o => o.name);
+            if (!name || opts.length === 0) return alert("Faltan datos");
+
+            if (!SESSION.data.menu.groups) SESSION.data.menu.groups = [];
+
+            SESSION.data.menu.groups.push({ id: 'g-' + Date.now(), name, options: opts });
+            renderGroups(); closeGroupCreator();
             saveDataToServer(false);
         }
-        
-        function deleteGroup(idx) { 
-            if(confirm("¿Borrar?")) { 
-                SESSION.data.menu.groups.splice(idx, 1); 
-                renderGroups(); 
+
+        function deleteGroup(idx) {
+            if (confirm("¿Borrar?")) {
+                SESSION.data.menu.groups.splice(idx, 1);
+                renderGroups();
                 saveDataToServer(false);
-            } 
+            }
         }
-        
-        function openProductModal(idx=-1) { 
+
+        function openProductModal(idx = -1) {
             editingIdx = idx; document.getElementById('product-modal').classList.remove('hidden');
             const sel = document.getElementById('prod-group-select');
             const groups = (SESSION.data.menu && SESSION.data.menu.groups) ? SESSION.data.menu.groups : [];
-            sel.innerHTML = '<option value="">-- Sin Complementos --</option>' + groups.map(g=>`<option value="${g.id}">${g.name}</option>`).join('');
-            if(idx === -1) { ['prod-name','prod-desc','prod-price','prod-original','prod-img-url','prod-tags'].forEach(i=>document.getElementById(i).value=''); document.getElementById('prod-img-preview').src=''; sel.value=""; } 
-            else { const item = SESSION.data.menu[currentCategory][idx]; document.getElementById('prod-name').value=item.name; document.getElementById('prod-desc').value=item.description; document.getElementById('prod-price').value=item.price; document.getElementById('prod-original').value=item.originalPrice||''; document.getElementById('prod-img-url').value=item.image||''; document.getElementById('prod-img-preview').src=item.image||''; document.getElementById('prod-tags').value=(item.tags||[]).join(','); sel.value=item.groupId||""; }
+            sel.innerHTML = '<option value="">-- Sin Complementos --</option>' + groups.map(g => `<option value="${g.id}">${g.name}</option>`).join('');
+            if (idx === -1) { ['prod-name', 'prod-desc', 'prod-price', 'prod-original', 'prod-img-url', 'prod-tags'].forEach(i => document.getElementById(i).value = ''); document.getElementById('prod-img-preview').src = ''; sel.value = ""; }
+            else { const item = SESSION.data.menu[currentCategory][idx]; document.getElementById('prod-name').value = item.name; document.getElementById('prod-desc').value = item.description; document.getElementById('prod-price').value = item.price; document.getElementById('prod-original').value = item.originalPrice || ''; document.getElementById('prod-img-url').value = item.image || ''; document.getElementById('prod-img-preview').src = item.image || ''; document.getElementById('prod-tags').value = (item.tags || []).join(','); sel.value = item.groupId || ""; }
         }
         function closeProductModal() { document.getElementById('product-modal').classList.add('hidden'); }
-        function handleImageUpload(i) { if(i.files[0]) { const r=new FileReader(); r.onload=e=>{document.getElementById('prod-img-preview').src=e.target.result;document.getElementById('prod-img-url').value=e.target.result;}; r.readAsDataURL(i.files[0]); } }
-        
-        function saveProductInternal() { 
+        function handleImageUpload(i) { if (i.files[0]) { const r = new FileReader(); r.onload = e => { document.getElementById('prod-img-preview').src = e.target.result; document.getElementById('prod-img-url').value = e.target.result; }; r.readAsDataURL(i.files[0]); } }
+
+        function saveProductInternal() {
             const name = document.getElementById('prod-name').value;
             const price = parseFloat(document.getElementById('prod-price').value);
-            if(!name || !price) return alert("Faltan datos"); 
-            const item = { 
-                id: editingIdx===-1 ? Date.now().toString() : SESSION.data.menu[currentCategory][editingIdx].id, 
-                name, description: document.getElementById('prod-desc').value, price, originalPrice: parseFloat(document.getElementById('prod-original').value)||null, image: document.getElementById('prod-img-url').value, tags: document.getElementById('prod-tags').value.split(',').filter(t=>t), groupId: document.getElementById('prod-group-select').value || null 
-            }; 
-            if(editingIdx===-1) SESSION.data.menu[currentCategory].push(item); else SESSION.data.menu[currentCategory][editingIdx]=item; 
+            if (!name || !price) return alert("Faltan datos");
+            const item = {
+                id: editingIdx === -1 ? Date.now().toString() : SESSION.data.menu[currentCategory][editingIdx].id,
+                name, description: document.getElementById('prod-desc').value, price, originalPrice: parseFloat(document.getElementById('prod-original').value) || null, image: document.getElementById('prod-img-url').value, tags: document.getElementById('prod-tags').value.split(',').filter(t => t), groupId: document.getElementById('prod-group-select').value || null
+            };
+            if (editingIdx === -1) SESSION.data.menu[currentCategory].push(item); else SESSION.data.menu[currentCategory][editingIdx] = item;
             closeProductModal(); renderMenuGrid(currentCategory); saveDataToServer(false);
         }
 
-        function deleteProduct(cat, idx) { 
-            if(confirm("¿Eliminar?")) { 
-                SESSION.data.menu[cat].splice(idx, 1); 
-                renderMenuGrid(cat); 
+        function deleteProduct(cat, idx) {
+            if (confirm("¿Eliminar?")) {
+                SESSION.data.menu[cat].splice(idx, 1);
+                renderMenuGrid(cat);
                 saveDataToServer(false);
-            } 
+            }
         }
-        
+
         function editProduct(cat, idx) { currentCategory = cat; openProductModal(idx); }
 
         async function saveDataToServer(showNotifications = true) {
-             const btn = document.querySelector('button[onclick="saveChanges()"]');
-             let originalText = "";
-             
-             if(showNotifications && btn) { originalText = btn.innerHTML; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Guardando...'; btn.disabled = true; }
+            const btn = document.querySelector('button[onclick="saveChanges()"]');
+            let originalText = "";
 
-             const cfg = { ...SESSION.data.config };
-             cfg.name = document.getElementById('conf-name').value;
-             cfg.businessType = document.getElementById('conf-type').value;
-             cfg.whatsapp = document.getElementById('conf-whatsapp').value;
-             cfg.address = document.getElementById('conf-address').value;
-             const latInput = document.getElementById('conf-lat').value;
-             const lngInput = document.getElementById('conf-lng').value;
-             if (latInput && lngInput) { cfg.coords = { lat: parseFloat(latInput), lng: parseFloat(lngInput) }; }
-             cfg.hours = { open: parseInt(document.getElementById('conf-open').value), close: parseInt(document.getElementById('conf-close').value) };
-             cfg.heroImage = document.getElementById('conf-hero').value;
-             cfg.highDemand = document.getElementById('conf-high-demand-active').checked;
-             cfg.highDemandTime = document.getElementById('conf-high-demand-time').value;
-             cfg.categoryTitles = { promos: document.getElementById('cat-title-promos').value, especiales: document.getElementById('cat-title-especiales').value, clasicos: document.getElementById('cat-title-clasicos').value, extras: document.getElementById('cat-title-extras').value };
-             
-             // Guardar Datos Bancarios
-             cfg.bankDetails = {
-                 name: document.getElementById('conf-bank-name').value,
-                 clabe: document.getElementById('conf-bank-clabe').value,
-                 owner: document.getElementById('conf-bank-owner').value
-             };
+            if (showNotifications && btn) { originalText = btn.innerHTML; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Guardando...'; btn.disabled = true; }
 
-             SESSION.data.config = cfg;
+            const cfg = { ...SESSION.data.config };
+            cfg.name = document.getElementById('conf-name').value;
+            cfg.businessType = document.getElementById('conf-type').value;
+            cfg.whatsapp = document.getElementById('conf-whatsapp').value;
+            cfg.address = document.getElementById('conf-address').value;
+            const latInput = document.getElementById('conf-lat').value;
+            const lngInput = document.getElementById('conf-lng').value;
+            if (latInput && lngInput) { cfg.coords = { lat: parseFloat(latInput), lng: parseFloat(lngInput) }; }
+            cfg.hours = { open: parseInt(document.getElementById('conf-open').value), close: parseInt(document.getElementById('conf-close').value) };
+            cfg.heroImage = document.getElementById('conf-hero').value;
+            cfg.isOpen = document.getElementById('conf-is-open').checked;
+            cfg.highDemand = document.getElementById('conf-high-demand-active').checked;
+            cfg.highDemandTime = document.getElementById('conf-high-demand-time').value;
+            cfg.categoryTitles = { promos: document.getElementById('cat-title-promos').value, especiales: document.getElementById('cat-title-especiales').value, clasicos: document.getElementById('cat-title-clasicos').value, extras: document.getElementById('cat-title-extras').value };
 
-             try {
-                const res = await fetch(`${API_URL}/api/shop/${SESSION.slug}`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ password: SESSION.password, data: { config: cfg, menu: SESSION.data.menu } }) });
-                if (res.ok) { 
-                    if(showNotifications && btn) { btn.innerHTML = '<i class="fa-solid fa-check"></i> ¡Listo!'; setTimeout(() => { btn.innerHTML = originalText; btn.disabled = false; }, 2000); }
+            // Guardar Datos Bancarios
+            cfg.bankDetails = {
+                name: document.getElementById('conf-bank-name').value,
+                clabe: document.getElementById('conf-bank-clabe').value,
+                owner: document.getElementById('conf-bank-owner').value
+            };
+
+            SESSION.data.config = cfg;
+
+            try {
+                const res = await fetch(`${API_URL}/api/shop/${SESSION.slug}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: SESSION.password, data: { config: cfg, menu: SESSION.data.menu } }) });
+                if (res.ok) {
+                    if (showNotifications && btn) { btn.innerHTML = '<i class="fa-solid fa-check"></i> ¡Listo!'; setTimeout(() => { btn.innerHTML = originalText; btn.disabled = false; }, 2000); }
                     ['promos', 'especiales', 'clasicos', 'extras'].forEach(key => { const btn = document.getElementById(`btn-cat-${key}`); if (btn) btn.innerText = cfg.categoryTitles[key] || key.toUpperCase(); });
-                } else { 
-                    if(showNotifications && btn) { btn.innerHTML = 'Error'; btn.disabled = false; }
+                } else {
+                    if (showNotifications && btn) { btn.innerHTML = 'Error'; btn.disabled = false; }
                     alert("Error al guardar en servidor.");
                 }
-            } catch(e) { 
-                if(showNotifications && btn) { btn.innerHTML = 'Error Red'; btn.disabled = false; }
+            } catch (e) {
+                if (showNotifications && btn) { btn.innerHTML = 'Error Red'; btn.disabled = false; }
                 console.error(e);
             }
         }
 
         function saveChanges() { saveDataToServer(true); }
-        
+
         async function parseMapLink() {
             const input = document.getElementById('map-link-input').value;
-            if(!input) return alert("Ingresa un link de Google Maps");
-            
-            const btn = event.target.closest('button'); 
-            const original = btn.innerHTML; 
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>'; 
+            if (!input) return alert("Ingresa un link de Google Maps");
+
+            const btn = event.target.closest('button');
+            const original = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
             btn.disabled = true;
-            
+
             try {
                 // 1. Intentar obtener datos del servidor
-                const res = await fetch(`${API_URL}/api/utils/parse-map`, { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ input }) });
+                const res = await fetch(`${API_URL}/api/utils/parse-map`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ input }) });
                 const data = await res.json();
-                
-                if(data.success) { 
+
+                if (data.success) {
                     // Actualizar coordenadas (Hidden fields)
-                    document.getElementById('conf-lat').value = data.lat; 
-                    document.getElementById('conf-lng').value = data.lng; 
-                    
+                    document.getElementById('conf-lat').value = data.lat;
+                    document.getElementById('conf-lng').value = data.lng;
+
                     let addressFound = data.address; // La API debería devolver la dirección si logra resolverla
 
                     // 2. Fallback Cliente: Intentar sacar nombre del lugar del URL si la API falló en eso
@@ -1191,33 +1659,33 @@
                         try {
                             const parts = input.split('/place/')[1].split('/')[0];
                             addressFound = decodeURIComponent(parts).replace(/\+/g, ' ');
-                        } catch(e) { console.log("Parsing fallback failed"); }
+                        } catch (e) { console.log("Parsing fallback failed"); }
                     }
 
                     // 3. ACTUALIZACIÓN DEL CAMPO DIRECCIÓN
-                    if(addressFound) {
+                    if (addressFound) {
                         const addrInput = document.getElementById('conf-address');
                         addrInput.value = addressFound; // <--- ASIGNACIÓN DIRECTA
-                        
+
                         // Efecto visual para confirmar cambio
                         addrInput.classList.add('bg-green-100', 'text-green-800', 'font-bold');
                         setTimeout(() => addrInput.classList.remove('bg-green-100', 'text-green-800', 'font-bold'), 2000);
-                        
+
                         // No mostramos alert de "Dirección sugerida", solo lo hacemos
                         alert("¡Ubicación y dirección actualizadas!");
                     } else {
                         alert("Coordenadas actualizadas. (No se pudo detectar el texto de la dirección, por favor verifícala).");
                     }
 
-                } else { 
-                    alert("No se pudieron obtener datos del link."); 
+                } else {
+                    alert("No se pudieron obtener datos del link.");
                 }
-            } catch(e) { 
+            } catch (e) {
                 console.error(e);
-                alert("Error de conexión."); 
+                alert("Error de conexión.");
             }
-            
-            btn.innerHTML = original; 
+
+            btn.innerHTML = original;
             btn.disabled = false;
         }
 
@@ -1230,25 +1698,120 @@
         }
 
         function renderQR(style) {
-            const c = document.getElementById('qr-print-area'); c.innerHTML="";
-            const div = document.createElement('div'); div.className="bg-white p-4 border flex flex-col items-center shadow-lg";
-            if (style === 'card') { div.style.border = "4px solid #3b82f6"; div.style.borderRadius = "20px"; }
-            else if (style === 'poster') { div.style.backgroundColor = "#111827"; div.style.color = "white"; div.style.borderRadius = "10px"; }
-            div.innerHTML = `${style==='poster' ? `<div class="mb-4 text-xl font-bold text-yellow-400">${SESSION.data.config.name}</div>` : ''}<div id="qrcode" class="${style==='poster'?'bg-white p-2 rounded':''}"></div><p class="mt-2 text-xs font-bold ${style==='poster'?'text-gray-400':'text-gray-600'}">${SESSION.data.config.name}</p>`;
+            const c = document.getElementById('qr-print-area');
+            c.innerHTML = "";
+            const qrUrl = `https://iamenu.github.io/menuia/menu.html?slug=${SESSION.slug}`;
+            const shopName = SESSION.data.config.name || "Mi Tienda";
+
+            let div = document.createElement('div');
+
+            // 1. BASICO
+            if (style === 'simple') {
+                div.className = "bg-white p-6 border flex flex-col items-center justify-center shadow-sm";
+                div.innerHTML = `
+                    <div id="qrcode"></div>
+                    <p class="mt-4 text-sm font-bold text-gray-800">${shopName}</p>
+                `;
+            }
+            // 2. TARJETA
+            else if (style === 'card') {
+                div.className = "bg-white p-6 border-4 border-blue-500 rounded-[20px] flex flex-col items-center shadow-lg relative overflow-hidden w-64";
+                div.innerHTML = `
+                    <div class="absolute top-0 left-0 w-full h-4 bg-blue-500"></div>
+                    <h3 class="text-lg font-bold text-blue-600 mb-4">Menú Digital</h3>
+                    <div id="qrcode"></div>
+                    <p class="mt-4 text-xs font-bold text-gray-500 uppercase tracking-widest">${shopName}</p>
+                    <div class="absolute bottom-0 left-0 w-full h-2 bg-blue-200"></div>
+                `;
+            }
+            // 3. POSTER
+            else if (style === 'poster') {
+                div.className = "bg-gray-900 p-8 rounded-lg flex flex-col items-center shadow-2xl w-72 text-center";
+                div.innerHTML = `
+                    <div class="mb-6 text-2xl font-bold text-yellow-400 font-serif border-b-2 border-yellow-400 pb-2">${shopName}</div>
+                    <div class="bg-white p-3 rounded-lg shadow-black/50 shadow-lg">
+                        <div id="qrcode"></div>
+                    </div>
+                    <p class="mt-6 text-sm text-gray-300">Escanea para ver nuestro menú</p>
+                `;
+            }
+            // 4. STAND MESA
+            else if (style === 'stand') {
+                div.className = "bg-white p-8 border-2 border-gray-200 rounded-t-3xl shadow-xl w-64 text-center relative";
+                div.style.borderBottom = "10px solid #f97316";
+                div.innerHTML = `
+                    <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4 text-orange-600">
+                        <i class="fa-solid fa-utensils text-xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 leading-none mb-1">¡Ordena Aquí!</h3>
+                    <p class="text-xs text-gray-400 mb-4">Sin filas, sin espera</p>
+                    <div id="qrcode" class="mx-auto"></div>
+                    <p class="mt-4 text-[10px] uppercase font-bold text-gray-400 tracking-widest">${shopName}</p>
+                `;
+            }
+            // 5. INSTAGRAM STORY
+            else if (style === 'story') {
+                div.className = "bg-gradient-to-br from-purple-600 via-pink-500 to-orange-400 p-8 flex flex-col items-center justify-center w-[300px] h-[533px] shadow-2xl relative text-white";
+                div.innerHTML = `
+                    <div class="absolute top-10 left-0 w-full text-center">
+                        <h2 class="text-3xl font-bold italic tracking-tighter">NUEVO MENÚ</h2>
+                        <p class="text-sm font-medium opacity-90">¡Checa lo que tenemos!</p>
+                    </div>
+                    
+                    <div class="bg-white/20 backdrop-blur-md p-6 rounded-3xl border border-white/30 shadow-2xl">
+                        <div class="bg-white p-2 rounded-xl">
+                            <div id="qrcode"></div>
+                        </div>
+                    </div>
+
+                    <div class="absolute bottom-12 flex flex-col items-center animate-bounce">
+                        <p class="mb-2 text-sm font-bold">Escanea o haz swipe up</p>
+                        <i class="fa-solid fa-chevron-up"></i>
+                    </div>
+                `;
+            }
+            // 6. ELEGANTE
+            else if (style === 'elegant') {
+                div.className = "bg-black p-8 border border-yellow-600/50 flex flex-col items-center shadow-2xl w-72 text-center relative";
+                div.innerHTML = `
+                    <div class="absolute inset-0 border-[6px] border-double border-yellow-700/30 m-2 pointer-events-none"></div>
+                    <h3 class="text-2xl font-serif text-yellow-500 mb-6 tracking-widest uppercase">${shopName}</h3>
+                    <div class="p-1 bg-gradient-to-tr from-yellow-700 to-yellow-200 rounded">
+                        <div class="bg-white p-3">
+                            <div id="qrcode"></div>
+                        </div>
+                    </div>
+                    <p class="mt-6 text-xs text-yellow-600 font-serif italic">Una experiencia gastronómica</p>
+                `;
+            }
+
             c.appendChild(div);
-            new QRCode(div.querySelector("#qrcode"), { text: `https://iamenu.github.io/menuia/menu.html?slug=${SESSION.slug}`, width:150, height:150, colorDark: "#000000", colorLight: "#ffffff" });
+
+            // Generate QR
+            // Using different sizes/colors based on style? For now standard is fine, colors handled by CSS container or QRCode options
+            let colorDark = "#000000";
+            if (style === 'elegant') colorDark = "#000000"; // QR itself black is best contrast usually
+
+            new QRCode(div.querySelector("#qrcode"), {
+                text: qrUrl,
+                width: 150,
+                height: 150,
+                colorDark: colorDark,
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
         }
-        
+
         function openSubModal() { document.getElementById('sub-concept-ref').innerText = `PRO-${SESSION.slug.toUpperCase()}`; document.getElementById('sub-modal').classList.remove('hidden'); }
         function logout() { localStorage.removeItem('shop_pass'); location.reload(); }
 
         // --- FUNCIONES AI (REALES) ---
-        
+
         // 1. Generador de Descripción
         async function generateAIDesc() {
             const name = document.getElementById('prod-name').value;
             if (!name) return alert("Por favor escribe el nombre del producto primero.");
-            
+
             const btn = event.target.closest('button');
             const originalIcon = btn.innerHTML;
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Pensando...';
@@ -1257,24 +1820,24 @@
             try {
                 const res = await fetch(`${API_URL}/api/ai/generate`, {
                     method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ 
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
                         slug: SESSION.slug,
                         task: 'product_description',
                         context: { productName: name }
                     })
                 });
                 const data = await res.json();
-                if(data.success) {
+                if (data.success) {
                     document.getElementById('prod-desc').value = data.result;
                 } else {
                     alert("Error IA: " + (data.error || "No se pudo generar"));
                 }
-            } catch(e) {
+            } catch (e) {
                 console.error(e);
                 alert("Error de conexión con el servicio de IA.");
             }
-            
+
             btn.innerHTML = originalIcon;
             btn.disabled = false;
         }
@@ -1288,23 +1851,23 @@
             try {
                 const res = await fetch(`${API_URL}/api/ai/generate`, {
                     method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ 
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
                         slug: SESSION.slug,
                         task: 'business_insight',
-                        context: { 
+                        context: {
                             stats: SESSION.data.stats,
                             businessType: SESSION.data.config.businessType
                         }
                     })
                 });
                 const data = await res.json();
-                if(data.success) {
+                if (data.success) {
                     textEl.innerText = `"${data.result}"`;
                 } else {
                     textEl.innerText = "No pudimos obtener un consejo ahora.";
                 }
-            } catch(e) {
+            } catch (e) {
                 textEl.innerText = "Error de conexión.";
             }
             textEl.style.opacity = 1;
@@ -1315,20 +1878,20 @@
             const shopName = SESSION.data.config.name || "Nuestro Restaurante";
             const textarea = document.getElementById('ai-social-result');
             textarea.value = "Generando copy creativo...";
-            
+
             let style = "estándar";
-            if(type === 'promo') style = "promocional y urgente";
-            if(type === 'engaging') style = "conversacional y viral para generar comentarios";
-            if(type === 'funny') style = "divertido, con humor y memes";
+            if (type === 'promo') style = "promocional y urgente";
+            if (type === 'engaging') style = "conversacional y viral para generar comentarios";
+            if (type === 'funny') style = "divertido, con humor y memes";
 
             try {
                 const res = await fetch(`${API_URL}/api/ai/generate`, {
                     method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ 
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
                         slug: SESSION.slug,
                         task: 'social_post',
-                        context: { 
+                        context: {
                             shopName: shopName,
                             platform: 'Instagram/Facebook',
                             style: style
@@ -1336,12 +1899,12 @@
                     })
                 });
                 const data = await res.json();
-                if(data.success) {
+                if (data.success) {
                     textarea.value = data.result;
                 } else {
                     textarea.value = "Error generando post.";
                 }
-            } catch(e) {
+            } catch (e) {
                 textarea.value = "Error de conexión.";
             }
         }
@@ -1358,32 +1921,160 @@
             const btn = event.target.closest('button');
             const original = btn.innerHTML;
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
-            
+
             try {
                 const res = await fetch(`${API_URL}/api/ai/generate`, {
                     method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ 
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
                         slug: SESSION.slug,
                         task: 'optimize_hours',
                         context: { businessType: SESSION.data.config.businessType }
                     })
                 });
                 const data = await res.json();
-                
-                if(data.success && data.result) {
+
+                if (data.success && data.result) {
                     alert(`🤖 Análisis de IA completado:\n\nSugerimos abrir a las ${data.result.open}:00 y cerrar a las ${data.result.close}:00.`);
                     document.getElementById('conf-open').value = data.result.open;
                     document.getElementById('conf-close').value = data.result.close;
                 } else {
                     alert("No se pudo optimizar el horario.");
                 }
-            } catch(e) {
+            } catch (e) {
                 alert("Error de conexión IA.");
             }
             btn.innerHTML = original;
         }
 
+        // --- MAP LOGIC ---
+        let mapPicker = null;
+        let markerPicker = null;
+        let tempCoords = null;
+
+        function openMapModal() {
+            document.getElementById('map-modal').classList.remove('hidden');
+
+            // Delay map init to ensure container is visible
+            setTimeout(() => {
+                if (!mapPicker) {
+                    // Default to Mexico City Center or current saved
+                    const lat = parseFloat(document.getElementById('conf-lat').value) || 19.4326;
+                    const lng = parseFloat(document.getElementById('conf-lng').value) || -99.1332;
+
+                    mapPicker = L.map('map-picker').setView([lat, lng], 15);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '&copy; OpenStreetMap contributors'
+                    }).addTo(mapPicker);
+
+                    markerPicker = L.marker([lat, lng], { draggable: true }).addTo(mapPicker);
+
+                    markerPicker.on('dragend', function (e) {
+                        const pos = e.target.getLatLng();
+                        updateMapInfo(pos.lat, pos.lng);
+                    });
+
+                    // Initial Info
+                    updateMapInfo(lat, lng);
+                } else {
+                    // Just reset view if already exists
+                    mapPicker.invalidateSize();
+                    const lat = parseFloat(document.getElementById('conf-lat').value) || 19.4326;
+                    const lng = parseFloat(document.getElementById('conf-lng').value) || -99.1332;
+                    markerPicker.setLatLng([lat, lng]);
+                    mapPicker.setView([lat, lng], 15);
+                    updateMapInfo(lat, lng);
+                }
+            }, 300);
+        }
+
+        function closeMapModal() {
+            document.getElementById('map-modal').classList.add('hidden');
+        }
+
+        async function updateMapInfo(lat, lng) {
+            tempCoords = { lat, lng };
+            document.getElementById('map-lat').innerText = lat.toFixed(5);
+            document.getElementById('map-lng').innerText = lng.toFixed(5);
+            document.getElementById('map-selected-address').innerText = "Cargando dirección...";
+
+            // Reverse Geocode (Backend Proxy to avoid CORS)
+            try {
+                const res = await fetch(`${API_URL}/api/utils/reverse-geocode`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ lat, lng })
+                });
+                const data = await res.json();
+                if (data.success && data.address) {
+                    tempCoords.address = data.address;
+                    document.getElementById('map-selected-address').innerText = data.address.split(',').slice(0, 3).join(',');
+                } else {
+                    document.getElementById('map-selected-address').innerText = "Dirección no encontrada";
+                }
+            } catch (e) {
+                console.error(e);
+                document.getElementById('map-selected-address').innerText = "Error de conexión";
+            }
+        }
+
+        function detectAdminLocation() {
+            const btn = event.target.closest('button');
+            const original = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin text-blue-500"></i>';
+
+            if (!navigator.geolocation) {
+                alert("Tu navegador no soporta geolocalización.");
+                btn.innerHTML = original;
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    const lat = pos.coords.latitude;
+                    const lng = pos.coords.longitude;
+
+                    if (mapPicker && markerPicker) {
+                        mapPicker.setView([lat, lng], 17);
+                        markerPicker.setLatLng([lat, lng]);
+                        updateMapInfo(lat, lng);
+                    }
+                    btn.innerHTML = original;
+                },
+                (err) => {
+                    console.error(err);
+                    let msg = "No pudimos detectar tu ubicación.";
+                    if (err.code === 1) msg = "Permiso denegado. Habilita la ubicación en tu navegador.";
+                    alert(msg);
+                    btn.innerHTML = original;
+                },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+            );
+        }
+
+        function confirmMapLocation() {
+            if (!tempCoords) return closeMapModal();
+
+            document.getElementById('conf-lat').value = tempCoords.lat;
+            document.getElementById('conf-lng').value = tempCoords.lng;
+
+            // Auto-fill address if we have it
+            if (tempCoords.address) {
+                const addrInput = document.getElementById('conf-address');
+                // Only overwrite if requested or empty? Let's overwrite and flash
+                addrInput.value = tempCoords.address;
+                addrInput.classList.add('bg-green-100', 'text-green-800');
+                setTimeout(() => addrInput.classList.remove('bg-green-100', 'text-green-800'), 2000);
+            }
+
+            // Update UI feedback
+            const feedback = document.getElementById('location-coords-text');
+            feedback.innerHTML = `<span class="text-green-600 font-bold"><i class="fa-solid fa-check"></i> Ubicación fijada:</span> ${tempCoords.lat.toFixed(4)}, ${tempCoords.lng.toFixed(4)}`;
+
+            closeMapModal();
+        }
+
     </script>
 </body>
+
 </html>
