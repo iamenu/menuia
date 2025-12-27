@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,53 +13,108 @@
 
     <style>
         /* TEMA CLARO - LIGHT THEME */
-        body { 
-            font-family: 'Inter', sans-serif; 
-            background-color: #f8fafc; /* Slate 50 */
-            color: #1e293b; /* Slate 800 */
-            background-image: radial-gradient(circle at 50% 0%, #eff6ff 0%, #f8fafc 70%); 
-            background-attachment: fixed; 
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            /* Slate 50 */
+            color: #1e293b;
+            /* Slate 800 */
+            background-image: radial-gradient(circle at 50% 0%, #eff6ff 0%, #f8fafc 70%);
+            background-attachment: fixed;
         }
-        
+
         /* Premium Neural Animations */
-        @keyframes subtle-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.8; } }
-        .neural-bg { animation: subtle-pulse 4s infinite ease-in-out; }
-        
-        html { scroll-behavior: smooth; }
-        
-        /* Cards & Interactions - LIGHT THEME */
-        .sushi-card { 
-            background: rgba(255, 255, 255, 0.9); 
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(226, 232, 240, 0.8); /* Slate 200 */
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+        @keyframes subtle-pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.8;
+            }
         }
-        .sushi-card:hover { 
-            transform: translateY(-8px); 
+
+        .neural-bg {
+            animation: subtle-pulse 4s infinite ease-in-out;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* Cards & Interactions - LIGHT THEME */
+        .sushi-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            /* Slate 200 */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .sushi-card:hover {
+            transform: translateY(-8px);
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
             border-color: rgba(59, 130, 246, 0.4);
         }
 
         /* Modals */
-        .modal { transition: opacity 0.3s ease, visibility 0.3s; opacity: 0; visibility: hidden; }
-        .modal.active { opacity: 1; visibility: visible; }
-        .modal-content { transform: scale(0.95) translateY(10px); transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
-        .modal.active .modal-content { transform: scale(1) translateY(0); }
+        .modal {
+            transition: opacity 0.3s ease, visibility 0.3s;
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            transform: scale(0.95) translateY(10px);
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .modal.active .modal-content {
+            transform: scale(1) translateY(0);
+        }
 
         /* Badges */
         .badge-ai-match {
             background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            color: white; font-weight: 700; font-size: 0.65rem;
-            padding: 2px 8px; border-radius: 99px;
+            color: white;
+            font-weight: 700;
+            font-size: 0.65rem;
+            padding: 2px 8px;
+            border-radius: 99px;
             box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);
-            display: flex; align-items: center; gap: 4px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
         }
+
         .badge-offer {
-            background: #ef4444; color: white; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 0.7rem; position: absolute; box-shadow: 0 2px 5px rgba(239,68,68,0.4);
+            background: #ef4444;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 0.7rem;
+            position: absolute;
+            box-shadow: 0 2px 5px rgba(239, 68, 68, 0.4);
         }
+
         .badge-ai {
-            background: #3b82f6; color: white; padding: 2px 8px; border-radius: 4px; font-weight: bold; font-size: 0.7rem; position: absolute; box-shadow: 0 2px 5px rgba(59,130,246,0.4);
+            background: #3b82f6;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 0.7rem;
+            position: absolute;
+            box-shadow: 0 2px 5px rgba(59, 130, 246, 0.4);
         }
 
 
@@ -67,73 +123,191 @@
             background-image: linear-gradient(rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.95)), url('https://www.transparenttextures.com/patterns/graphy.png');
             color: #1e293b;
         }
-        .chat-bubble { max-width: 85%; padding: 12px 16px; border-radius: 18px; margin-bottom: 12px; font-size: 0.9rem; line-height: 1.5; animation: messageSlide 0.3s ease-out; position: relative; }
-        
-        .chat-bubble.bot { 
-            background: #f1f5f9; /* Slate 100 */
-            color: #334155; 
-            border-bottom-left-radius: 4px; 
+
+        .chat-bubble {
+            max-width: 85%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            margin-bottom: 12px;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            animation: messageSlide 0.3s ease-out;
+            position: relative;
+        }
+
+        .chat-bubble.bot {
+            background: #f1f5f9;
+            /* Slate 100 */
+            color: #334155;
+            border-bottom-left-radius: 4px;
             border: 1px solid #e2e8f0;
         }
+
         .chat-bubble.bot::before {
-            content: ''; position: absolute; left: -6px; bottom: 0;
-            width: 0; height: 0;
+            content: '';
+            position: absolute;
+            left: -6px;
+            bottom: 0;
+            width: 0;
+            height: 0;
             border-left: 6px solid transparent;
             border-right: 6px solid transparent;
-            border-bottom: 6px solid #e2e8f0; /* Match border color approx */
+            border-bottom: 6px solid #e2e8f0;
+            /* Match border color approx */
         }
-        .chat-bubble.user { 
-            background: linear-gradient(135deg, #3b82f6, #2563eb); 
-            color: white; 
-            border-bottom-right-radius: 4px; 
-            align-self: flex-end; 
+
+        .chat-bubble.user {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+            border-bottom-right-radius: 4px;
+            align-self: flex-end;
             text-align: right;
             box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2);
         }
-        
-        .chat-option-btn { 
-            background: rgba(0, 0, 0, 0.03); 
-            border: 1px solid rgba(0, 0, 0, 0.08); 
-            color: #475569; 
-            padding: 10px 16px; 
-            border-radius: 12px; 
-            font-size: 0.85rem; 
-            cursor: pointer; 
-            transition: all 0.2s; 
+
+        .chat-option-btn {
+            background: rgba(0, 0, 0, 0.03);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            color: #475569;
+            padding: 10px 16px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
             font-weight: 600;
             text-align: center;
             flex: 1 1 auto;
         }
-        .chat-option-btn:hover { 
-            background: rgba(59, 130, 246, 0.1); 
-            border-color: #3b82f6; 
-            color: #2563eb; 
-            transform: translateY(-2px); 
+
+        .chat-option-btn:hover {
+            background: rgba(59, 130, 246, 0.1);
+            border-color: #3b82f6;
+            color: #2563eb;
+            transform: translateY(-2px);
         }
 
         /* Animations */
-        @keyframes messageSlide { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes progress-stripes { from { background-position: 1rem 0; } to { background-position: 0 0; } }
-        .animate-stripes { background-image: linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent); background-size: 1rem 1rem; animation: progress-stripes 1s linear infinite; }
-        
+        @keyframes messageSlide {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes progress-stripes {
+            from {
+                background-position: 1rem 0;
+            }
+
+            to {
+                background-position: 0 0;
+            }
+        }
+
+        .animate-stripes {
+            background-image: linear-gradient(45deg, rgba(255, 255, 255, 0.15) 25%, transparent 25%, transparent 50%, rgba(255, 255, 255, 0.15) 50%, rgba(255, 255, 255, 0.15) 75%, transparent 75%, transparent);
+            background-size: 1rem 1rem;
+            animation: progress-stripes 1s linear infinite;
+        }
+
         /* Tracker Styles */
-        .step-item { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; flex: 1; }
-        .step-icon { width: 32px; height: 32px; border-radius: 50%; background: #f3f4f6; display: flex; align-items: center; justify-content: center; z-index: 10; border: 2px solid #e5e7eb; transition: all 0.3s; color: #6b7280; }
-        .step-item.active .step-icon { background: #2563eb; border-color: #60a5fa; box-shadow: 0 0 10px rgba(37, 99, 235, 0.3); transform: scale(1.1); color: white; }
-        .step-item.completed .step-icon { background: #059669; border-color: #34d399; color: white; }
-        .step-line { position: absolute; top: 16px; left: -50%; width: 100%; height: 2px; background: #e5e7eb; z-index: 1; }
-        .step-item:first-child .step-line { display: none; }
-        .step-item.active .step-line, .step-item.completed .step-line { background: #059669; }
-        .step-label { font-size: 0.55rem; color: #9ca3af; margin-top: 4px; text-align: center; font-weight: bold; text-transform: uppercase; transition: color 0.3s; }
-        .step-item.active .step-label { color: #2563eb; }
-        .step-item.completed .step-label { color: #059669; }
-        
+        .step-item {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            flex: 1;
+        }
+
+        .step-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #f3f4f6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            border: 2px solid #e5e7eb;
+            transition: all 0.3s;
+            color: #6b7280;
+        }
+
+        .step-item.active .step-icon {
+            background: #2563eb;
+            border-color: #60a5fa;
+            box-shadow: 0 0 10px rgba(37, 99, 235, 0.3);
+            transform: scale(1.1);
+            color: white;
+        }
+
+        .step-item.completed .step-icon {
+            background: #059669;
+            border-color: #34d399;
+            color: white;
+        }
+
+        .step-line {
+            position: absolute;
+            top: 16px;
+            left: -50%;
+            width: 100%;
+            height: 2px;
+            background: #e5e7eb;
+            z-index: 1;
+        }
+
+        .step-item:first-child .step-line {
+            display: none;
+        }
+
+        .step-item.active .step-line,
+        .step-item.completed .step-line {
+            background: #059669;
+        }
+
+        .step-label {
+            font-size: 0.55rem;
+            color: #9ca3af;
+            margin-top: 4px;
+            text-align: center;
+            font-weight: bold;
+            text-transform: uppercase;
+            transition: color 0.3s;
+        }
+
+        .step-item.active .step-label {
+            color: #2563eb;
+        }
+
+        .step-item.completed .step-label {
+            color: #059669;
+        }
+
         /* Custom Scrollbar for Modal */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
         /* AI Suggestion Banner */
         .ai-suggestion-banner {
             background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
@@ -147,36 +321,59 @@
             animation: fadeIn 0.5s ease-out;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
         }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
     </style>
 </head>
+
 <body class="text-slate-800 ai-active" onclick="resetIdleTimer()" onscroll="resetIdleTimer()">
 
     <!-- LOADER -->
-    <div id="app-loader" class="fixed inset-0 z-[100] bg-white flex flex-col items-center justify-center transition-opacity duration-500">
+    <div id="app-loader"
+        class="fixed inset-0 z-[100] bg-white flex flex-col items-center justify-center transition-opacity duration-500">
         <i class="fa-solid fa-robot text-6xl text-blue-600 animate-bounce mb-4"></i>
         <p class="text-xl font-bold text-slate-800 animate-pulse" id="loader-text">Cargando...</p>
     </div>
 
     <!-- Header / Navbar -->
     <nav class="bg-white/90 backdrop-blur-md shadow-sm fixed w-full z-50 top-0 border-b border-gray-100">
-        
+
         <!-- DISEÑO PREMIUM BARRA RASTREO (Light Mode) -->
-        <div id="tracker-header" class="hidden bg-gradient-to-r from-blue-50 via-white to-blue-50 border-b border-blue-100 w-full animate-fade-in shadow-sm relative overflow-hidden">
-            <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-5"></div>
+        <div id="tracker-header"
+            class="hidden bg-gradient-to-r from-blue-50 via-white to-blue-50 border-b border-blue-100 w-full animate-fade-in shadow-sm relative overflow-hidden">
+            <div
+                class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-5">
+            </div>
             <div class="max-w-7xl mx-auto px-4 py-3 relative z-10">
                 <div class="flex items-center justify-between gap-4">
                     <div class="flex items-center gap-4">
-                        <div class="w-10 h-10 rounded-full bg-blue-50 border border-blue-200 flex items-center justify-center relative shadow-sm">
-                            <i id="header-status-icon" class="fa-solid fa-fire-burner text-blue-600 text-lg animate-pulse"></i>
-                            <div class="absolute inset-0 rounded-full border border-blue-400 opacity-20 animate-ping"></div>
+                        <div
+                            class="w-10 h-10 rounded-full bg-blue-50 border border-blue-200 flex items-center justify-center relative shadow-sm">
+                            <i id="header-status-icon"
+                                class="fa-solid fa-fire-burner text-blue-600 text-lg animate-pulse"></i>
+                            <div class="absolute inset-0 rounded-full border border-blue-400 opacity-20 animate-ping">
+                            </div>
                         </div>
                         <div class="flex flex-col">
                             <div class="flex items-center gap-2">
-                                <span class="text-xs font-bold text-blue-600 uppercase tracking-wider" id="header-order-id">ORDEN #...</span>
-                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-700 border border-blue-200 hidden sm:inline-block" id="header-eta">Actualizado</span>
+                                <span class="text-xs font-bold text-blue-600 uppercase tracking-wider"
+                                    id="header-order-id">ORDEN #...</span>
+                                <span
+                                    class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-700 border border-blue-200 hidden sm:inline-block"
+                                    id="header-eta">Actualizado</span>
                             </div>
-                            <span class="text-sm font-bold text-slate-800 leading-tight truncate max-w-[200px]" id="header-tracker-status">Cargando estado...</span>
+                            <span class="text-sm font-bold text-slate-800 leading-tight truncate max-w-[200px]"
+                                id="header-tracker-status">Cargando estado...</span>
                         </div>
                     </div>
                     <div class="flex-1 max-w-[200px] sm:max-w-xs flex flex-col justify-center gap-1.5">
@@ -185,43 +382,56 @@
                             <span id="header-progress-text">0%</span>
                         </div>
                         <div class="h-2.5 bg-gray-200 rounded-full overflow-hidden border border-gray-100">
-                            <div id="header-progress-bar" class="h-full bg-gradient-to-r from-blue-500 to-cyan-400 animate-stripes transition-all duration-1000 ease-out" style="width: 5%"></div>
+                            <div id="header-progress-bar"
+                                class="h-full bg-gradient-to-r from-blue-500 to-cyan-400 animate-stripes transition-all duration-1000 ease-out"
+                                style="width: 5%"></div>
                         </div>
                     </div>
-                    <button onclick="toggleUserModal()" class="hidden sm:flex bg-white hover:bg-gray-50 text-gray-600 p-2 rounded-full transition border border-gray-200 hover:border-gray-300 shadow-sm">
+                    <button onclick="toggleUserModal()"
+                        class="hidden sm:flex bg-white hover:bg-gray-50 text-gray-600 p-2 rounded-full transition border border-gray-200 hover:border-gray-300 shadow-sm">
                         <i class="fa-solid fa-chevron-down"></i>
                     </button>
                 </div>
             </div>
         </div>
 
-        <div id="status-banner" class="text-white text-center py-1 text-xs font-bold tracking-wider uppercase transition-colors duration-300"></div>
-        
+        <div id="status-banner"
+            class="text-white text-center py-1 text-xs font-bold tracking-wider uppercase transition-colors duration-300">
+        </div>
+
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-14">
                 <div class="flex items-center gap-2">
-                    <div class="bg-gradient-to-br from-indigo-600 to-blue-700 w-9 h-9 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20">
+                    <div
+                        class="bg-gradient-to-br from-indigo-600 to-blue-700 w-9 h-9 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20">
                         <i class="fa-solid fa-utensils text-white text-sm"></i>
                     </div>
                     <span class="font-bold text-xl tracking-tight text-slate-900" id="brand-name">TIENDA</span>
                 </div>
                 <div class="flex items-center gap-3">
-                    <button onclick="toggleUserModal()" class="text-gray-500 hover:text-slate-900 transition flex items-center gap-2 bg-gray-50 hover:bg-gray-100 px-3 py-1.5 rounded-full border border-gray-200 hover:border-gray-300">
+                    <button onclick="toggleUserModal()"
+                        class="text-gray-500 hover:text-slate-900 transition flex items-center gap-2 bg-gray-50 hover:bg-gray-100 px-3 py-1.5 rounded-full border border-gray-200 hover:border-gray-300">
                         <i class="fa-solid fa-user-circle text-lg"></i>
                         <span id="nav-user-name" class="text-xs font-bold hidden sm:inline">Ingresar</span>
-                        <span id="nav-order-indicator" class="hidden w-2 h-2 bg-green-500 rounded-full animate-pulse absolute top-0 right-0"></span>
+                        <span id="nav-order-indicator"
+                            class="hidden w-2 h-2 bg-green-500 rounded-full animate-pulse absolute top-0 right-0"></span>
                     </button>
 
-                    <button onclick="toggleAI()" class="group relative bg-white hover:bg-blue-50 text-blue-600 border border-blue-100 hover:border-blue-300 px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-2 transition overflow-hidden shadow-sm">
+                    <button onclick="toggleAI()"
+                        class="group relative bg-white hover:bg-blue-50 text-blue-600 border border-blue-100 hover:border-blue-300 px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-2 transition overflow-hidden shadow-sm">
                         <div class="absolute inset-0 bg-blue-50/50 group-hover:bg-blue-100/50 transition"></div>
-                        <i class="fa-solid fa-sparkles animate-pulse text-purple-500"></i> <span class="hidden sm:inline bg-gradient-to-r from-blue-600 to-purple-600 text-transparent bg-clip-text font-extrabold">IA Chef</span>
+                        <i class="fa-solid fa-sparkles animate-pulse text-purple-500"></i> <span
+                            class="hidden sm:inline bg-gradient-to-r from-blue-600 to-purple-600 text-transparent bg-clip-text font-extrabold">IA
+                            Chef</span>
                     </button>
-                    
+
                     <div class="relative cursor-pointer hover:scale-110 transition duration-300" onclick="toggleCart()">
                         <div class="flex items-center gap-2">
                             <div class="relative">
-                                <i class="fa-solid fa-cart-shopping text-2xl text-slate-700 hover:text-blue-600 transition"></i>
-                                <span id="cart-count" class="absolute -top-2 -right-2 bg-red-600 text-white text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center shadow-sm">0</span>
+                                <i
+                                    class="fa-solid fa-cart-shopping text-2xl text-slate-700 hover:text-blue-600 transition"></i>
+                                <span id="cart-count"
+                                    class="absolute -top-2 -right-2 bg-red-600 text-white text-[10px] font-bold rounded-full h-4 w-4 flex items-center justify-center shadow-sm">0</span>
                             </div>
                         </div>
                     </div>
@@ -232,31 +442,44 @@
 
     <!-- Hero Section -->
     <div class="relative bg-gray-900 h-80 mt-20 flex items-center justify-center overflow-hidden">
-        <img id="hero-img" src="" class="absolute w-full h-full object-cover opacity-60 transform hover:scale-105 transition duration-[30s] scale-100">
+        <img id="hero-img" src=""
+            class="absolute w-full h-full object-cover opacity-60 transform hover:scale-105 transition duration-[30s] scale-100">
         <div class="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/50 to-transparent"></div>
         <div class="relative z-10 text-center px-4 max-w-3xl pt-10">
             <!-- Contextual Badge -->
-            <div id="context-badge" class="inline-flex items-center gap-2 mb-3 px-4 py-1.5 rounded-full bg-white/10 border border-white/20 backdrop-blur-md shadow-xl transform hover:scale-105 transition cursor-default">
+            <div id="context-badge"
+                class="inline-flex items-center gap-2 mb-3 px-4 py-1.5 rounded-full bg-white/10 border border-white/20 backdrop-blur-md shadow-xl transform hover:scale-105 transition cursor-default">
                 <i class="fa-regular fa-clock text-yellow-300 animate-spin-slow"></i>
-                <span class="text-white text-xs font-bold tracking-wide uppercase" id="context-text">Cargando contexto...</span>
+                <span class="text-white text-xs font-bold tracking-wide uppercase" id="context-text">Cargando
+                    contexto...</span>
             </div>
-            
-            <h1 class="text-5xl md:text-7xl font-bold text-white mb-2 drop-shadow-lg tracking-tight leading-none" id="hero-title">BIENVENIDO</h1>
-            <p class="text-gray-200 text-lg font-light mb-6 drop-shadow-md">Tu experiencia gastronómica, re-imaginada.</p>
+
+            <h1 class="text-4xl md:text-7xl font-bold text-white mb-2 drop-shadow-lg tracking-tight leading-none"
+                id="hero-title">BIENVENIDO</h1>
+            <p class="text-gray-200 text-lg font-light mb-6 drop-shadow-md">Tu experiencia gastronómica, re-imaginada.
+            </p>
         </div>
     </div>
 
     <!-- Filtros Inteligentes (Light) -->
-    <div class="sticky top-20 z-40 bg-white/80 backdrop-blur-xl border-b border-gray-200 py-3 mb-6 transition-all shadow-sm" id="ai-filters-bar">
+    <div class="sticky top-20 z-40 bg-white/80 backdrop-blur-xl border-b border-gray-200 py-3 mb-6 transition-all shadow-sm"
+        id="ai-filters-bar">
         <div class="max-w-7xl mx-auto px-4 overflow-x-auto">
             <div class="flex items-center gap-3 min-w-max">
-                <span class="text-gray-500 text-xs font-bold uppercase tracking-wider flex items-center gap-1"><i class="fa-solid fa-layer-group"></i> Menú:</span>
-                <button onclick="applyAIFilter('all')" class="ai-filter-btn active px-4 py-1.5 rounded-full text-xs font-medium border border-gray-200 bg-white text-gray-600 hover:text-blue-600 hover:border-blue-200 transition shadow-sm">Todo</button>
-                <button onclick="applyAIFilter('top')" class="ai-filter-btn px-4 py-1.5 rounded-full text-xs font-medium border border-gray-200 bg-white text-gray-600 hover:text-purple-600 hover:border-purple-200 transition shadow-sm"><i class="fa-solid fa-crown text-purple-500 mr-1"></i> Populares</button>
-                <button onclick="applyAIFilter('promo')" class="ai-filter-btn px-4 py-1.5 rounded-full text-xs font-medium border border-gray-200 bg-white text-gray-600 hover:text-yellow-600 hover:border-yellow-200 transition shadow-sm"><i class="fa-solid fa-tag text-yellow-500 mr-1"></i> Ofertas</button>
-                
+                <span class="text-gray-500 text-xs font-bold uppercase tracking-wider flex items-center gap-1"><i
+                        class="fa-solid fa-layer-group"></i> Menú:</span>
+                <button onclick="applyAIFilter('all')"
+                    class="ai-filter-btn active px-4 py-1.5 rounded-full text-xs font-medium border border-gray-200 bg-white text-gray-600 hover:text-blue-600 hover:border-blue-200 transition shadow-sm">Todo</button>
+                <button onclick="applyAIFilter('top')"
+                    class="ai-filter-btn px-4 py-1.5 rounded-full text-xs font-medium border border-gray-200 bg-white text-gray-600 hover:text-purple-600 hover:border-purple-200 transition shadow-sm"><i
+                        class="fa-solid fa-crown text-purple-500 mr-1"></i> Populares</button>
+                <button onclick="applyAIFilter('promo')"
+                    class="ai-filter-btn px-4 py-1.5 rounded-full text-xs font-medium border border-gray-200 bg-white text-gray-600 hover:text-yellow-600 hover:border-yellow-200 transition shadow-sm"><i
+                        class="fa-solid fa-tag text-yellow-500 mr-1"></i> Ofertas</button>
+
                 <!-- NUEVO BOTÓN SORPRÉNDEME IA -->
-                <button onclick="surpriseMeAI()" class="ai-filter-btn px-4 py-1.5 rounded-full text-xs font-medium border border-purple-200 bg-purple-50 text-purple-700 hover:bg-purple-100 transition shadow-sm flex items-center gap-1">
+                <button onclick="surpriseMeAI()"
+                    class="ai-filter-btn px-4 py-1.5 rounded-full text-xs font-medium border border-purple-200 bg-purple-50 text-purple-700 hover:bg-purple-100 transition shadow-sm flex items-center gap-1">
                     <i class="fa-solid fa-wand-magic-sparkles"></i> Sorpréndeme
                 </button>
             </div>
@@ -265,7 +488,7 @@
 
     <!-- Menu Section -->
     <div class="max-w-7xl mx-auto px-4 pb-24 min-h-[60vh]">
-        
+
         <!-- AI Suggestion Area (Dynamic) -->
         <div id="ai-suggestion-area" class="hidden">
             <!-- Populated via JS -->
@@ -275,97 +498,151 @@
         <div id="no-results" class="hidden text-center py-20">
             <i class="fa-solid fa-robot text-6xl text-gray-300 mb-4 animate-bounce"></i>
             <p class="text-gray-400 text-xl">Sin resultados para este filtro.</p>
-            <button onclick="applyAIFilter('all')" class="mt-4 text-blue-500 hover:text-blue-600 underline font-medium">Ver todo el menú</button>
+            <button onclick="applyAIFilter('all')"
+                class="mt-4 text-blue-500 hover:text-blue-600 underline font-medium">Ver todo el menú</button>
         </div>
     </div>
 
     <!-- MODAL DE OPCIONES / TOPPINGS (Light) -->
-    <div id="options-modal" class="modal fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
-        <div class="bg-white w-full max-w-sm rounded-2xl border border-gray-200 shadow-2xl overflow-hidden transform transition-all">
+    <div id="options-modal"
+        class="modal fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+        <div
+            class="bg-white w-full max-w-sm rounded-2xl border border-gray-200 shadow-2xl overflow-hidden transform transition-all">
             <div class="p-5 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
                 <h3 class="font-bold text-lg text-slate-800">Personaliza tu orden</h3>
-                <button onclick="toggleOptionsModal(false)" class="text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark text-xl"></i></button>
+                <button onclick="toggleOptionsModal(false)" class="text-gray-400 hover:text-gray-600"><i
+                        class="fa-solid fa-xmark text-xl"></i></button>
             </div>
             <div class="p-5 max-h-[60vh] overflow-y-auto bg-white">
-                <p class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3" id="options-instruction">Complementos disponibles:</p>
+                <p class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3" id="options-instruction">
+                    Complementos disponibles:</p>
                 <div id="options-list" class="space-y-3"></div>
             </div>
             <div class="p-5 bg-gray-50 border-t border-gray-200">
-                <button id="modal-confirm-btn" onclick="confirmOptions()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition shadow-lg shadow-blue-500/30">Confirmar y Agregar</button>
+                <button id="modal-confirm-btn" onclick="confirmOptions()"
+                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition shadow-lg shadow-blue-500/30">Confirmar
+                    y Agregar</button>
             </div>
         </div>
     </div>
 
     <!-- MODAL DE LOGIN USUARIO (Light) -->
-    <div id="user-modal" class="modal fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
+    <div id="user-modal"
+        class="modal fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
         <div class="modal-content bg-white w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden">
             <div class="bg-gray-50 border-b border-gray-200 flex">
-                <button onclick="switchAuthTab('login')" id="tab-login" class="flex-1 py-4 text-sm font-bold text-blue-600 border-b-2 border-blue-600 transition">Iniciar Sesión</button>
-                <button onclick="switchAuthTab('register')" id="tab-register" class="flex-1 py-4 text-sm font-medium text-gray-500 hover:text-gray-700 transition">Crear Cuenta</button>
+                <button onclick="switchAuthTab('login')" id="tab-login"
+                    class="flex-1 py-4 text-sm font-bold text-blue-600 border-b-2 border-blue-600 transition">Iniciar
+                    Sesión</button>
+                <button onclick="switchAuthTab('register')" id="tab-register"
+                    class="flex-1 py-4 text-sm font-medium text-gray-500 hover:text-gray-700 transition">Crear
+                    Cuenta</button>
             </div>
-            
+
             <div class="p-6 relative">
-                <button onclick="toggleUserModal()" class="absolute top-2 right-4 text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+                <button onclick="toggleUserModal()" class="absolute top-2 right-4 text-gray-400 hover:text-gray-600"><i
+                        class="fa-solid fa-xmark text-lg"></i></button>
 
                 <!-- LOGIN -->
                 <form id="form-login" onsubmit="event.preventDefault(); handleUserLogin();" class="space-y-4">
                     <div class="text-center mb-4">
-                        <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-2 text-xl"><i class="fa-solid fa-user"></i></div>
+                        <div
+                            class="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-2 text-xl">
+                            <i class="fa-solid fa-user"></i></div>
                         <h3 class="text-lg font-bold text-gray-800">¡Bienvenido de nuevo!</h3>
                         <p class="text-xs text-gray-500">Accede para rastrear tus pedidos.</p>
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Celular</label>
-                        <input type="tel" id="login-phone" class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-slate-800 focus:ring-2 focus:ring-blue-500 outline-none text-sm transition" placeholder="Tu número" required>
+                        <input type="tel" id="login-phone"
+                            class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-slate-800 focus:ring-2 focus:ring-blue-500 outline-none text-sm transition"
+                            placeholder="Tu número" required>
                     </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Contraseña</label>
-                        <input type="password" id="login-pass" class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-slate-800 focus:ring-2 focus:ring-blue-500 outline-none text-sm transition" placeholder="••••••••" required>
+                        <input type="password" id="login-pass"
+                            class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-slate-800 focus:ring-2 focus:ring-blue-500 outline-none text-sm transition"
+                            placeholder="••••••••" required>
                     </div>
-                    <button type="submit" class="w-full bg-slate-900 hover:bg-black text-white font-bold py-3 rounded-xl shadow-lg transition transform active:scale-95">Entrar</button>
+                    <button type="submit"
+                        class="w-full bg-slate-900 hover:bg-black text-white font-bold py-3 rounded-xl shadow-lg transition transform active:scale-95">Entrar</button>
                 </form>
 
                 <!-- REGISTER -->
-                <form id="form-register" onsubmit="event.preventDefault(); handleUserRegister();" class="space-y-4 hidden">
+                <form id="form-register" onsubmit="event.preventDefault(); handleUserRegister();"
+                    class="space-y-4 hidden">
                     <div class="text-center mb-4">
                         <h3 class="text-lg font-bold text-gray-800">Crear Cuenta</h3>
                         <p class="text-xs text-gray-500">Es rápido y fácil.</p>
                     </div>
-                    <input type="text" id="reg-name" class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-slate-800 outline-none text-sm" placeholder="Nombre Completo" required>
-                    <input type="tel" id="reg-phone" class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-slate-800 outline-none text-sm" placeholder="Celular" required>
-                    <textarea id="reg-address" class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-slate-800 outline-none text-sm" rows="2" placeholder="Dirección de entrega" required></textarea>
-                    <input type="password" id="reg-pass" class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-slate-800 outline-none text-sm" placeholder="Contraseña" required>
-                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow-lg transition">Registrarme</button>
+                    <input type="text" id="reg-name"
+                        class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-slate-800 outline-none text-sm"
+                        placeholder="Nombre Completo" required>
+                    <input type="tel" id="reg-phone"
+                        class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-slate-800 outline-none text-sm"
+                        placeholder="Celular" required>
+                    <textarea id="reg-address"
+                        class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-slate-800 outline-none text-sm"
+                        rows="2" placeholder="Dirección de entrega" required></textarea>
+                    <input type="password" id="reg-pass"
+                        class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-slate-800 outline-none text-sm"
+                        placeholder="Contraseña" required>
+                    <button type="submit"
+                        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow-lg transition">Registrarme</button>
                 </form>
 
                 <!-- PANEL USUARIO -->
                 <div id="user-info-panel" class="hidden text-center py-4">
-                    <div class="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 text-white rounded-full flex items-center justify-center mx-auto mb-3 text-3xl font-bold shadow-lg" id="user-initial">U</div>
+                    <div class="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 text-white rounded-full flex items-center justify-center mx-auto mb-3 text-3xl font-bold shadow-lg"
+                        id="user-initial">U</div>
                     <h3 class="font-bold text-xl text-gray-800" id="display-user-name">Usuario</h3>
                     <p class="text-sm text-gray-500 mb-6" id="display-user-phone">...</p>
-                    
+
                     <!-- RASTREO INTEGRADO (Solo visible si hay orden y login) -->
-                    <div id="active-order-card" class="hidden mb-6 bg-white p-5 rounded-2xl border border-blue-100 shadow-lg text-left relative overflow-hidden">
-                        <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-400 to-purple-500"></div>
+                    <div id="active-order-card"
+                        class="hidden mb-6 bg-white p-5 rounded-2xl border border-blue-100 shadow-lg text-left relative overflow-hidden">
+                        <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-400 to-purple-500">
+                        </div>
                         <div class="flex justify-between items-center mb-6">
-                            <h4 class="font-bold text-gray-800 text-sm uppercase flex items-center gap-2"><i class="fa-solid fa-location-dot text-blue-500 animate-bounce"></i> En curso</h4>
-                            <span class="text-[10px] font-mono bg-gray-100 px-2 py-1 rounded text-gray-600 border border-gray-200" id="tracker-order-id">#...</span>
+                            <h4 class="font-bold text-gray-800 text-sm uppercase flex items-center gap-2"><i
+                                    class="fa-solid fa-location-dot text-blue-500 animate-bounce"></i> En curso</h4>
+                            <span
+                                class="text-[10px] font-mono bg-gray-100 px-2 py-1 rounded text-gray-600 border border-gray-200"
+                                id="tracker-order-id">#...</span>
                         </div>
-                        
+
                         <div class="flex justify-between w-full relative mb-6">
-                            <div class="step-item active" id="step-pending"><div class="step-icon"><i class="fa-solid fa-check text-[10px]"></i></div><div class="step-label">Orden</div><div class="step-line"></div></div>
-                            <div class="step-item" id="step-preparing"><div class="step-icon"><i class="fa-solid fa-fire text-[10px]"></i></div><div class="step-label">Cocina</div><div class="step-line"></div></div>
-                            <div class="step-item" id="step-ready"><div class="step-icon"><i class="fa-solid fa-box text-[10px]"></i></div><div class="step-label">Listo</div><div class="step-line"></div></div>
-                            <div class="step-item" id="step-delivering"><div class="step-icon"><i class="fa-solid fa-motorcycle text-[10px]"></i></div><div class="step-label">Camino</div><div class="step-line"></div></div>
+                            <div class="step-item active" id="step-pending">
+                                <div class="step-icon"><i class="fa-solid fa-check text-[10px]"></i></div>
+                                <div class="step-label">Orden</div>
+                                <div class="step-line"></div>
+                            </div>
+                            <div class="step-item" id="step-preparing">
+                                <div class="step-icon"><i class="fa-solid fa-fire text-[10px]"></i></div>
+                                <div class="step-label">Cocina</div>
+                                <div class="step-line"></div>
+                            </div>
+                            <div class="step-item" id="step-ready">
+                                <div class="step-icon"><i class="fa-solid fa-box text-[10px]"></i></div>
+                                <div class="step-label">Listo</div>
+                                <div class="step-line"></div>
+                            </div>
+                            <div class="step-item" id="step-delivering">
+                                <div class="step-icon"><i class="fa-solid fa-motorcycle text-[10px]"></i></div>
+                                <div class="step-label">Camino</div>
+                                <div class="step-line"></div>
+                            </div>
                         </div>
-                        
+
                         <div class="bg-blue-50 p-3 rounded-xl border border-blue-100 text-center">
                             <p class="font-bold text-blue-700 text-sm mb-1" id="tracker-status-text">Procesando...</p>
                             <p class="text-[11px] text-blue-500" id="tracker-status-desc">...</p>
                         </div>
                     </div>
 
-                    <button onclick="logoutUser()" class="text-red-500 font-bold text-xs hover:bg-red-50 px-6 py-2 rounded-full transition">Cerrar Sesión</button>
+                    <button onclick="logoutUser()"
+                        class="text-red-500 font-bold text-xs hover:bg-red-50 px-6 py-2 rounded-full transition">Cerrar
+                        Sesión</button>
                 </div>
             </div>
         </div>
@@ -374,59 +651,82 @@
     <!-- Carrito Modal (Light) -->
     <div id="cart-modal" class="modal fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-sm">
         <div class="modal-content bg-white w-full max-w-md h-full shadow-2xl flex flex-col border-l border-gray-200">
-            <div class="bg-white p-5 text-slate-800 flex justify-between items-center shadow-sm border-b border-gray-100">
-                <h3 class="font-bold text-lg flex items-center gap-2"><i class="fa-solid fa-bag-shopping text-blue-600"></i> Tu Bolsa</h3>
-                <button onclick="toggleCart()" class="text-gray-400 hover:text-gray-600 transition"><i class="fa-solid fa-xmark text-xl"></i></button>
+            <div
+                class="bg-white p-5 text-slate-800 flex justify-between items-center shadow-sm border-b border-gray-100">
+                <h3 class="font-bold text-lg flex items-center gap-2"><i
+                        class="fa-solid fa-bag-shopping text-blue-600"></i> Tu Bolsa</h3>
+                <button onclick="toggleCart()" class="text-gray-400 hover:text-gray-600 transition"><i
+                        class="fa-solid fa-xmark text-xl"></i></button>
             </div>
             <div id="cart-items-container" class="flex-1 p-5 overflow-y-auto bg-gray-50/50"></div>
             <div class="p-6 bg-white border-t border-gray-200 shadow-[0_-5px_20px_rgba(0,0,0,0.05)]">
-                <div class="flex justify-between items-center mb-2 text-sm text-gray-500"><span>Subtotal</span><span id="cart-subtotal" class="text-slate-800">$0.00</span></div>
-                <div class="flex justify-between items-center mb-4 text-sm text-gray-500"><span>Envío</span><span id="cart-shipping" class="text-slate-800 font-bold">--</span></div>
-                <div class="flex justify-between items-center mb-6 text-2xl font-bold text-slate-900 border-t border-gray-100 pt-4"><span>Total</span><span id="cart-total" class="text-blue-600">$0.00</span></div>
-                
+                <div class="flex justify-between items-center mb-2 text-sm text-gray-500"><span>Subtotal</span><span
+                        id="cart-subtotal" class="text-slate-800">$0.00</span></div>
+                <div class="flex justify-between items-center mb-4 text-sm text-gray-500"><span>Envío</span><span
+                        id="cart-shipping" class="text-slate-800 font-bold">--</span></div>
+                <div
+                    class="flex justify-between items-center mb-6 text-2xl font-bold text-slate-900 border-t border-gray-100 pt-4">
+                    <span>Total</span><span id="cart-total" class="text-blue-600">$0.00</span></div>
+
                 <div id="checkout-form" class="hidden space-y-3 mb-4">
-                    <input type="text" id="cust-name" placeholder="Tu Nombre" class="w-full bg-gray-50 p-3 rounded-xl text-slate-800 border border-gray-200 focus:border-blue-500 outline-none transition text-sm">
-                    
+                    <input type="text" id="cust-name" placeholder="Tu Nombre"
+                        class="w-full bg-gray-50 p-3 rounded-xl text-slate-800 border border-gray-200 focus:border-blue-500 outline-none transition text-sm">
+
                     <div class="relative">
-                        <input type="tel" id="cust-phone" placeholder="Teléfono" class="w-full bg-gray-50 p-3 rounded-xl text-slate-800 border border-gray-200 focus:border-blue-500 outline-none transition text-sm">
-                        <div id="locked-phone-icon" class="hidden absolute right-3 top-3 text-green-500 text-sm" title="Verificado"><i class="fa-solid fa-circle-check"></i></div>
+                        <input type="tel" id="cust-phone" placeholder="Teléfono"
+                            class="w-full bg-gray-50 p-3 rounded-xl text-slate-800 border border-gray-200 focus:border-blue-500 outline-none transition text-sm">
+                        <div id="locked-phone-icon" class="hidden absolute right-3 top-3 text-green-500 text-sm"
+                            title="Verificado"><i class="fa-solid fa-circle-check"></i></div>
                     </div>
 
                     <div class="bg-gray-50 p-3 rounded-xl border border-gray-200">
                         <div class="flex justify-between items-center mb-2">
                             <span class="text-xs text-gray-500 font-bold uppercase">Dirección</span>
-                            <button onclick="getLocation()" class="text-[10px] bg-blue-100 hover:bg-blue-200 text-blue-700 px-2 py-1 rounded transition border border-blue-200"><i class="fa-solid fa-location-crosshairs"></i> Usar GPS</button>
+                            <button onclick="getLocation()"
+                                class="text-[10px] bg-blue-100 hover:bg-blue-200 text-blue-700 px-2 py-1 rounded transition border border-blue-200"><i
+                                    class="fa-solid fa-location-crosshairs"></i> Usar GPS</button>
                         </div>
                         <div id="location-result" class="text-xs mb-2 text-green-600 font-mono"></div>
-                        <textarea id="cust-address" placeholder="Calle, Número, Colonia..." class="w-full bg-white p-2 text-sm rounded-lg text-slate-800 border border-gray-200 focus:border-blue-500 outline-none resize-none" rows="2"></textarea>
+                        <textarea id="cust-address" placeholder="Calle, Número, Colonia..."
+                            class="w-full bg-white p-2 text-sm rounded-lg text-slate-800 border border-gray-200 focus:border-blue-500 outline-none resize-none"
+                            rows="2"></textarea>
                     </div>
-                    
+
                     <div class="mt-4">
                         <p class="text-xs font-bold text-gray-400 uppercase mb-2">Método de Pago</p>
                         <div class="flex gap-3">
                             <label class="flex-1 cursor-pointer">
-                                <input type="radio" name="pay" value="Transferencia" class="peer sr-only" checked onchange="togglePay()">
-                                <div class="bg-white peer-checked:bg-blue-50 peer-checked:border-blue-500 border border-gray-200 rounded-xl p-3 text-center text-xs transition text-slate-600 peer-checked:text-blue-700 hover:bg-gray-50">
+                                <input type="radio" name="pay" value="Transferencia" class="peer sr-only" checked
+                                    onchange="togglePay()">
+                                <div
+                                    class="bg-white peer-checked:bg-blue-50 peer-checked:border-blue-500 border border-gray-200 rounded-xl p-3 text-center text-xs transition text-slate-600 peer-checked:text-blue-700 hover:bg-gray-50">
                                     <i class="fa-solid fa-building-columns mb-1 block text-lg"></i> Transferencia
                                 </div>
                             </label>
                             <label class="flex-1 cursor-pointer">
-                                <input type="radio" name="pay" value="Efectivo" class="peer sr-only" onchange="togglePay()">
-                                <div class="bg-white peer-checked:bg-green-50 peer-checked:border-green-500 border border-gray-200 rounded-xl p-3 text-center text-xs transition text-slate-600 peer-checked:text-green-700 hover:bg-gray-50">
+                                <input type="radio" name="pay" value="Efectivo" class="peer sr-only"
+                                    onchange="togglePay()">
+                                <div
+                                    class="bg-white peer-checked:bg-green-50 peer-checked:border-green-500 border border-gray-200 rounded-xl p-3 text-center text-xs transition text-slate-600 peer-checked:text-green-700 hover:bg-gray-50">
                                     <i class="fa-solid fa-money-bill-wave mb-1 block text-lg"></i> Efectivo
                                 </div>
                             </label>
                         </div>
-                        <div id="pay-trans" class="mt-3 text-xs text-blue-800 bg-blue-50 border border-blue-100 p-3 rounded-lg">
-                            <p class="mb-1">Banco: <span id="disp-bank-name" class="font-bold text-slate-900 select-all"></span></p>
-                            <p>CLABE: <span id="disp-bank-clabe" class="font-bold text-slate-900 select-all font-mono tracking-wide"></span></p>
+                        <div id="pay-trans"
+                            class="mt-3 text-xs text-blue-800 bg-blue-50 border border-blue-100 p-3 rounded-lg">
+                            <p class="mb-1">Banco: <span id="disp-bank-name"
+                                    class="font-bold text-slate-900 select-all"></span></p>
+                            <p>CLABE: <span id="disp-bank-clabe"
+                                    class="font-bold text-slate-900 select-all font-mono tracking-wide"></span></p>
                         </div>
-                        <div id="pay-cash" class="hidden mt-3 text-xs text-green-800 bg-green-50 border border-green-100 p-3 rounded-lg">
+                        <div id="pay-cash"
+                            class="hidden mt-3 text-xs text-green-800 bg-green-50 border border-green-100 p-3 rounded-lg">
                             <p>Pagas al recibir. Por favor ten cambio listo.</p>
                         </div>
                     </div>
                 </div>
-                <button onclick="handleCheckout()" id="checkout-btn" class="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white font-bold py-4 rounded-xl shadow-lg transition transform active:scale-95 flex items-center justify-center gap-2 text-lg">
+                <button onclick="handleCheckout()" id="checkout-btn"
+                    class="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white font-bold py-4 rounded-xl shadow-lg transition transform active:scale-95 flex items-center justify-center gap-2 text-lg">
                     <span>Enviar Pedido</span> <i class="fa-brands fa-whatsapp text-xl"></i>
                 </button>
             </div>
@@ -434,35 +734,45 @@
     </div>
 
     <!-- IA Modal (PREMIUM DESIGN - LIGHT) -->
-    <div id="ai-modal" class="modal fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-        <div class="bg-white w-full max-w-sm rounded-3xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col h-[600px] animate-fade-in relative chat-container-premium">
+    <div id="ai-modal"
+        class="modal fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div
+            class="bg-white w-full max-w-sm rounded-3xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col h-[85vh] md:h-[600px] animate-fade-in relative chat-container-premium">
             <!-- Header -->
-            <div class="bg-white/80 backdrop-blur-md p-4 border-b border-gray-100 flex justify-between items-center z-10 sticky top-0">
+            <div
+                class="bg-white/80 backdrop-blur-md p-4 border-b border-gray-100 flex justify-between items-center z-10 sticky top-0">
                 <div class="flex items-center gap-3">
                     <div class="relative">
-                        <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg shadow-purple-500/20">
+                        <div
+                            class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg shadow-purple-500/20">
                             <i class="fa-solid fa-robot text-white text-lg"></i>
                         </div>
-                        <span class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full"></span>
+                        <span
+                            class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full"></span>
                     </div>
                     <div>
                         <h3 class="font-bold text-slate-800 text-sm">IA Chef (Real)</h3>
-                        <p class="text-[10px] text-blue-500 flex items-center gap-1"><span class="w-1 h-1 bg-blue-500 rounded-full animate-pulse"></span> En línea con Gemini</p>
+                        <p class="text-[10px] text-blue-500 flex items-center gap-1"><span
+                                class="w-1 h-1 bg-blue-500 rounded-full animate-pulse"></span> En línea con Gemini</p>
                     </div>
                 </div>
-                <button onclick="toggleAI()" class="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 flex items-center justify-center transition"><i class="fa-solid fa-xmark"></i></button>
+                <button onclick="toggleAI()"
+                    class="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 flex items-center justify-center transition"><i
+                        class="fa-solid fa-xmark"></i></button>
             </div>
-            
+
             <!-- Chat Area -->
             <div id="chat-container" class="flex-1 p-4 overflow-y-auto flex flex-col gap-3 relative z-0">
                 <!-- Messages will appear here -->
             </div>
-            
+
             <!-- Input Area (REAL TEXT INPUT) -->
             <div class="p-4 bg-white border-t border-gray-100 z-10">
                 <form id="ai-chat-form" onsubmit="event.preventDefault(); handleChatSubmit();" class="flex gap-2">
-                    <input type="text" id="ai-user-input" placeholder="Pregunta algo (ej: ¿Qué pido si tengo hambre?)" class="flex-1 border border-gray-200 bg-gray-50 rounded-full px-4 py-2 text-sm focus:ring-2 focus:ring-blue-100 outline-none transition">
-                    <button type="submit" class="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center hover:bg-blue-700 transition shadow-md">
+                    <input type="text" id="ai-user-input" placeholder="Pregunta algo (ej: ¿Qué pido si tengo hambre?)"
+                        class="flex-1 border border-gray-200 bg-gray-50 rounded-full px-4 py-2 text-sm focus:ring-2 focus:ring-blue-100 outline-none transition">
+                    <button type="submit"
+                        class="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center hover:bg-blue-700 transition shadow-md">
                         <i class="fa-solid fa-paper-plane text-xs"></i>
                     </button>
                 </form>
@@ -472,36 +782,38 @@
     </div>
 
     <!-- Toast Notification (Light) -->
-    <div id="toast" class="fixed bottom-8 left-1/2 transform -translate-x-1/2 bg-white border border-gray-200 text-slate-800 px-6 py-3 rounded-full opacity-0 pointer-events-none transition-all duration-300 z-[70] flex items-center gap-3 translate-y-10 shadow-xl">
-        <i class="fa-solid fa-circle-check text-green-500 text-lg"></i> <span id="toast-msg" class="font-medium text-sm">Notificación</span>
+    <div id="toast"
+        class="fixed bottom-8 left-1/2 transform -translate-x-1/2 bg-white border border-gray-200 text-slate-800 px-6 py-3 rounded-full opacity-0 pointer-events-none transition-all duration-300 z-[70] flex items-center gap-3 translate-y-10 shadow-xl">
+        <i class="fa-solid fa-circle-check text-green-500 text-lg"></i> <span id="toast-msg"
+            class="font-medium text-sm">Notificación</span>
     </div>
 
     <script>
         const API_URL = "https://menuia.onrender.com";
         let socket;
-        try { socket = io(API_URL); } catch(e) { console.warn("Socket no disponible"); }
-        
+        try { socket = io(API_URL); } catch (e) { console.warn("Socket no disponible"); }
+
         let SHOP_CONFIG = {}, MENU_DATA = {}, cart = [], userLocation = null, distanceKm = 0;
-        let allItems = []; 
+        let allItems = [];
         let idleTimer, idleWarningShown = false;
-        
+
         const urlParams = new URLSearchParams(window.location.search);
         let pathSlug = window.location.pathname.split('/').pop();
-        if(pathSlug.endsWith('.html')) pathSlug = pathSlug.replace('.html', '');
-        
+        if (pathSlug.endsWith('.html')) pathSlug = pathSlug.replace('.html', '');
+
         const SHOP_SLUG = urlParams.get('slug') || pathSlug || 'sosushi';
-        
+
         let pendingItem = null;
         let USER_DATA = JSON.parse(localStorage.getItem('menuia_user_data')) || null;
         let ACTIVE_ORDER = JSON.parse(localStorage.getItem('menuia_active_order_' + SHOP_SLUG)) || null;
         // --- TASTE LEARNING SYSTEM (LOCAL & CLOUD) ---
         function learnUserTaste(item) {
             let tastes = JSON.parse(localStorage.getItem('menuia_user_tastes')) || { items: [], categories: {} };
-            
+
             // Log Item
             if (!tastes.items.includes(item.name)) {
                 tastes.items.unshift(item.name);
-                if(tastes.items.length > 5) tastes.items.pop(); // Keep last 5
+                if (tastes.items.length > 5) tastes.items.pop(); // Keep last 5
             }
 
             // Log Category (Infer from tags if available or simple check)
@@ -510,7 +822,7 @@
 
             // 1. Save Local
             localStorage.setItem('menuia_user_tastes', JSON.stringify(tastes));
-            
+
             // 2. Save to Cloud (MongoDB) if logged in
             if (USER_DATA && USER_DATA.phone) {
                 syncTastesToCloud(tastes);
@@ -518,13 +830,13 @@
 
             checkAndShowAISuggestion(); // Update suggestion if tastes change
         }
-        
+
         // Función para enviar gustos al servidor
         async function syncTastesToCloud(tastes) {
             try {
                 await fetch(`${API_URL}/api/customer/update-tastes`, {
                     method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         phone: USER_DATA.phone,
                         tastes: tastes
@@ -551,19 +863,19 @@
         function checkAndShowAISuggestion() {
             const tastes = JSON.parse(localStorage.getItem('menuia_user_tastes'));
             const banner = document.getElementById('ai-suggestion-area');
-            
+
             if (tastes && Object.keys(tastes.categories).length > 0) {
                 // Find favorite category
                 const favCat = Object.keys(tastes.categories).reduce((a, b) => tastes.categories[a] > tastes.categories[b] ? a : b);
-                
+
                 // Find an item from that category not in recent history
                 const suggestion = allItems.find(i => detectCategory(i) === favCat && !tastes.items.includes(i.name)) || allItems[0];
-                
+
                 if (suggestion) {
                     banner.classList.remove('hidden');
                     banner.className = "ai-suggestion-banner";
                     const safeItem = JSON.stringify(suggestion).replace(/'/g, "&#39;");
-                    
+
                     banner.innerHTML = `
                         <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 text-blue-600">
                             <i class="fa-solid fa-lightbulb text-xl animate-pulse"></i>
@@ -587,26 +899,26 @@
             if (tastes) {
                 prompt = "Sorpréndeme con un plato basado en mis gustos, o algo totalmente nuevo que sea la especialidad.";
             }
-            
+
             // Simulate user typing
             const chatContainer = document.getElementById('chat-container');
-            if(chatContainer.innerHTML === '') chatContainer.innerHTML = ''; // Clear initial greeting if strictly needed or keep it
-            
+            if (chatContainer.innerHTML === '') chatContainer.innerHTML = ''; // Clear initial greeting if strictly needed or keep it
+
             // Call AI directly
-            handleChatSubmit(prompt); 
+            handleChatSubmit(prompt);
         }
 
         // --- SOCKET LOGIC ---
-        if(socket) {
+        if (socket) {
             socket.on('connect', () => { socket.emit('join-store', SHOP_SLUG); });
             socket.on('shop-updated', async () => { await loadStoreData(); showToast("Menú actualizado"); });
-            
+
             socket.on('order-created-client', (order) => {
                 // SEGURIDAD ESTRICTA: Solo guardar si es mi teléfono
                 const myPhone = USER_DATA ? USER_DATA.phone : (ACTIVE_ORDER?.customerPhone);
                 if (order.customerPhone === myPhone) {
                     saveActiveOrder(order);
-                    if(USER_DATA) {
+                    if (USER_DATA) {
                         showToast("¡Pedido Recibido!");
                         checkActiveOrder();
                     }
@@ -619,7 +931,7 @@
 
                     ACTIVE_ORDER.status = data.status;
                     localStorage.setItem('menuia_active_order_' + SHOP_SLUG, JSON.stringify(ACTIVE_ORDER));
-                    
+
                     if (data.status === 'completed') {
                         showToast("¡Pedido Entregado! 🎉");
                         setTimeout(() => checkActiveOrder(), 5000); // Hide after delay
@@ -631,12 +943,33 @@
             });
         }
 
+        // --- CONTEXT AWARENESS ---
+        function initContextAwareness() {
+            const h = new Date().getHours();
+            const textEl = document.getElementById('context-text');
+            const badgeEl = document.getElementById('context-badge');
+            const iconEl = badgeEl.querySelector('i');
+
+            // Remove previous classes that might conflict (optional, but safer to just set className)
+
+            if (h >= 5 && h < 12) {
+                textEl.innerText = "Buenos Días";
+                iconEl.className = "fa-regular fa-sun text-yellow-300 animate-spin-slow";
+            } else if (h >= 12 && h < 20) {
+                textEl.innerText = "Buenas Tardes";
+                iconEl.className = "fa-solid fa-cloud-sun text-orange-400";
+            } else {
+                textEl.innerText = "Buenas Noches";
+                iconEl.className = "fa-solid fa-moon text-indigo-300";
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => {
                 const l = document.getElementById('app-loader');
-                if(l) { l.style.opacity = '0'; setTimeout(()=>l.remove(), 500); }
-            }, 1500); 
-            
+                if (l) { l.style.opacity = '0'; setTimeout(() => l.remove(), 500); }
+            }, 1500);
+
             loadStoreData();
             resetIdleTimer();
             initUser();
@@ -654,16 +987,16 @@
             const banner = document.getElementById('tracker-header');
             const card = document.getElementById('active-order-card');
             const indicator = document.getElementById('nav-order-indicator');
-            
+
             if (isMyOrder) {
                 banner.classList.remove('hidden');
-                if(card) card.classList.remove('hidden');
-                if(indicator) indicator.classList.remove('hidden');
+                if (card) card.classList.remove('hidden');
+                if (indicator) indicator.classList.remove('hidden');
                 updateTrackerUI(ACTIVE_ORDER.status);
             } else {
                 banner.classList.add('hidden');
-                if(card) card.classList.add('hidden');
-                if(indicator) indicator.classList.add('hidden');
+                if (card) card.classList.add('hidden');
+                if (indicator) indicator.classList.add('hidden');
             }
         }
 
@@ -679,44 +1012,44 @@
         }
 
         function updateTrackerUI(status) {
-            if(!USER_DATA) return;
+            if (!USER_DATA) return;
 
             const steps = ['pending', 'preparing', 'ready', 'delivering'];
             let activeIndex = steps.indexOf(status);
-            if(status === 'completed') activeIndex = 4;
+            if (status === 'completed') activeIndex = 4;
 
             const displayId = `ORDEN #${(ACTIVE_ORDER.dailyId || '...').toString().slice(-4)}`;
             const statusText = translateStatus(status);
-            
+
             // Header Update
             document.getElementById('header-order-id').innerText = displayId;
             document.getElementById('header-tracker-status').innerText = statusText;
-            
+
             let percentage = 10;
             let iconClass = "fa-fire-burner";
-            
-            if(status === 'pending') { percentage = 25; iconClass = "fa-clipboard-check"; }
-            else if(status === 'preparing') { percentage = 50; iconClass = "fa-fire"; }
-            else if(status === 'ready') { percentage = 75; iconClass = "fa-box-open"; }
-            else if(status === 'delivering') { percentage = 90; iconClass = "fa-motorcycle"; }
-            else if(status === 'completed') { percentage = 100; iconClass = "fa-flag-checkered"; }
-            
+
+            if (status === 'pending') { percentage = 25; iconClass = "fa-clipboard-check"; }
+            else if (status === 'preparing') { percentage = 50; iconClass = "fa-fire"; }
+            else if (status === 'ready') { percentage = 75; iconClass = "fa-box-open"; }
+            else if (status === 'delivering') { percentage = 90; iconClass = "fa-motorcycle"; }
+            else if (status === 'completed') { percentage = 100; iconClass = "fa-flag-checkered"; }
+
             document.getElementById('header-progress-bar').style.width = `${percentage}%`;
             document.getElementById('header-progress-text').innerText = `${percentage}%`;
             document.getElementById('header-status-icon').className = `fa-solid ${iconClass} text-blue-600 text-lg animate-pulse`;
 
             // Modal Update
             const modalStatusTxt = document.getElementById('tracker-status-text');
-            if(modalStatusTxt) modalStatusTxt.innerText = statusText;
-            
+            if (modalStatusTxt) modalStatusTxt.innerText = statusText;
+
             const modalId = document.getElementById('tracker-order-id');
-            if(modalId) modalId.innerText = displayId;
+            if (modalId) modalId.innerText = displayId;
 
             steps.forEach((s, i) => {
                 const el = document.getElementById(`step-${s}`);
-                if(el) {
+                if (el) {
                     el.classList.remove('active', 'completed');
-                    if(i < activeIndex) el.classList.add('completed');
+                    if (i < activeIndex) el.classList.add('completed');
                     else if (i === activeIndex) el.classList.add('active');
                 }
             });
@@ -730,8 +1063,8 @@
             const r = document.getElementById('form-register');
             const lb = document.getElementById('tab-login');
             const rb = document.getElementById('tab-register');
-            
-            if(tab === 'login') {
+
+            if (tab === 'login') {
                 l.classList.remove('hidden'); r.classList.add('hidden');
                 lb.className = "flex-1 py-4 text-sm font-bold text-blue-600 border-b-2 border-blue-600 transition";
                 rb.className = "flex-1 py-4 text-sm font-medium text-gray-500 hover:text-gray-700 transition";
@@ -752,16 +1085,16 @@
             try {
                 const res = await fetch(`${API_URL}/api/customer/login`, {
                     method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ phone, password })
                 });
                 const data = await res.json();
-                
+
                 if (data.success) {
                     USER_DATA = data.customer;
-                    USER_DATA.password = password; 
+                    USER_DATA.password = password;
                     localStorage.setItem('menuia_user_data', JSON.stringify(USER_DATA));
-                    
+
                     // IMPORTANTE: Sincronizar gustos de la DB al LocalStorage
                     if (data.customer.tastes && (data.customer.tastes.items.length > 0 || Object.keys(data.customer.tastes.categories).length > 0)) {
                         localStorage.setItem('menuia_user_tastes', JSON.stringify(data.customer.tastes));
@@ -769,13 +1102,13 @@
                     } else {
                         // Si es la primera vez en este dispositivo pero tiene datos locales, subirlos
                         const localTastes = localStorage.getItem('menuia_user_tastes');
-                        if(localTastes) syncTastesToCloud(JSON.parse(localTastes));
+                        if (localTastes) syncTastesToCloud(JSON.parse(localTastes));
                     }
-                    
+
                     updateUserUI();
                     checkActiveOrder(); // IMPORTANT: Trigger tracker check on login
                     initContextAwareness(); // Re-run context logic with new data
-                    
+
                     showToast(`¡Hola, ${USER_DATA.name.split(' ')[0]}!`);
                     toggleUserModal(); // Close modal
                 } else {
@@ -790,15 +1123,15 @@
             const phone = document.getElementById('reg-phone').value;
             const address = document.getElementById('reg-address').value;
             const password = document.getElementById('reg-pass').value;
-            
+
             try {
                 const res = await fetch(`${API_URL}/api/customer/register`, {
                     method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ name, phone, address, password })
                 });
                 const data = await res.json();
-                
+
                 if (data.success) {
                     USER_DATA = { name, phone, address, password };
                     localStorage.setItem('menuia_user_data', JSON.stringify(USER_DATA));
@@ -822,23 +1155,23 @@
             const loginForm = document.getElementById('form-login');
             const regForm = document.getElementById('form-register');
             const infoPanel = document.getElementById('user-info-panel');
-            const tabs = document.querySelector('.bg-gray-50.border-b'); 
+            const tabs = document.querySelector('.bg-gray-50.border-b');
 
             if (USER_DATA) {
                 document.getElementById('nav-user-name').innerText = USER_DATA.name.split(' ')[0];
                 document.getElementById('display-user-name').innerText = USER_DATA.name;
                 document.getElementById('display-user-phone').innerText = USER_DATA.phone;
                 document.getElementById('user-initial').innerText = USER_DATA.name.charAt(0).toUpperCase();
-                
+
                 loginForm.classList.add('hidden');
                 regForm.classList.add('hidden');
-                if(tabs) tabs.classList.add('hidden');
+                if (tabs) tabs.classList.add('hidden');
                 infoPanel.classList.remove('hidden');
             } else {
                 document.getElementById('nav-user-name').innerText = "Ingresar";
-                if(tabs) tabs.classList.remove('hidden');
+                if (tabs) tabs.classList.remove('hidden');
                 infoPanel.classList.add('hidden');
-                switchAuthTab('login'); 
+                switchAuthTab('login');
             }
         }
         function toggleUserModal() { document.getElementById('user-modal').classList.toggle('active'); }
@@ -846,52 +1179,52 @@
         // --- CORE FUNCTIONS (Load, Render, Cart) ---
         async function loadStoreData() {
             try {
-                if(socket) socket.emit('register-visit', SHOP_SLUG);
+                if (socket) socket.emit('register-visit', SHOP_SLUG);
                 const res = await fetch(`${API_URL}/api/shop/${SHOP_SLUG}`);
-                if(!res.ok) throw new Error("Tienda no encontrada");
-                
-                const data = await res.json();
-                SHOP_CONFIG = data.config || {}; 
-                MENU_DATA = data.menu || {};
-                
-                allItems = [...(MENU_DATA.promos||[]), ...(MENU_DATA.especiales||[]), ...(MENU_DATA.clasicos||[]), ...(MENU_DATA.extras||[])];
-                allItems.forEach(item => { if(!item.sales) item.sales = Math.floor(Math.random() * 100); });
+                if (!res.ok) throw new Error("Tienda no encontrada");
 
-                applyConfig(); 
+                const data = await res.json();
+                SHOP_CONFIG = data.config || {};
+                MENU_DATA = data.menu || {};
+
+                allItems = [...(MENU_DATA.promos || []), ...(MENU_DATA.especiales || []), ...(MENU_DATA.clasicos || []), ...(MENU_DATA.extras || [])];
+                allItems.forEach(item => { if (!item.sales) item.sales = Math.floor(Math.random() * 100); });
+
+                applyConfig();
                 renderMenu('all');
                 checkAndShowAISuggestion(); // Update banner after load
             } catch (e) { console.error("Error loading store"); }
         }
 
         function applyConfig() {
-            if(!SHOP_CONFIG.name) return; 
+            if (!SHOP_CONFIG.name) return;
             document.title = SHOP_CONFIG.name;
             document.getElementById('brand-name').innerText = SHOP_CONFIG.name.toUpperCase();
             document.getElementById('hero-title').innerText = SHOP_CONFIG.name.toUpperCase();
             document.getElementById('hero-img').src = SHOP_CONFIG.heroImage || 'https://via.placeholder.com/800';
-            
+
             const hoursDisplay = document.getElementById('hours-display');
-            if(hoursDisplay) hoursDisplay.innerText = `Abierto ${SHOP_CONFIG.hours?.open || 9}:00 - ${SHOP_CONFIG.hours?.close || 22}:00`;
-            
-            if(SHOP_CONFIG.bank) {
+            if (hoursDisplay) hoursDisplay.innerText = `Abierto ${SHOP_CONFIG.hours?.open || 9}:00 - ${SHOP_CONFIG.hours?.close || 22}:00`;
+
+            if (SHOP_CONFIG.bank) {
                 document.getElementById('disp-bank-name').innerText = SHOP_CONFIG.bank.name || 'N/A';
                 document.getElementById('disp-bank-clabe').innerText = SHOP_CONFIG.bank.clabe || 'N/A';
             }
-            
+
             const h = new Date().getHours();
-            const isOpen = h >= (SHOP_CONFIG.hours?.open||9) && h < (SHOP_CONFIG.hours?.close||22);
+            const isOpen = h >= (SHOP_CONFIG.hours?.open || 9) && h < (SHOP_CONFIG.hours?.close || 22);
             const banner = document.getElementById('status-banner');
-            
-            if(isOpen) {
+
+            if (isOpen) {
                 if (SHOP_CONFIG.highDemand) {
-                    banner.innerText = `⚠️ ALTA DEMANDA - DEMORA: ${SHOP_CONFIG.highDemandTime || '45min'} ⚠️`; 
+                    banner.innerText = `⚠️ ALTA DEMANDA - DEMORA: ${SHOP_CONFIG.highDemandTime || '45min'} ⚠️`;
                     banner.className = "bg-orange-600 text-white text-center py-1 text-xs font-bold tracking-wider uppercase";
                 } else {
-                    banner.innerText = "¡ENVIOS DISPONIBLES AHORA!"; 
+                    banner.innerText = "¡ENVIOS DISPONIBLES AHORA!";
                     banner.className = "bg-green-600 text-white text-center py-1 text-xs font-bold tracking-wider uppercase";
                 }
             } else {
-                banner.innerText = "CERRADO - ABRE MAÑANA"; 
+                banner.innerText = "CERRADO - ABRE MAÑANA";
                 banner.className = "bg-red-600 text-white text-center py-1 text-xs font-bold tracking-wider uppercase";
             }
         }
@@ -905,15 +1238,15 @@
             const cats = ['promos', 'especiales', 'clasicos', 'extras'];
             const titles = SHOP_CONFIG.categoryTitles || {};
 
-            if(filter === 'top') {
-                const topItems = [...allItems].sort((a,b) => b.sales - a.sales).slice(0, 6);
-                if(topItems.length) { hasResults = true; renderSection(container, "🏆 Top Ventas", topItems); }
+            if (filter === 'top') {
+                const topItems = [...allItems].sort((a, b) => b.sales - a.sales).slice(0, 6);
+                if (topItems.length) { hasResults = true; renderSection(container, "🏆 Top Ventas", topItems); }
             } else {
                 cats.forEach(key => {
                     let items = MENU_DATA[key] || [];
-                    if(filter === 'promo') items = items.filter(i => (i.tags||[]).includes('promo') || key === 'promos');
-                    
-                    if(items.length > 0) {
+                    if (filter === 'promo') items = items.filter(i => (i.tags || []).includes('promo') || key === 'promos');
+
+                    if (items.length > 0) {
                         hasResults = true;
                         renderSection(container, titles[key] || key.toUpperCase(), items);
                     }
@@ -943,12 +1276,12 @@
             let badges = '';
             if (isTop) badges += `<div class="badge-ai top-2 right-2"><i class="fa-solid fa-fire"></i> Top</div>`;
             if (isPromo) badges += `<div class="badge-offer top-2 left-2">Oferta</div>`;
-            
+
             // Context Awareness Badge (Mock - "Dinner Choice")
             const h = new Date().getHours();
-            if (h > 18 && (item.tags||[]).includes('dinner')) badges += `<div class="badge-ai top-2 right-20 bg-purple-600"><i class="fa-solid fa-moon"></i> Cena</div>`;
+            if (h > 18 && (item.tags || []).includes('dinner')) badges += `<div class="badge-ai top-2 right-20 bg-purple-600"><i class="fa-solid fa-moon"></i> Cena</div>`;
 
-            const priceDisplay = item.originalPrice > item.price 
+            const priceDisplay = item.originalPrice > item.price
                 ? `<div class="flex flex-col items-end"><span class="text-xs text-gray-400 line-through">$${item.originalPrice}</span><span class="text-xl font-bold text-slate-800">$${item.price}</span></div>`
                 : `<span class="text-xl font-bold text-slate-800">$${item.price}</span>`;
 
@@ -958,7 +1291,7 @@
             <div class="sushi-card rounded-2xl overflow-hidden flex flex-col h-full relative group">
                 ${badges}
                 <div class="h-48 relative overflow-hidden bg-gray-200">
-                    <img src="${item.image||'https://via.placeholder.com/300'}" class="w-full h-full object-cover transition duration-700 transform group-hover:scale-110" loading="lazy" onerror="this.src='https://via.placeholder.com/300?text=Sin+Imagen'">
+                    <img src="${item.image || 'https://via.placeholder.com/300'}" class="w-full h-full object-cover transition duration-700 transform group-hover:scale-110" loading="lazy" onerror="this.src='https://via.placeholder.com/300?text=Sin+Imagen'">
                     <div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-30"></div>
                     <div class="absolute bottom-3 right-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg shadow-sm">${priceDisplay}</div>
                 </div>
@@ -973,7 +1306,7 @@
         }
 
         // --- CART & CHECKOUT ---
-        function toggleCart() { 
+        function toggleCart() {
             if (USER_DATA) {
                 document.getElementById('cust-name').value = USER_DATA.name;
                 document.getElementById('cust-phone').value = USER_DATA.phone;
@@ -984,11 +1317,11 @@
                 document.getElementById('cust-phone').readOnly = false;
                 document.getElementById('locked-phone-icon').classList.add('hidden');
             }
-            document.getElementById('cart-modal').classList.toggle('active'); 
+            document.getElementById('cart-modal').classList.toggle('active');
         }
         function toggleOptionsModal(show) {
             const m = document.getElementById('options-modal');
-            if(show) m.classList.add('active'); else m.classList.remove('active');
+            if (show) m.classList.add('active'); else m.classList.remove('active');
         }
         function addToCart(item) {
             // LEARN TASTE
@@ -1000,13 +1333,13 @@
                 if (group) options = group.options;
             }
 
-            if(options && options.length > 0) {
+            if (options && options.length > 0) {
                 pendingItem = item;
-                pendingItem.price = parseFloat(pendingItem.price); 
+                pendingItem.price = parseFloat(pendingItem.price);
                 const container = document.getElementById('options-list');
                 container.innerHTML = options.map((opt, idx) => {
                     const name = typeof opt === 'object' ? opt.name : opt;
-                    const price = typeof opt === 'object' ? (parseFloat(opt.price) || 0) : 0; 
+                    const price = typeof opt === 'object' ? (parseFloat(opt.price) || 0) : 0;
                     const priceTxt = price > 0 ? `(+$${price})` : '';
                     return `<label class="flex items-center p-3 bg-gray-50 border border-gray-200 rounded-xl cursor-pointer hover:bg-white hover:border-blue-300 hover:shadow-sm transition justify-between group">
                         <div class="flex items-center">
@@ -1039,13 +1372,13 @@
         function addItemToCartInternal(item, options) {
             const optionsKey = options.sort().join('|');
             const ex = cart.find(i => i.name === item.name && (i.selectedOptions || []).sort().join('|') === optionsKey);
-            if(ex) ex.qty++; else cart.push({...item, qty:1, selectedOptions: options});
-            updateCart(); showToast("Agregado a la bolsa"); confetti({particleCount:30, origin:{y:0.8}, colors: ['#3b82f6', '#10b981']});
+            if (ex) ex.qty++; else cart.push({ ...item, qty: 1, selectedOptions: options });
+            updateCart(); showToast("Agregado a la bolsa"); confetti({ particleCount: 30, origin: { y: 0.8 }, colors: ['#3b82f6', '#10b981'] });
         }
         function updateCart() {
-            document.getElementById('cart-count').innerText = cart.reduce((a,b)=>a+b.qty,0);
+            document.getElementById('cart-count').innerText = cart.reduce((a, b) => a + b.qty, 0);
             const c = document.getElementById('cart-items-container');
-            if(cart.length === 0) {
+            if (cart.length === 0) {
                 c.innerHTML = `<div class="flex flex-col items-center justify-center h-full text-gray-400 space-y-4"><i class="fa-solid fa-basket-shopping text-6xl opacity-10"></i><p>Tu bolsa está vacía</p></div>`;
                 document.getElementById('checkout-form').classList.add('hidden');
                 document.getElementById('checkout-btn').classList.add('hidden');
@@ -1054,11 +1387,11 @@
             }
             document.getElementById('checkout-btn').classList.remove('hidden');
             document.getElementById('checkout-form').classList.remove('hidden');
-            
+
             c.innerHTML = cart.map((i, idx) => {
                 const optsHtml = i.selectedOptions && i.selectedOptions.length > 0 ? `<div class="text-[10px] text-blue-500 mt-1 font-medium bg-blue-50 px-1.5 py-0.5 rounded inline-block">+ ${i.selectedOptions.join(', ')}</div>` : '';
                 return `<div class="flex items-center gap-4 mb-4 bg-white p-3 rounded-xl border border-gray-200 shadow-sm">
-                    <img src="${i.image||'https://via.placeholder.com/100'}" class="w-16 h-16 rounded-lg object-cover bg-gray-100">
+                    <img src="${i.image || 'https://via.placeholder.com/100'}" class="w-16 h-16 rounded-lg object-cover bg-gray-100">
                     <div class="flex-1 min-w-0">
                         <h4 class="text-sm font-bold text-slate-800 truncate">${i.name}</h4>
                         ${optsHtml}
@@ -1073,10 +1406,10 @@
                     </div>
                 </div>`;
             }).join('');
-            
-            let total = cart.reduce((a,b)=>a + (parseFloat(b.price) * b.qty), 0);
+
+            let total = cart.reduce((a, b) => a + (parseFloat(b.price) * b.qty), 0);
             let shipping = 0; // Simple logic
-            if(userLocation && distanceKm <= (SHOP_CONFIG.shipping?.maxRadius || 10)) {
+            if (userLocation && distanceKm <= (SHOP_CONFIG.shipping?.maxRadius || 10)) {
                 shipping = (total >= (SHOP_CONFIG.shipping?.freeThreshold || 9999)) ? 0 : Math.ceil(distanceKm * (SHOP_CONFIG.shipping?.costPerKm || 10));
             }
             document.getElementById('cart-subtotal').innerText = `$${total.toFixed(2)}`;
@@ -1084,49 +1417,49 @@
             document.getElementById('cart-total').innerText = `$${(total + shipping).toFixed(2)}`;
         }
         function changeQty(index, delta) {
-            const item = cart[index]; if(item) { item.qty += delta; if(item.qty <= 0) cart.splice(index, 1); updateCart(); }
+            const item = cart[index]; if (item) { item.qty += delta; if (item.qty <= 0) cart.splice(index, 1); updateCart(); }
         }
         function togglePay() {
             const m = document.querySelector('input[name="pay"]:checked').value;
-            document.getElementById('pay-cash').classList.toggle('hidden', m!=='efectivo');
-            document.getElementById('pay-trans').classList.toggle('hidden', m!=='transferencia');
+            document.getElementById('pay-cash').classList.toggle('hidden', m !== 'efectivo');
+            document.getElementById('pay-trans').classList.toggle('hidden', m !== 'transferencia');
         }
         function getLocation() {
-            const b = event.target; const ogHtml = b.innerHTML; b.innerHTML='<i class="fa-solid fa-spinner fa-spin"></i>';
-            navigator.geolocation.getCurrentPosition(p=>{
-                userLocation={lat:p.coords.latitude, lng:p.coords.longitude};
+            const b = event.target; const ogHtml = b.innerHTML; b.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+            navigator.geolocation.getCurrentPosition(p => {
+                userLocation = { lat: p.coords.latitude, lng: p.coords.longitude };
                 // Mock dist calc
-                distanceKm = 2.5; 
+                distanceKm = 2.5;
                 document.getElementById('location-result').innerText = `📍 Ubicación detectada (Precisión: Alta)`;
                 b.innerHTML = ogHtml;
                 updateCart();
-            }, ()=>{ alert("Activa el GPS"); b.innerHTML = ogHtml; });
+            }, () => { alert("Activa el GPS"); b.innerHTML = ogHtml; });
         }
 
         function handleCheckout() {
             const n = document.getElementById('cust-name').value;
             const p = document.getElementById('cust-phone').value;
             const a = document.getElementById('cust-address').value;
-            if(!n || !p || !a) return alert("Por favor completa tus datos de entrega.");
-            
+            if (!n || !p || !a) return alert("Por favor completa tus datos de entrega.");
+
             // Check auth for tracking
-            if(!USER_DATA) {
-                if(!confirm("⚠️ Estás ordenando como Invitado.\n\nPara poder RASTREAR tu pedido en tiempo real, te recomendamos Iniciar Sesión o Crear Cuenta primero.\n\n¿Deseas continuar de todos modos?")) return;
+            if (!USER_DATA) {
+                if (!confirm("⚠️ Estás ordenando como Invitado.\n\nPara poder RASTREAR tu pedido en tiempo real, te recomendamos Iniciar Sesión o Crear Cuenta primero.\n\n¿Deseas continuar de todos modos?")) return;
             }
 
             let method = document.querySelector('input[name="pay"]:checked').value;
             let m = `*NUEVO PEDIDO - ${SHOP_CONFIG.name}*\n----------------\n👤 ${n}\n📞 ${p}\n📍 ${a}\n💳 Pago: ${method}\n----------------\n`;
-            cart.forEach(i=> {
+            cart.forEach(i => {
                 const opts = i.selectedOptions ? ` (${i.selectedOptions.join(', ')})` : '';
-                m+=`${i.qty}x ${i.name}${opts} - $${(i.price*i.qty).toFixed(2)}\n`;
+                m += `${i.qty}x ${i.name}${opts} - $${(i.price * i.qty).toFixed(2)}\n`;
             });
             const total = document.getElementById('cart-total').innerText;
-            m+=`\n💰 *TOTAL: ${total}*`;
-            
+            m += `\n💰 *TOTAL: ${total}*`;
+
             window.open(`https://wa.me/521${SHOP_CONFIG.whatsapp}?text=${encodeURIComponent(m)}`, '_blank');
-            
+
             // Register in Backend
-            if(socket) {
+            if (socket) {
                 const orderPayload = {
                     slug: SHOP_SLUG,
                     order: {
@@ -1141,7 +1474,7 @@
                     }
                 };
                 socket.emit('register-order', orderPayload);
-                
+
                 // Save Local
                 saveActiveOrder({
                     _id: 'TEMP-' + Date.now(),
@@ -1151,56 +1484,56 @@
                     total: total
                 });
             }
-            
+
             cart = []; updateCart(); toggleCart();
             showToast("Procesando pedido...");
         }
 
-        function showToast(m) { 
-            const t=document.getElementById('toast'); 
-            document.getElementById('toast-msg').innerText=m; 
-            t.style.opacity=1; t.style.transform='translate(-50%,0)'; 
-            setTimeout(()=>{t.style.opacity=0; t.style.transform='translate(-50%,20px)'},3000); 
+        function showToast(m) {
+            const t = document.getElementById('toast');
+            document.getElementById('toast-msg').innerText = m;
+            t.style.opacity = 1; t.style.transform = 'translate(-50%,0)';
+            setTimeout(() => { t.style.opacity = 0; t.style.transform = 'translate(-50%,20px)' }, 3000);
         }
-        function resetIdleTimer() { clearTimeout(idleTimer); if(!idleWarningShown) idleTimer=setTimeout(()=>{showToast("💡 ¿No te decides? Prueba nuestra IA Chef"); idleWarningShown=true}, 20000); }
-        
+        function resetIdleTimer() { clearTimeout(idleTimer); if (!idleWarningShown) idleTimer = setTimeout(() => { showToast("💡 ¿No te decides? Prueba nuestra IA Chef"); idleWarningShown = true }, 20000); }
+
         // --- REAL AI CHATBOT (GEMINI INTEGRATION) ---
         // Replaced Simulated Neural Engine with Real API Calls
-        
-        function toggleAI() { 
-            const m=document.getElementById('ai-modal'); 
-            m.classList.toggle('active'); 
-            if(m.classList.contains('active')) {
+
+        function toggleAI() {
+            const m = document.getElementById('ai-modal');
+            m.classList.toggle('active');
+            if (m.classList.contains('active')) {
                 // Initial greeting if empty
                 const c = document.getElementById('chat-container');
-                if(c.innerHTML === '') {
+                if (c.innerHTML === '') {
                     addMsg("¡Hola! Soy tu Chef Virtual con IA real 🤖. ¿Qué se te antoja hoy?", true);
                 }
-            } 
+            }
         }
 
         async function handleChatSubmit(manualMsg = null) {
             const input = document.getElementById('ai-user-input');
             const userMsg = manualMsg || input.value.trim();
-            if(!userMsg) return;
-            
+            if (!userMsg) return;
+
             // 1. Add User Msg
             addMsg(userMsg, false);
-            if(!manualMsg) input.value = '';
-            
+            if (!manualMsg) input.value = '';
+
             // 2. Add Loading State
             const loadingId = 'loading-' + Date.now();
             addMsg('<i class="fa-solid fa-circle-notch fa-spin text-blue-500"></i> Pensando...', true, loadingId);
-            
+
             try {
                 // 3. Prepare Menu Context (Simplified for token efficiency)
                 const menuContext = allItems.map(i => ({ name: i.name, price: i.price, desc: i.description }));
-                
+
                 // --- INJECT USER TASTES INTO CONTEXT HIDDENLY ---
                 const tastes = JSON.parse(localStorage.getItem('menuia_user_tastes'));
                 let tasteContext = "";
-                if(tastes) {
-                    const topCat = Object.keys(tastes.categories).length > 0 ? 
+                if (tastes) {
+                    const topCat = Object.keys(tastes.categories).length > 0 ?
                         Object.keys(tastes.categories).reduce((a, b) => tastes.categories[a] > tastes.categories[b] ? a : b) : "Variado";
                     tasteContext = `\n[SISTEMA: El cliente prefiere: ${topCat}. Últimos pedidos: ${tastes.items.join(', ')}. Usa esto para personalizar.]`;
                 }
@@ -1208,7 +1541,7 @@
                 // 4. Call API
                 const res = await fetch(`${API_URL}/api/ai/generate`, {
                     method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         task: 'chef_chat',
                         context: {
@@ -1217,34 +1550,35 @@
                         }
                     })
                 });
-                
+
                 const data = await res.json();
-                
+
                 // 5. Remove Loading & Show Response
                 document.getElementById(loadingId).remove();
-                
-                if(data.success) {
+
+                if (data.success) {
                     addMsg(data.result, true);
                 } else {
                     addMsg("Lo siento, mi cerebro IA está descansando un momento. Intenta de nuevo.", true);
                 }
-            } catch(e) {
+            } catch (e) {
                 console.error(e);
                 const l = document.getElementById(loadingId);
-                if(l) l.remove();
+                if (l) l.remove();
                 addMsg("Error de conexión. Verifica tu internet.", true);
             }
         }
 
-        function addMsg(txt, bot, id=null) { 
-            const c = document.getElementById('chat-container'); 
+        function addMsg(txt, bot, id = null) {
+            const c = document.getElementById('chat-container');
             const div = document.createElement('div');
             div.className = `chat-bubble ${bot ? 'bot' : 'user'}`;
             div.innerHTML = txt;
-            if(id) div.id = id;
-            c.appendChild(div); 
-            c.scrollTop = c.scrollHeight; 
+            if (id) div.id = id;
+            c.appendChild(div);
+            c.scrollTop = c.scrollHeight;
         }
     </script>
 </body>
+
 </html>
