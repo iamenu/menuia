@@ -1,33 +1,55 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MenúIA Food - Tu Ciudad, Tu Comida</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Leaflet CSS & JS (OpenStreetMap) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <!-- Socket.io para rastreo en tiempo real -->
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; color: #1e293b; }
-        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+        }
+
         /* Animaciones */
-        @keyframes fade-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .animate-fade-in { animation: fade-in 0.5s ease-out forwards; }
-        
+        @keyframes fade-in {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-fade-in {
+            animation: fade-in 0.5s ease-out forwards;
+        }
+
         /* Cards */
         .shop-card {
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             border: 1px solid #e2e8f0;
         }
+
         .shop-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.1);
             border-color: #3b82f6;
         }
-        
+
         /* Hero Pattern */
         .hero-bg {
             background-color: #0f172a;
@@ -36,17 +58,53 @@
         }
 
         /* Modal */
-        .modal { transition: opacity 0.3s ease, visibility 0.3s; opacity: 0; visibility: hidden; }
-        .modal.active { opacity: 1; visibility: visible; }
-        .modal-content { transform: scale(0.95); transition: all 0.3s; }
-        .modal.active .modal-content { transform: scale(1); }
+        .modal {
+            transition: opacity 0.3s ease, visibility 0.3s;
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            transform: scale(0.95);
+            transition: all 0.3s;
+        }
+
+        .modal.active .modal-content {
+            transform: scale(1);
+        }
 
         /* Chat Styles */
-        .chat-bubble { max-width: 85%; padding: 12px 16px; border-radius: 18px; margin-bottom: 12px; font-size: 0.9rem; position: relative; animation: fade-in 0.3s; }
-        .chat-bubble.bot { background: #f1f5f9; color: #334155; border-bottom-left-radius: 4px; }
-        .chat-bubble.user { background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; border-bottom-right-radius: 4px; align-self: flex-end; text-align: right; }
+        .chat-bubble {
+            max-width: 85%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            margin-bottom: 12px;
+            font-size: 0.9rem;
+            position: relative;
+            animation: fade-in 0.3s;
+        }
+
+        .chat-bubble.bot {
+            background: #f1f5f9;
+            color: #334155;
+            border-bottom-left-radius: 4px;
+        }
+
+        .chat-bubble.user {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+            border-bottom-right-radius: 4px;
+            align-self: flex-end;
+            text-align: right;
+        }
     </style>
 </head>
+
 <body class="bg-slate-50">
 
     <!-- Navbar -->
@@ -54,20 +112,25 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
                 <div class="flex items-center gap-2">
-                    <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold"><i class="fa-solid fa-utensils"></i></div>
+                    <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold"><i
+                            class="fa-solid fa-utensils"></i></div>
                     <span class="font-bold text-xl tracking-tight text-slate-800">MenúIA</span>
                 </div>
                 <div class="flex items-center gap-3">
-                     <!-- Botón Login -->
-                     <button onclick="toggleUserModal()" class="text-gray-500 hover:text-slate-900 transition flex items-center gap-2 bg-gray-50 hover:bg-gray-100 px-3 py-1.5 rounded-full border border-gray-200">
+                    <!-- Botón Login -->
+                    <button onclick="toggleUserModal()"
+                        class="text-gray-500 hover:text-slate-900 transition flex items-center gap-2 bg-gray-50 hover:bg-gray-100 px-3 py-1.5 rounded-full border border-gray-200">
                         <i class="fa-solid fa-user-circle text-lg"></i>
                         <span id="nav-user-name" class="text-xs font-bold hidden sm:inline">Ingresar</span>
                     </button>
 
                     <!-- Botón IA -->
-                    <button onclick="toggleAI()" class="group relative bg-white hover:bg-blue-50 text-blue-600 border border-blue-100 px-4 py-2 rounded-full text-sm font-bold flex items-center gap-2 transition shadow-sm hover:shadow-md">
+                    <button onclick="toggleAI()"
+                        class="group relative bg-white hover:bg-blue-50 text-blue-600 border border-blue-100 px-4 py-2 rounded-full text-sm font-bold flex items-center gap-2 transition shadow-sm hover:shadow-md">
                         <i class="fa-solid fa-sparkles text-purple-500 animate-pulse"></i>
-                        <span class="bg-gradient-to-r from-blue-600 to-purple-600 text-transparent bg-clip-text">Asistente IA</span>
+                        <span
+                            class="bg-gradient-to-r from-blue-600 to-purple-600 text-transparent bg-clip-text">Asistente
+                            IA</span>
                     </button>
                 </div>
             </div>
@@ -78,31 +141,54 @@
     <div class="hero-bg text-white py-20 px-4 text-center relative overflow-hidden">
         <div class="absolute inset-0 bg-gradient-to-b from-transparent to-slate-900/90"></div>
         <div class="relative z-10 max-w-2xl mx-auto">
-            <span class="inline-block py-1 px-3 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-xs font-bold mb-4 uppercase tracking-wider backdrop-blur-sm">
+            <span
+                class="inline-block py-1 px-3 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-xs font-bold mb-4 uppercase tracking-wider backdrop-blur-sm">
                 <i class="fa-solid fa-bolt text-yellow-400"></i> Potenciado por Gemini
             </span>
-            <h1 class="text-4xl md:text-6xl font-bold mb-4 leading-tight">Tu comida favorita,<br><span class="text-blue-400">más inteligente.</span></h1>
-            <p class="text-gray-300 text-lg mb-8 font-light">Explora los mejores restaurantes de la ciudad con recomendaciones personalizadas para ti.</p>
-            
+            <h1 class="text-4xl md:text-6xl font-bold mb-4 leading-tight">Tu comida favorita,<br><span
+                    class="text-blue-400">más inteligente.</span></h1>
+            <p class="text-gray-300 text-lg mb-8 font-light">Explora los mejores restaurantes de la ciudad con
+                recomendaciones personalizadas para ti.</p>
+
             <div class="relative max-w-md mx-auto">
-                <input type="text" id="search-input" onkeyup="filterShops()" placeholder="¿Qué se te antoja hoy? (Sushi, Pizza...)" class="w-full px-6 py-4 rounded-full text-gray-800 focus:outline-none focus:ring-4 focus:ring-blue-500/30 shadow-xl pl-12 text-sm">
-                <i class="fa-solid fa-search absolute left-5 top-4 text-gray-400"></i>
+                <div class="flex gap-2">
+                    <div class="relative flex-1">
+                        <input type="text" id="search-input" onkeyup="filterShops()"
+                            placeholder="¿Qué buscas? (Sushi, Pizza...)"
+                            class="w-full px-6 py-4 rounded-full text-gray-800 focus:outline-none focus:ring-4 focus:ring-blue-500/30 shadow-xl pl-12 text-sm">
+                        <i class="fa-solid fa-search absolute left-5 top-4 text-gray-400"></i>
+                    </div>
+                    <button onclick="filterByLocation()" id="btn-location"
+                        class="bg-blue-600 hover:bg-blue-700 text-white rounded-full w-14 h-14 flex items-center justify-center shadow-xl transition tooltip-btn relative group"
+                        title="Usar mi ubicación">
+                        <i class="fa-solid fa-location-crosshairs text-xl"></i>
+                        <span
+                            class="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition whitespace-nowrap">Cerca
+                            de mí</span>
+                    </button>
+                </div>
+                <div id="location-status" class="text-xs mt-2 font-medium text-blue-200 hidden"></div>
             </div>
         </div>
     </div>
 
     <!-- AI Personalization Banner -->
     <div id="ai-recommendation-banner" class="max-w-7xl mx-auto px-4 -mt-8 relative z-20 hidden animate-fade-in">
-        <div class="bg-white rounded-2xl shadow-xl p-6 border border-blue-100 flex items-center gap-6 relative overflow-hidden">
-            <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-50 to-purple-50 rounded-bl-full -z-0"></div>
-            <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 flex-shrink-0 z-10">
+        <div
+            class="bg-white rounded-2xl shadow-xl p-6 border border-blue-100 flex items-center gap-6 relative overflow-hidden">
+            <div
+                class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-50 to-purple-50 rounded-bl-full -z-0">
+            </div>
+            <div
+                class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 flex-shrink-0 z-10">
                 <i class="fa-solid fa-brain text-xl"></i>
             </div>
             <div class="flex-1 z-10">
                 <h3 class="font-bold text-slate-800 text-lg">Recomendación Personalizada</h3>
                 <p class="text-slate-500 text-sm" id="ai-banner-text">Analizando tus gustos...</p>
             </div>
-            <button onclick="toggleAI()" class="bg-slate-900 hover:bg-slate-800 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition z-10 shadow-lg shadow-slate-900/20">
+            <button onclick="toggleAI()"
+                class="bg-slate-900 hover:bg-slate-800 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition z-10 shadow-lg shadow-slate-900/20">
                 Ver más
             </button>
         </div>
@@ -111,11 +197,20 @@
     <!-- Categories -->
     <div class="max-w-7xl mx-auto px-4 py-8">
         <div class="flex gap-3 overflow-x-auto pb-4 no-scrollbar" id="categories-container">
-            <button onclick="filterCategory('all')" class="cat-pill active px-4 py-2 rounded-full bg-blue-600 text-white text-sm font-bold whitespace-nowrap transition shadow-md shadow-blue-500/20">Todas</button>
-            <button onclick="filterCategory('Sushi')" class="cat-pill px-4 py-2 rounded-full bg-white text-gray-600 hover:bg-gray-100 text-sm font-bold whitespace-nowrap border border-gray-200 transition">🍣 Sushi</button>
-            <button onclick="filterCategory('Pizza')" class="cat-pill px-4 py-2 rounded-full bg-white text-gray-600 hover:bg-gray-100 text-sm font-bold whitespace-nowrap border border-gray-200 transition">🍕 Pizza</button>
-            <button onclick="filterCategory('Hamburguesas')" class="cat-pill px-4 py-2 rounded-full bg-white text-gray-600 hover:bg-gray-100 text-sm font-bold whitespace-nowrap border border-gray-200 transition">🍔 Hamburguesas</button>
-            <button onclick="filterCategory('Tacos')" class="cat-pill px-4 py-2 rounded-full bg-white text-gray-600 hover:bg-gray-100 text-sm font-bold whitespace-nowrap border border-gray-200 transition">🌮 Tacos</button>
+            <button onclick="filterCategory('all')"
+                class="cat-pill active px-4 py-2 rounded-full bg-blue-600 text-white text-sm font-bold whitespace-nowrap transition shadow-md shadow-blue-500/20">Todas</button>
+            <button onclick="filterCategory('Sushi')"
+                class="cat-pill px-4 py-2 rounded-full bg-white text-gray-600 hover:bg-gray-100 text-sm font-bold whitespace-nowrap border border-gray-200 transition">🍣
+                Sushi</button>
+            <button onclick="filterCategory('Pizza')"
+                class="cat-pill px-4 py-2 rounded-full bg-white text-gray-600 hover:bg-gray-100 text-sm font-bold whitespace-nowrap border border-gray-200 transition">🍕
+                Pizza</button>
+            <button onclick="filterCategory('Hamburguesas')"
+                class="cat-pill px-4 py-2 rounded-full bg-white text-gray-600 hover:bg-gray-100 text-sm font-bold whitespace-nowrap border border-gray-200 transition">🍔
+                Hamburguesas</button>
+            <button onclick="filterCategory('Tacos')"
+                class="cat-pill px-4 py-2 rounded-full bg-white text-gray-600 hover:bg-gray-100 text-sm font-bold whitespace-nowrap border border-gray-200 transition">🌮
+                Tacos</button>
         </div>
     </div>
 
@@ -134,22 +229,32 @@
     </div>
 
     <!-- MODAL DE LOGIN (Copia Adaptada) -->
-    <div id="user-modal" class="modal fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
+    <div id="user-modal"
+        class="modal fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
         <div class="modal-content bg-white w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden relative">
-            <button onclick="toggleUserModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600"><i class="fa-solid fa-xmark text-lg"></i></button>
-            
+            <button onclick="toggleUserModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600"><i
+                    class="fa-solid fa-xmark text-lg"></i></button>
+
             <div class="p-8">
                 <div class="text-center mb-6">
-                    <div class="w-14 h-14 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl"><i class="fa-solid fa-user-astronaut"></i></div>
+                    <div
+                        class="w-14 h-14 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl">
+                        <i class="fa-solid fa-user-astronaut"></i>
+                    </div>
                     <h3 class="text-xl font-bold text-slate-800" id="modal-title">Iniciar Sesión</h3>
                     <p class="text-xs text-gray-500 mt-1">Accede para ver tus recomendaciones personalizadas.</p>
                 </div>
 
                 <!-- LOGIN FORM -->
                 <form id="form-login" onsubmit="event.preventDefault(); handleUserLogin();" class="space-y-4">
-                    <input type="tel" id="login-phone" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-slate-800 focus:ring-2 focus:ring-blue-500 outline-none text-sm font-medium" placeholder="Tu celular" required>
-                    <input type="password" id="login-pass" class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-slate-800 focus:ring-2 focus:ring-blue-500 outline-none text-sm font-medium" placeholder="Contraseña" required>
-                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-blue-500/30 transition transform active:scale-95">Entrar</button>
+                    <input type="tel" id="login-phone"
+                        class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-slate-800 focus:ring-2 focus:ring-blue-500 outline-none text-sm font-medium"
+                        placeholder="Tu celular" required>
+                    <input type="password" id="login-pass"
+                        class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-slate-800 focus:ring-2 focus:ring-blue-500 outline-none text-sm font-medium"
+                        placeholder="Contraseña" required>
+                    <button type="submit"
+                        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-blue-500/30 transition transform active:scale-95">Entrar</button>
                 </form>
 
                 <!-- USER INFO -->
@@ -160,42 +265,54 @@
                         <p class="text-xs text-blue-600 font-bold uppercase mb-1">Tus Gustos Detectados</p>
                         <p class="text-sm text-slate-700" id="user-tastes-summary">Aún no hay suficiente info.</p>
                     </div>
-                    <button onclick="logoutUser()" class="text-red-500 font-bold text-sm hover:underline">Cerrar Sesión</button>
+                    <button onclick="logoutUser()" class="text-red-500 font-bold text-sm hover:underline">Cerrar
+                        Sesión</button>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- AI MARKETPLACE CHAT MODAL -->
-    <div id="ai-modal" class="modal fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-        <div class="bg-white w-full max-w-sm rounded-3xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col h-[600px] animate-fade-in relative">
+    <div id="ai-modal"
+        class="modal fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div
+            class="bg-white w-full max-w-sm rounded-3xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col h-[600px] animate-fade-in relative">
             <!-- Header -->
-            <div class="bg-white/80 backdrop-blur-md p-4 border-b border-gray-100 flex justify-between items-center z-10 sticky top-0">
+            <div
+                class="bg-white/80 backdrop-blur-md p-4 border-b border-gray-100 flex justify-between items-center z-10 sticky top-0">
                 <div class="flex items-center gap-3">
                     <div class="relative">
-                        <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg shadow-purple-500/20">
+                        <div
+                            class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg shadow-purple-500/20">
                             <i class="fa-solid fa-map-location-dot text-white text-lg"></i>
                         </div>
-                        <span class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full"></span>
+                        <span
+                            class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full"></span>
                     </div>
                     <div>
                         <h3 class="font-bold text-slate-800 text-sm">Guía Gastronómico</h3>
-                        <p class="text-[10px] text-blue-500 flex items-center gap-1"><span class="w-1 h-1 bg-blue-500 rounded-full animate-pulse"></span> Gemini AI</p>
+                        <p class="text-[10px] text-blue-500 flex items-center gap-1"><span
+                                class="w-1 h-1 bg-blue-500 rounded-full animate-pulse"></span> Gemini AI</p>
                     </div>
                 </div>
-                <button onclick="toggleAI()" class="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 flex items-center justify-center transition"><i class="fa-solid fa-xmark"></i></button>
+                <button onclick="toggleAI()"
+                    class="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 flex items-center justify-center transition"><i
+                        class="fa-solid fa-xmark"></i></button>
             </div>
-            
+
             <!-- Chat Area -->
-            <div id="chat-container" class="flex-1 p-4 overflow-y-auto flex flex-col gap-3 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] bg-fixed">
+            <div id="chat-container"
+                class="flex-1 p-4 overflow-y-auto flex flex-col gap-3 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] bg-fixed">
                 <!-- Messages -->
             </div>
-            
+
             <!-- Input Area -->
             <div class="p-4 bg-white border-t border-gray-100 z-10">
                 <form id="ai-chat-form" onsubmit="event.preventDefault(); handleMarketplaceChat();" class="flex gap-2">
-                    <input type="text" id="ai-user-input" placeholder="Ej: Busco algo picante..." class="flex-1 border border-gray-200 bg-gray-50 rounded-full px-4 py-2 text-sm focus:ring-2 focus:ring-blue-100 outline-none transition">
-                    <button type="submit" class="w-10 h-10 bg-indigo-600 text-white rounded-full flex items-center justify-center hover:bg-indigo-700 transition shadow-md">
+                    <input type="text" id="ai-user-input" placeholder="Ej: Busco algo picante..."
+                        class="flex-1 border border-gray-200 bg-gray-50 rounded-full px-4 py-2 text-sm focus:ring-2 focus:ring-blue-100 outline-none transition">
+                    <button type="submit"
+                        class="w-10 h-10 bg-indigo-600 text-white rounded-full flex items-center justify-center hover:bg-indigo-700 transition shadow-md">
                         <i class="fa-solid fa-paper-plane text-xs"></i>
                     </button>
                 </form>
@@ -204,7 +321,7 @@
     </div>
 
     <script>
-        const API_URL = "https://menuia.onrender.com"; 
+        const API_URL = "https://menuia.onrender.com";
         let ALL_SHOPS = [];
         let CURRENT_FILTER = 'all';
         let USER_DATA = JSON.parse(localStorage.getItem('menuia_user_data')) || null;
@@ -212,20 +329,21 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             initUser();
+            initAutoLocation(); // Auto-start location
             loadShops();
         });
 
         // --- AUTH & USER DATA LOGIC ---
         function initUser() {
-            if(USER_DATA) {
+            if (USER_DATA) {
                 document.getElementById('nav-user-name').innerText = USER_DATA.name.split(' ')[0];
                 document.getElementById('display-user-name').innerText = USER_DATA.name;
                 document.getElementById('display-user-phone').innerText = USER_DATA.phone;
-                
+
                 document.getElementById('form-login').classList.add('hidden');
                 document.getElementById('user-logged-info').classList.remove('hidden');
                 document.getElementById('modal-title').innerText = "Tu Perfil";
-                
+
                 displayTastesSummary();
                 checkAndShowAISuggestion(); // Muestra el banner
             } else {
@@ -246,18 +364,18 @@
             try {
                 const res = await fetch(`${API_URL}/api/customer/login`, {
                     method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ phone, password })
                 });
                 const data = await res.json();
-                
+
                 if (data.success) {
                     USER_DATA = data.customer;
                     USER_DATA.password = password; // Guardar pass para sesiones futuras (simple)
                     localStorage.setItem('menuia_user_data', JSON.stringify(USER_DATA));
 
                     // Recuperar gustos
-                    if(data.customer.tastes) {
+                    if (data.customer.tastes) {
                         USER_TASTES = data.customer.tastes;
                         localStorage.setItem('menuia_user_tastes', JSON.stringify(USER_TASTES));
                     }
@@ -281,9 +399,9 @@
         }
 
         function displayTastesSummary() {
-            if(USER_TASTES && USER_TASTES.categories) {
+            if (USER_TASTES && USER_TASTES.categories) {
                 const topCats = Object.entries(USER_TASTES.categories)
-                    .sort((a,b) => b[1] - a[1])
+                    .sort((a, b) => b[1] - a[1])
                     .slice(0, 3)
                     .map(e => e[0])
                     .join(', ');
@@ -301,11 +419,11 @@
             try {
                 const res = await fetch(`${API_URL}/api/shops/public`);
                 const data = await res.json();
-                if(data.success) {
+                if (data.success) {
                     ALL_SHOPS = data.shops;
                     renderShops(ALL_SHOPS);
                 }
-            } catch(e) {
+            } catch (e) {
                 console.error("Error loading shops", e);
                 document.getElementById('shops-grid').innerHTML = `<p class="col-span-full text-center text-red-400">Error cargando tiendas.</p>`;
             }
@@ -313,15 +431,15 @@
 
         function renderShops(shops) {
             const grid = document.getElementById('shops-grid');
-            if(shops.length === 0) {
+            if (shops.length === 0) {
                 grid.innerHTML = `<div class="col-span-full text-center py-10 opacity-50"><i class="fa-solid fa-store-slash text-4xl mb-2"></i><p>No se encontraron restaurantes.</p></div>`;
                 return;
             }
 
             grid.innerHTML = shops.map(shop => {
                 const isOpen = isShopOpen(shop.config?.hours);
-                const statusHtml = isOpen 
-                    ? `<span class="bg-green-100 text-green-700 text-[10px] font-bold px-2 py-1 rounded-full border border-green-200">ABIERTO</span>` 
+                const statusHtml = isOpen
+                    ? `<span class="bg-green-100 text-green-700 text-[10px] font-bold px-2 py-1 rounded-full border border-green-200">ABIERTO</span>`
                     : `<span class="bg-red-100 text-red-700 text-[10px] font-bold px-2 py-1 rounded-full border border-red-200">CERRADO</span>`;
 
                 return `
@@ -336,6 +454,7 @@
                         <p class="text-xs text-gray-500 font-medium uppercase tracking-wide mb-3">${shop.config?.businessType || 'General'}</p>
                         <div class="flex items-center gap-2 text-xs text-gray-400">
                             <span><i class="fa-solid fa-clock"></i> ${shop.config?.hours?.open || 9}:00 - ${shop.config?.hours?.close || 22}:00</span>
+                            ${shop.distanceKm ? `<span class="text-blue-500 font-bold"><i class="fa-solid fa-location-arrow"></i> ${shop.distanceKm} km</span>` : ''}
                             <span>•</span>
                             <span><i class="fa-solid fa-location-dot"></i> ${shop.config?.address ? 'Ver mapa' : 'Ubicación'}</span>
                         </div>
@@ -345,7 +464,7 @@
         }
 
         function isShopOpen(hours) {
-            if(!hours) return true; 
+            if (!hours) return true;
             const h = new Date().getHours();
             return h >= (hours.open || 0) && h < (hours.close || 24);
         }
@@ -355,7 +474,7 @@
             document.querySelectorAll('.cat-pill').forEach(b => {
                 b.classList.remove('bg-blue-600', 'text-white');
                 b.classList.add('bg-white', 'text-gray-600');
-                if(b.innerText.includes(cat) || (cat==='all' && b.innerText==='Todas')) {
+                if (b.innerText.includes(cat) || (cat === 'all' && b.innerText === 'Todas')) {
                     b.classList.add('bg-blue-600', 'text-white');
                     b.classList.remove('bg-white', 'text-gray-600');
                 }
@@ -368,19 +487,99 @@
             const filtered = ALL_SHOPS.filter(s => {
                 const matchesSearch = (s.config?.name || '').toLowerCase().includes(term) || (s.config?.businessType || '').toLowerCase().includes(term);
                 const matchesCat = CURRENT_FILTER === 'all' || (s.config?.businessType || '').includes(CURRENT_FILTER);
-                return matchesSearch && matchesCat;
+
+                // Location Filter Check
+                let matchesLoc = true;
+                if (window.userLat && window.userLng && s.mockLocation) {
+                    const dist = calculateDistance(window.userLat, window.userLng, s.mockLocation.lat, s.mockLocation.lng);
+                    s.distanceKm = dist.toFixed(1); // Guarda la distancia para mostrarla
+                    if (document.getElementById('btn-location').classList.contains('bg-green-600')) {
+                        matchesLoc = dist <= 10; // 10km radius filter if active
+                    }
+                }
+
+                return matchesSearch && matchesCat && matchesLoc;
             });
+
+            // Sort by distance if location active
+            if (window.userLat && window.userLng) {
+                filtered.sort((a, b) => (parseFloat(a.distanceKm) || 999) - (parseFloat(b.distanceKm) || 999));
+            }
+
             renderShops(filtered);
         }
 
+        // --- GEOLOCATION LOGIC ---
+        function filterByLocation() {
+            const btn = document.getElementById('btn-location');
+            const status = document.getElementById('location-status');
+
+            if (btn.classList.contains('bg-green-600')) {
+                // Deactivate
+                btn.classList.remove('bg-green-600');
+                btn.classList.add('bg-blue-600');
+                status.classList.add('hidden');
+                window.userLat = null; window.userLng = null;
+                filterShops();
+                return;
+            }
+
+            btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i>';
+            status.innerHTML = "📍 Buscando tu ubicación...";
+            status.classList.remove('hidden');
+
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    window.userLat = pos.coords.latitude;
+                    window.userLng = pos.coords.longitude;
+
+                    btn.classList.remove('bg-blue-600');
+                    btn.classList.add('bg-green-600');
+                    btn.innerHTML = '<i class="fa-solid fa-map-location-dot"></i>';
+
+                    status.innerHTML = `✅ Ubicación detectada (Precisión: ${pos.coords.accuracy.toFixed(0)}m). Mostrando restaurantes a 10km.`;
+
+                    // Inject Mock Locations to Shops for Demo
+                    ALL_SHOPS.forEach((s, i) => {
+                        // Mock random locations around user or fixed point for demo
+                        // Using a fixed offset spread to ensure some are "near" and some "far"
+                        s.mockLocation = {
+                            lat: window.userLat + (Math.random() - 0.5) * 0.1,
+                            lng: window.userLng + (Math.random() - 0.5) * 0.1
+                        };
+                    });
+
+                    filterShops();
+                },
+                (err) => {
+                    console.error(err);
+                    btn.innerHTML = '<i class="fa-solid fa-location-crosshairs"></i>';
+                    btn.classList.add('shake'); setTimeout(() => btn.classList.remove('shake'), 500);
+                    status.innerHTML = "❌ No se pudo obtener ubicación. Verifica permisos.";
+                },
+                { enableHighAccuracy: true, timeout: 5000 }
+            );
+        }
+
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371; // km
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c;
+        }
+
         // --- AI LOGIC FOR MARKETPLACE ---
-        
+
         function toggleAI() {
             const m = document.getElementById('ai-modal');
             m.classList.toggle('active');
-            if(m.classList.contains('active')) {
+            if (m.classList.contains('active')) {
                 const c = document.getElementById('chat-container');
-                if(c.innerHTML === '') {
+                if (c.innerHTML === '') {
                     addMsg("👋 ¡Hola! Soy tu guía de la ciudad. Dime qué se te antoja y te diré dónde ir.", true);
                 }
             }
@@ -389,11 +588,11 @@
         async function handleMarketplaceChat() {
             const input = document.getElementById('ai-user-input');
             const txt = input.value.trim();
-            if(!txt) return;
+            if (!txt) return;
 
             addMsg(txt, false);
             input.value = '';
-            
+
             const loadingId = 'load-' + Date.now();
             addMsg('<i class="fa-solid fa-circle-notch fa-spin"></i> Buscando lugares...', true, loadingId);
 
@@ -407,14 +606,14 @@
 
                 // Inyectar gustos del usuario
                 let userContext = "";
-                if(USER_TASTES && USER_TASTES.categories) {
+                if (USER_TASTES && USER_TASTES.categories) {
                     const top = Object.keys(USER_TASTES.categories).join(', ');
                     userContext = `(El usuario prefiere: ${top})`;
                 }
 
                 const res = await fetch(`${API_URL}/api/ai/generate`, {
                     method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         task: 'marketplace_assistant',
                         context: {
@@ -427,13 +626,13 @@
                 const data = await res.json();
                 document.getElementById(loadingId).remove();
 
-                if(data.success) {
+                if (data.success) {
                     addMsg(data.result, true);
                 } else {
                     addMsg("Lo siento, me perdí en el mapa. Intenta de nuevo.", true);
                 }
 
-            } catch(e) {
+            } catch (e) {
                 document.getElementById(loadingId).remove();
                 addMsg("Error de conexión.", true);
             }
@@ -443,27 +642,28 @@
             const c = document.getElementById('chat-container');
             const d = document.createElement('div');
             d.className = `chat-bubble ${isBot ? 'bot' : 'user'}`;
-            if(id) d.id = id;
+            if (id) d.id = id;
             d.innerHTML = html;
             c.appendChild(d);
             c.scrollTop = c.scrollHeight;
         }
 
         function checkAndShowAISuggestion() {
-            if(!USER_TASTES || !USER_TASTES.categories) return;
-            
+            if (!USER_TASTES || !USER_TASTES.categories) return;
+
             // Encontrar categoría favorita
             const cats = USER_TASTES.categories;
             const favCat = Object.keys(cats).reduce((a, b) => cats[a] > cats[b] ? a : b);
 
-            if(favCat) {
+            if (favCat) {
                 const banner = document.getElementById('ai-recommendation-banner');
                 const txt = document.getElementById('ai-banner-text');
-                
+
                 txt.innerHTML = `Vemos que te encanta <b>${favCat}</b>. ¡Pregúntale a nuestra IA por los mejores lugares de ${favCat}!`;
                 banner.classList.remove('hidden');
             }
         }
     </script>
 </body>
+
 </html>
