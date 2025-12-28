@@ -414,7 +414,9 @@
                 <div class="flex items-center gap-3">
                     <button onclick="toggleUserModal()"
                         class="text-gray-500 hover:text-slate-900 transition flex items-center gap-2 bg-gray-50 hover:bg-gray-100 px-3 py-1.5 rounded-full border border-gray-200 hover:border-gray-300">
-                        <i class="fa-solid fa-user-circle text-lg"></i>
+                        <div id="nav-user-icon-wrapper" class="w-6 h-6 flex items-center justify-center">
+                            <i class="fa-solid fa-user-circle text-lg"></i>
+                        </div>
                         <span id="nav-user-name" class="text-xs font-bold hidden sm:inline">Ingresar</span>
                         <span id="nav-order-indicator"
                             class="hidden w-2 h-2 bg-green-500 rounded-full animate-pulse absolute top-0 right-0"></span>
@@ -597,8 +599,18 @@
 
                 <!-- PANEL USUARIO -->
                 <div id="user-info-panel" class="hidden text-center py-4">
-                    <div class="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 text-white rounded-full flex items-center justify-center mx-auto mb-3 text-3xl font-bold shadow-lg"
-                        id="user-initial">U</div>
+                    <div class="relative w-24 h-24 mx-auto mb-4 group">
+                        <img id="profile-img-preview" src="https://ui-avatars.com/api/?name=Usuario&background=random"
+                            class="w-full h-full rounded-full object-cover border-4 border-blue-50 shadow-md">
+
+                        <label for="profile-upload"
+                            class="absolute bottom-0 right-0 bg-blue-600 text-white w-8 h-8 rounded-full flex items-center justify-center cursor-pointer shadow-lg hover:bg-blue-700 transition transform hover:scale-110">
+                            <i class="fa-solid fa-camera text-xs"></i>
+                        </label>
+                        <input type="file" id="profile-upload" class="hidden" accept="image/*"
+                            onchange="uploadProfileImage(this)">
+                    </div>
+
                     <h3 class="font-bold text-xl text-gray-800" id="display-user-name">Usuario</h3>
                     <p class="text-sm text-gray-500 mb-6" id="display-user-phone">...</p>
 
@@ -1203,7 +1215,22 @@
                 document.getElementById('nav-user-name').innerText = USER_DATA.name.split(' ')[0];
                 document.getElementById('display-user-name').innerText = USER_DATA.name;
                 document.getElementById('display-user-phone').innerText = USER_DATA.phone;
-                document.getElementById('user-initial').innerText = USER_DATA.name.charAt(0).toUpperCase();
+
+                // Set Profile Image
+                const img = document.getElementById('profile-img-preview');
+                if (img) {
+                    img.src = USER_DATA.profileImage || `https://ui-avatars.com/api/?name=${USER_DATA.name}&background=random`;
+                }
+
+                // Navbar Avatar
+                const navIconWrapper = document.getElementById('nav-user-icon-wrapper');
+                if (navIconWrapper) {
+                    if (USER_DATA.profileImage) {
+                        navIconWrapper.innerHTML = `<img src="${USER_DATA.profileImage}" class="w-full h-full rounded-full object-cover">`;
+                    } else {
+                        navIconWrapper.innerHTML = `<div class="w-full h-full rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">${USER_DATA.name.charAt(0)}</div>`;
+                    }
+                }
 
                 loginForm.classList.add('hidden');
                 regForm.classList.add('hidden');
@@ -1211,12 +1238,68 @@
                 infoPanel.classList.remove('hidden');
             } else {
                 document.getElementById('nav-user-name').innerText = "Ingresar";
+
+                // Reset Navbar
+                const navIconWrapper = document.getElementById('nav-user-icon-wrapper');
+                if (navIconWrapper) {
+                    navIconWrapper.innerHTML = `<i class="fa-solid fa-user-circle text-lg"></i>`;
+                }
+
                 if (tabs) tabs.classList.remove('hidden');
                 infoPanel.classList.add('hidden');
                 switchAuthTab('login');
             }
         }
         function toggleUserModal() { document.getElementById('user-modal').classList.toggle('active'); }
+
+        async function uploadProfileImage(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            // MongoDB Limit Safety (10MB)
+            if (file.size > 10 * 1024 * 1024) {
+                alert("La imagen es muy pesada (Máx 10MB). Por favor elige una más ligera.");
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = async function (e) {
+                const base64 = e.target.result;
+
+                // Optimistic UI Update
+                document.getElementById('profile-img-preview').src = base64;
+
+                // Optimistic UI Update (Navbar)
+                const navIconWrapper = document.getElementById('nav-user-icon-wrapper');
+                if (navIconWrapper) {
+                    navIconWrapper.innerHTML = `<img src="${base64}" class="w-full h-full rounded-full object-cover">`;
+                }
+
+                // Send to Server
+                try {
+                    const res = await fetch(`${API_URL}/api/customer/upload-profile`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            phone: USER_DATA.phone,
+                            image: base64
+                        })
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        // Update LocalStorage
+                        USER_DATA.profileImage = base64;
+                        localStorage.setItem('menuia_user_data', JSON.stringify(USER_DATA));
+                    } else {
+                        alert("Error al guardar en la nube: " + (data.error || "Intenta con una imagen más pequeña."));
+                    }
+                } catch (err) {
+                    console.error(err);
+                    alert("Error de conexión al subir imagen");
+                }
+            };
+            reader.readAsDataURL(file);
+        }
 
         // --- CORE FUNCTIONS (Load, Render, Cart) ---
         async function loadStoreData() {
