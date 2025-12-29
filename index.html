@@ -887,7 +887,8 @@
             status.classList.remove('hidden');
 
             if (!navigator.geolocation) {
-                status.innerHTML = "❌ GPS no soportado.";
+                // Fallback immediately if no Geo support
+                detectLocationByIP();
                 return;
             }
 
@@ -895,29 +896,19 @@
             let bestAccuracy = Infinity;
             let bestPos = null;
             const TARGET_ACCURACY = 20; // meters
-            const MAX_WAIT_TIME = 15000; // 15 seconds limit
+            const MAX_WAIT_TIME = 10000; // Reduced to 10s for faster fallback
 
             // Timeout fallback
             const timeoutId = setTimeout(() => {
                 if (watchId !== null) navigator.geolocation.clearWatch(watchId);
 
-                if (bestPos) {
-                    console.log(`Timeout reached. Best accuracy: ${bestAccuracy}m`);
-                    if (bestAccuracy <= 60) {
-                        // Accept somewhat ok accuracy
-                        finishDetection(bestPos, `Margen: ~${Math.round(bestAccuracy)}m`);
-                    } else {
-                        // Too imprecise, force manual
-                        status.innerHTML = `⚠️ Precisión baja (${Math.round(bestAccuracy)}m). Abriendo mapa...`;
-                        window.userLat = bestPos.coords.latitude;
-                        window.userLng = bestPos.coords.longitude;
-                        setTimeout(() => {
-                            openAddressModal();
-                            alert(`Tu GPS tiene poca señal (Error: ${Math.round(bestAccuracy)}m). Mueve el pin a tu entrada exacta.`);
-                        }, 1000);
-                    }
+                if (bestPos && bestAccuracy <= 100) {
+                    // If we have a decent GPS position (~100m), accept it
+                    finishDetection(bestPos, `Margen: ~${Math.round(bestAccuracy)}m`);
                 } else {
-                    status.innerHTML = "❌ Sin señal GPS. Intenta manual.";
+                    // No signal or very poor signal -> IP FALLBACK
+                    status.innerHTML = "⚠️ Señal GPS débil. Buscando por internet...";
+                    detectLocationByIP();
                 }
             }, MAX_WAIT_TIME);
 
@@ -943,19 +934,21 @@
                 },
                 (err) => {
                     console.error("GPS Error", err);
-                    if (err.code === 1) { // User denied
+                    // On error (denied/timeout/unavailable), try IP immediately
+                    if (err.code === 1 || err.code === 2 || err.code === 3) {
                         clearTimeout(timeoutId);
                         if (watchId !== null) navigator.geolocation.clearWatch(watchId);
-                        status.innerHTML = "❌ Permiso GPS denegado.";
+                        status.innerHTML = "⚠️ GPS no disponible. Usando red...";
+                        detectLocationByIP();
                     }
                 },
-                { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
             );
 
             async function finishDetection(pos, msg) {
                 const lat = pos.coords.latitude;
                 const lng = pos.coords.longitude;
-                const accuracy = pos.coords.accuracy; // Define here
+                const accuracy = pos.coords.accuracy;
 
                 try {
                     const res = await fetch(`${API_URL}/api/utils/reverse-geocode`, {
@@ -972,6 +965,42 @@
                     setClientLocation(lat, lng, "Ubicación Detectada");
                     status.classList.add('hidden');
                 }
+            }
+        }
+
+        async function detectLocationByIP() {
+            const status = document.getElementById('location-status');
+            status.innerHTML = '<i class="fa-solid fa-globe fa-spin"></i> Localizando por IP...';
+            status.classList.remove('hidden');
+
+            try {
+                // Using ipapi.co as a free fallback (Rate limited but good for backup)
+                // Alternative: ip-api.com (HTTP only often), ipwho.is (Free)
+                const res = await fetch('https://ipapi.co/json/');
+                if (!res.ok) throw new Error("IP Service Failed");
+                const data = await res.json();
+
+                if (data.latitude && data.longitude) {
+                    const lat = data.latitude;
+                    const lng = data.longitude;
+                    const addr = `${data.city}, ${data.region_code}`; // Approximate address
+
+                    console.log("✅ IP Location Found:", lat, lng, addr);
+                    setClientLocation(lat, lng, addr || "Ubicación Aproximada (Red)");
+
+                    status.innerHTML = "";
+                    status.classList.add('hidden');
+                    // Optional: Alert user we used rough location
+                    // alert("No pudimos usar tu GPS, así que usamos tu ubicación aproximada de internet.");
+                } else {
+                    throw new Error("Invalid IP Data");
+                }
+            } catch (e) {
+                console.warn("IP Fallback failed:", e);
+                status.innerHTML = "❌ Ubicación fallida. Selecciona manual.";
+                setTimeout(() => {
+                    openAddressModal(); // Final Fallback: Manual
+                }, 1500);
             }
         }
 
