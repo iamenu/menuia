@@ -237,29 +237,34 @@
                 <p class="text-gray-500 text-sm leading-relaxed mb-6 border-b border-gray-100 pb-4" id="detail-desc">
                     Descripción...</p>
 
+                <!-- Modifiers Container -->
+                <div id="detail-modifiers" class="mb-4"></div>
+
                 <!-- Options Row: Cubiertos -->
                 <div class="flex items-center justify-between py-3 border-b border-gray-100">
                     <div class="flex items-center gap-3">
                         <i class="fa-solid fa-utensils text-gray-400"></i>
-                        <span class="font-medium text-black text-sm">Cubiertos</span>
+                        <span class="font-medium text-black text-sm">¿Necesitas cubiertos?</span>
                     </div>
                     <label class="custom-checkbox relative flex items-center cursor-pointer">
-                        <input type="checkbox" class="sr-only">
+                        <input type="checkbox" id="detail-cutlery" class="sr-only">
                         <div
-                            class="w-6 h-6 border-2 border-gray-300 rounded flex items-center justify-center transition-colors">
-                            <i class="fa-solid fa-check text-white text-xs hidden"></i>
+                            class="w-6 h-6 border-2 border-gray-300 rounded flex items-center justify-center transition-colors peer-checked:bg-black peer-checked:border-black">
+                            <!-- Using simple logic to toggle visual -->
+                            <span id="cutlery-coditional-check" class="hidden text-white text-xs"><i
+                                    class="fa-solid fa-check"></i></span>
                         </div>
                     </label>
                 </div>
 
                 <!-- Add Note -->
-                <div
-                    class="flex items-center justify-between py-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 -mx-5 px-5 transition">
-                    <div class="flex items-center gap-3">
-                        <i class="fa-solid fa-pen text-gray-400 text-sm"></i>
-                        <span class="font-medium text-black text-sm">Agregar una nota</span>
+                <div class="py-4 border-b border-gray-100">
+                    <div class="flex items-center gap-2 mb-2">
+                        <i class="fa-regular fa-comment text-gray-400 text-sm"></i>
+                        <span class="font-bold text-black text-sm">Nota para el restaurante</span>
                     </div>
-                    <i class="fa-solid fa-chevron-right text-xs text-gray-300"></i>
+                    <textarea id="detail-note" rows="2" placeholder="Ej: Sin cebolla, salsa aparte..."
+                        class="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm focus:ring-1 focus:ring-black outline-none resize-none transition"></textarea>
                 </div>
 
                 <!-- UPSELLS -->
@@ -574,6 +579,14 @@
                     updateCartUI();
                     closeCheckout();
                 });
+
+                // NEW: Listen for real-time shop updates from Admin
+                socket.on('shop-updated', () => {
+                    console.log("Store updated! Refreshing...");
+                    const params = new URLSearchParams(window.location.search);
+                    const slug = params.get('slug');
+                    if (slug) fetchShop(slug); // Re-fetch data
+                });
             } catch (e) { console.error("Socket error", e); }
         }
 
@@ -767,6 +780,63 @@
 
             document.getElementById('detail-desc').innerText = item.desc || "";
             document.getElementById('detail-img').src = item.image || 'https://placehold.co/400';
+
+            // RESET INPUTS
+            document.getElementById('detail-note').value = '';
+            document.getElementById('detail-cutlery').checked = false;
+
+            // RENDER MODIFIERS
+            const container = document.getElementById('detail-modifiers');
+            container.innerHTML = '';
+
+            // Handle groups (Array of IDs or Objects)
+            // Strategy: Look in SHOP_DATA.menu.groups for matching IDs, or use embedded
+            const itemGroups = item.groups || item.modifierGroups || [];
+            const definitions = SHOP_DATA.menu.groups || [];
+
+            itemGroups.forEach(g => {
+                // Resolve group definition
+                let groupDef = g;
+                if (typeof g === 'string') { // It's an ID
+                    groupDef = definitions.find(d => d.id === g || d._id === g);
+                }
+
+                if (!groupDef) return;
+
+                const isSingle = groupDef.max === 1;
+                const inputType = isSingle ? 'radio' : 'checkbox';
+                const inputName = `mod-${groupDef.id || groupDef.name.replace(/\s+/g, '-')}`;
+
+                let optionsHtml = (groupDef.options || []).map(opt => `
+                    <label class="flex items-center justify-between py-2 cursor-pointer group">
+                        <div class="flex items-center gap-3">
+                             <input type="${inputType}" name="${inputName}" data-name="${opt.name}" data-price="${opt.price || 0}" class="peer sr-only">
+                             <div class="w-5 h-5 rounded border border-gray-300 peer-checked:bg-black peer-checked:border-black flex items-center justify-center transition">
+                                <span class="text-white text-[10px] hidden peer-checked:block"><i class="fa-solid fa-check"></i></span>
+                             </div>
+                             <span class="text-sm text-gray-700 font-medium group-hover:text-black transition">${opt.name}</span>
+                        </div>
+                        <span class="text-xs text-gray-500 font-medium">+MX$${parseFloat(opt.price || 0).toFixed(2)}</span>
+                    </label>
+                `).join('');
+
+                const html = `
+                    <div class="mb-4">
+                        <div class="flex justify-between items-center mb-2 bg-gray-50 p-2 rounded-lg">
+                            <h4 class="font-bold text-sm text-black">${groupDef.name}</h4>
+                            <span class="text-[10px] text-gray-400 uppercase font-bold tracking-wider">${isSingle ? 'Elige 1' : 'Opcional'}</span>
+                        </div>
+                        <div class="pl-2">
+                            ${optionsHtml}
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += html;
+            });
+
+            // Update Total on Modifier Change
+            container.addEventListener('change', updateDetailTotal);
+
             updateDetailTotal();
 
             // Populate Upsells (Random)
@@ -817,16 +887,47 @@
         }
 
         function updateDetailTotal() {
-            const total = (parseFloat(CURRENT_ITEM.price) * CURRENT_ITEM.qty).toFixed(2);
+            // Base
+            let unitPrice = parseFloat(CURRENT_ITEM.price);
+
+            // Add Modifiers
+            document.querySelectorAll('#detail-modifiers input:checked').forEach(inp => {
+                unitPrice += parseFloat(inp.dataset.price || 0);
+            });
+
+            const total = (unitPrice * CURRENT_ITEM.qty).toFixed(2);
             document.getElementById('detail-btn-total').innerText = `MX$${total}`;
         }
 
         function addToCartFromDetail() {
-            const total = parseFloat(CURRENT_ITEM.price) * CURRENT_ITEM.qty;
+            // 1. Get Modifiers
+            const modifiers = [];
+            let modifiersTotal = 0;
+            document.querySelectorAll('#detail-modifiers input:checked').forEach(inp => {
+                const price = parseFloat(inp.dataset.price || 0);
+                modifiers.push({
+                    name: inp.dataset.name,
+                    price: price
+                });
+                modifiersTotal += price;
+            });
+
+            // 2. Get Note & Cutlery
+            const note = document.getElementById('detail-note').value;
+            const cutlery = document.getElementById('detail-cutlery').checked;
+
+            // 3. Calc Total
+            // (Base + Modifiers) * Qty
+            const unitPrice = parseFloat(CURRENT_ITEM.price) + modifiersTotal;
+            const total = unitPrice * CURRENT_ITEM.qty;
+
             const cartItem = {
                 id: Date.now(),
                 name: CURRENT_ITEM.name,
-                price: parseFloat(CURRENT_ITEM.price),
+                price: parseFloat(CURRENT_ITEM.price), // Base price
+                modifiers: modifiers, // Store modifiers
+                note: note,
+                cutlery: cutlery,
                 qty: CURRENT_ITEM.qty,
                 total: total,
                 image: CURRENT_ITEM.image
@@ -879,7 +980,18 @@
                             <span class="text-sm font-bold text-black line-clamp-1">${i.name}</span>
                             <span class="text-sm font-bold text-black">MX$${i.total.toFixed(2)}</span>
                         </div>
-                        <p class="text-xs text-gray-400 mb-2">Sin cubiertos</p>
+                        
+                        <!-- NEW: Render Modifiers & Note -->
+                         ${i.modifiers && i.modifiers.length > 0 ? `
+                            <div class="mb-1">
+                                ${i.modifiers.map(m => `<p class="text-xs text-gray-500">+ ${m.name} ($${m.price})</p>`).join('')}
+                            </div>
+                         ` : ''}
+                         
+                         ${i.note ? `<p class="text-xs text-orange-600 italic mb-1">"${i.note}"</p>` : ''}
+
+                        <p class="text-xs text-gray-400 mb-2">${i.cutlery ? 'Con cubiertos' : 'Sin cubiertos'}</p>
+                        
                         <div class="flex items-center gap-3">
                              <div class="flex items-center border rounded px-2 py-0.5 text-xs font-bold text-black bg-white border-gray-200 shadow-sm">
                                 <span>${i.qty}</span>
