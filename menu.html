@@ -653,7 +653,7 @@
             }
 
             // 2. FAVORITES (Top 3)
-            const allItems = [...(menu.clasicos || []), ...(menu.speciales || [])];
+            const allItems = [...(menu.clasicos || []), ...(menu.especiales || [])];
             const favorites = allItems.slice(0, 3);
 
             if (favorites.length > 0) {
@@ -710,7 +710,9 @@
             catContainer.innerHTML = catHtml;
             menuContainer.innerHTML = menuHtml;
 
-            if (cats.length > 0) setActiveCat(cats[0]);
+            // Find first populated category to set active
+            const firstPopulated = cats.find(key => (menu[key] || []).length > 0);
+            if (firstPopulated) setActiveCat(firstPopulated);
         }
 
 
