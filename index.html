@@ -1385,18 +1385,31 @@
                 const logo = s.config.logo || 'https://placehold.co/50?text=Logo';
                 const rating = s.trendValue ? (4 + (s.trendValue / 100)).toFixed(1) : '5.0';
 
+                // Shipping Badge
+                let badgeHtml = '';
+                const shipCfg = s.config.shipping;
+                if (shipCfg && shipCfg.freeShippingActive) {
+                    badgeHtml = `<div class="absolute top-2 right-2 bg-green-500 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-sm flex items-center gap-1"><i class="fa-solid fa-truck-fast"></i> Envío Gratis</div>`;
+                } else {
+                    badgeHtml = `<div class="absolute top-2 right-2 bg-white/90 backdrop-blur text-gray-700 text-[10px] font-bold px-2 py-1 rounded-full shadow-sm flex items-center gap-1 border border-gray-100"><i class="fa-solid fa-clock"></i> ${s.config.prepTime || '30m'}</div>`;
+                }
+
                 return `
-                 <div onclick="window.location.href='menu.html?slug=${s.slug}'" class="min-w-[280px] bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden cursor-pointer hover:shadow-md transition">
-                    <div class="h-32 bg-gray-200 relative">
-                         <img src="${img}" class="w-full h-full object-cover" onerror="this.src='https://placehold.co/400x200?text=No+Image'">
-                         <span class="absolute top-2 left-2 bg-white/90 backdrop-blur-sm px-2 py-0.5 rounded-full text-[10px] font-bold text-green-700">Recomendado <i class="fa-solid fa-star text-yellow-500"></i></span>
-                         <!-- LOGO OVERLAY -->
-                         <img src="${logo}" class="absolute bottom-2 right-2 w-10 h-10 rounded-full border-2 border-white object-cover shadow-md bg-white" onerror="this.src='https://placehold.co/50?text=Logo'">
+                <div onclick="window.location.href='menu.html?slug=${s.slug}'" class="min-w-[280px] w-72 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden shrink-0 cursor-pointer hover:shadow-md transition group">
+                    <div class="relative h-40 bg-gray-200 overflow-hidden">
+                        <img src="${s.config.heroImage || 'https://placehold.co/600x400'}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                        
+                         ${badgeHtml}
+
+                         <div class="absolute bottom-3 left-3 text-white">
+                             <h3 class="font-bold text-lg leading-tight shadow-black drop-shadow-md">${s.config.name}</h3> 
+                         </div>
                     </div>
                     <div class="p-3">
-                        <div class="flex justify-between items-start">
-                            <h4 class="font-bold text-slate-800 truncate pr-2">${s.config.name}</h4>
-                             <span class="text-xs font-bold bg-green-100 text-green-700 px-1.5 py-0.5 rounded">${rating} <i class="fa-solid fa-star text-[10px]"></i></span>
+                        <div class="flex justify-between items-center text-xs text-gray-500 mb-2">
+                            <span class="bg-gray-100 text-gray-600 px-2 py-0.5 rounded flex items-center gap-1"><i class="fa-solid fa-star text-orange-400"></i> ${s.rating || '4.8'}</span>
+                             <span>${s.config.address ? s.config.address.split(',')[0] : 'Ubicación'}</span>
                         </div>
                         <p class="text-xs text-gray-500 mt-1 truncate">${s.config.businessType || 'Comercio'} • $$</p>
                     </div>
