@@ -678,7 +678,32 @@
             }
 
             // 3. CATEGORIES
-            const cats = ['promos', 'especiales', 'clasicos', 'extras'];
+            // 3. CATEGORIES
+            const ignoreKeys = ['groups'];
+            const allKeys = Object.keys(menu).filter(k => !ignoreKeys.includes(k));
+            let cats = [];
+
+            if (config.categories && Array.isArray(config.categories) && config.categories.length > 0) {
+                // Start with configured categories
+                cats = config.categories.map(c => c.id);
+
+                // Append any keys in 'menu' that are NOT in config (orphaned/legacy data)
+                // This ensures nothing is hidden even if config is out of sync
+                allKeys.forEach(k => {
+                    if (!cats.includes(k)) cats.push(k);
+                });
+            } else {
+                // Fallback Legacy
+                const preferred = ['promos', 'especiales', 'clasicos', 'extras'];
+                cats = allKeys.sort((a, b) => {
+                    const idxA = preferred.indexOf(a);
+                    const idxB = preferred.indexOf(b);
+                    if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+                    if (idxA !== -1) return -1;
+                    if (idxB !== -1) return 1;
+                    return a.localeCompare(b);
+                });
+            }
             const catContainer = document.getElementById('categories-list');
             const menuContainer = document.getElementById('menu-container');
 
@@ -687,7 +712,13 @@
 
             cats.forEach(key => {
                 const items = menu[key] || [];
-                const title = config.categoryTitles?.[key] || key.charAt(0).toUpperCase() + key.slice(1);
+                let title = key.charAt(0).toUpperCase() + key.slice(1);
+                if (config.categories) {
+                    const c = config.categories.find(c => c.id === key);
+                    if (c) title = c.name;
+                } else if (config.categoryTitles?.[key]) {
+                    title = config.categoryTitles[key];
+                }
 
                 if (items.length > 0) {
                     catHtml += `
