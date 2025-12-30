@@ -953,9 +953,9 @@
 
             // Sync checkout
             document.getElementById('summ-products').innerText = `MX$${total.toFixed(2)}`;
-            const shipping = 52.00;
-            const service = 6.00;
-            const discount = 9.25;
+            const shipping = 0.00; // Por ahora 0
+            const service = 0.00;  // Por ahora 0
+            const discount = 0.00; // Por ahora 0
             document.getElementById('summ-discount').innerText = `-MX$${discount.toFixed(2)}`;
 
             const tipVal = (total * (SELECTED_TIP / 100));
