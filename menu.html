@@ -624,12 +624,16 @@
             // 1. PROMOTIONS
             const promos = menu.promos || [];
             if (promos.length > 0) {
-                document.getElementById('promos-container').innerHTML = promos.map(p => `
+                document.getElementById('promos-container').innerHTML = promos.map(p => {
+                    const old = p.originalPrice || p.oldPrice;
+                    const discount = old && old > p.price ? Math.round(((old - p.price) / old) * 100) : 0;
+
+                    return `
                     <div onclick='openDetail(${JSON.stringify(p).replace(/'/g, "&#39;")})' class="min-w-[140px] w-[140px] cursor-pointer group">
                         <div class="relative w-full h-32 rounded-2xl overflow-hidden mb-2 shadow-sm bg-gray-100">
                             <img src="${p.image || 'https://placehold.co/200'}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500 transition-all"> 
                              <!-- Discount Badge (Black) -->
-                            <div class="absolute bottom-2 left-2 bg-black text-white text-[10px] font-bold px-1.5 py-0.5 rounded-md shadow-sm">25% OFF</div>
+                            ${discount > 0 ? `<div class="absolute bottom-2 left-2 bg-black text-white text-[10px] font-bold px-1.5 py-0.5 rounded-md shadow-sm">${discount}% OFF</div>` : ''}
                             <!-- Add Btn Overlay (Black) -->
                             <div class="absolute bottom-2 right-2 w-7 h-7 bg-white/90 backdrop-blur rounded-full flex items-center justify-center text-black shadow-sm">
                                 <i class="fa-solid fa-plus text-xs font-bold"></i>
@@ -639,11 +643,11 @@
                             <h4 class="font-bold text-black text-sm leading-tight line-clamp-1 mb-0.5">${p.name}</h4>
                             <div class="flex flex-col leading-none">
                                 <span class="text-black font-bold text-sm">MX$${parseFloat(p.price).toFixed(2)}</span>
-                                ${p.oldPrice ? `<span class="text-[10px] text-gray-400 line-through">MX$${p.oldPrice}</span>` : ''}
+                                ${old ? `<span class="text-[10px] text-gray-400 line-through">MX$${old}</span>` : ''}
                             </div>
                         </div>
                     </div>
-                `).join('');
+                `}).join('');
             } else {
                 document.getElementById('promos-section').style.display = 'none';
             }
