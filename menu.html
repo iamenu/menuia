@@ -608,6 +608,7 @@
             const menu = SHOP_DATA.menu;
 
             document.getElementById('store-title').innerText = config.name;
+            document.getElementById('store-meta').innerText = config.businessType || "Tienda General";
             document.getElementById('store-time').innerText = config.prepTime || "30-45 Min";
             const sCfg = config.shipping || {};
             if (sCfg.freeShippingActive) {
