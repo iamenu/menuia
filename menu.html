@@ -7,14 +7,17 @@
     <title>Menú - Detalles del Comercio</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 
+    <!-- STRIPE SDK -->
+    <script src="https://js.stripe.com/v3/"></script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #fcfcfc;
-            /* Lighter gray/white */
+            background-color: #ffffff;
+            /* Pure white background for cleaner mono look */
         }
 
         /* Hide scrollbar for Chrome, Safari and Opera */
@@ -58,7 +61,8 @@
 
         .rank-number {
             font-family: 'Inter', sans-serif;
-            -webkit-text-stroke: 1px #fff;
+            -webkit-text-stroke: 1.5px white;
+            text-shadow: 0px 2px 4px rgba(0, 0, 0, 0.2);
         }
 
         .line-clamp-2 {
@@ -67,81 +71,91 @@
             -webkit-box-orient: vertical;
             overflow: hidden;
         }
+
+        /* Custom Checkbox - Black */
+        .custom-checkbox input:checked+div {
+            background-color: #000000;
+            border-color: #000000;
+        }
+
+        .custom-checkbox input:checked+div i {
+            display: block;
+        }
     </style>
 </head>
 
-<body class="bg-gray-50 pb-28">
+<body class="bg-white pb-28 text-slate-900">
 
     <!-- LOADER -->
     <div id="page-loader" class="fixed inset-0 bg-white z-[99999] flex flex-col items-center justify-center">
-        <div class="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-        <p class="text-gray-500 text-sm font-medium animate-pulse">Cargando menú delicioso...</p>
+        <div class="w-12 h-12 border-4 border-black border-t-transparent rounded-full animate-spin mb-4"></div>
+        <p class="text-gray-500 text-sm font-medium animate-pulse">Cargando...</p>
     </div>
 
     <!-- HEADER (Sticky) -->
-    <header class="sticky top-0 z-50 bg-white" id="main-header">
+    <header class="sticky top-0 z-50 bg-white shadow-[0_1px_0px_rgba(0,0,0,0.05)]" id="main-header">
         <!-- Top Nav -->
         <div class="flex items-center justify-between px-4 py-3 bg-white">
-            <a href="index.html" class="w-8 h-8 flex items-center justify-center transition text-slate-800">
+            <a href="index.html"
+                class="w-8 h-8 flex items-center justify-center transition text-black hover:bg-gray-100 rounded-full">
                 <i class="fa-solid fa-chevron-left text-xl"></i>
             </a>
 
-            <!-- Search Bar Wrapper in Header (initially hidden or integrated? Let's do integrated like Didi) -->
+            <!-- Search Bar Wrapper -->
             <div class="flex-1 mx-3">
                 <div class="relative">
                     <i
                         class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
                     <input type="text" placeholder="Buscar productos" id="global-search"
                         oninput="filterProducts(this.value)"
-                        class="w-full bg-gray-100/80 rounded-full pl-9 pr-4 py-2.5 text-sm text-gray-700 font-medium focus:outline-none focus:bg-gray-100 transition">
+                        class="w-full bg-gray-100 rounded-full pl-9 pr-4 py-2 text-sm text-gray-800 font-medium focus:outline-none focus:bg-gray-200 transition placeholder-gray-400">
                 </div>
             </div>
 
-            <button class="w-8 h-8 flex items-center justify-center text-slate-800">
+            <button class="w-8 h-8 flex items-center justify-center text-black hover:bg-gray-100 rounded-full">
                 <i class="fa-regular fa-heart text-xl"></i>
             </button>
         </div>
-
-        <!-- Info Mini Banner (Sticky context) - Optional, similar to Didi small summary if scrolled -->
     </header>
 
     <!-- SHOP INFO SECTION -->
     <div class="bg-white pb-2 mb-2">
-        <div class="px-4 pt-1 mb-4">
+        <div class="px-4 pt-4 mb-4">
+            <!-- Title & Rating -->
+            <div class="flex justify-between items-start mb-1">
+                <h1 class="text-2xl font-extrabold text-black leading-tight" id="store-title">Cargando...</h1>
+                <div class="flex flex-col items-end">
+                    <span
+                        class="text-xs font-bold text-black bg-gray-100 px-2 py-1 rounded-md border border-gray-200">4.5
+                        <i class="fa-solid fa-star text-black text-[10px]"></i></span>
+                </div>
+            </div>
+            <p class="text-gray-500 text-xs mb-4 font-medium" id="store-meta">Tacos • Mexicana • Bebidas</p>
+
             <!-- Time/Cost Badge -->
-            <div class="flex items-center justify-between bg-gray-50 rounded-xl p-3 mb-4">
-                <div class="flex flex-col">
-                    <span class="text-xs font-bold text-slate-900" id="store-time">-- Min</span>
-                    <div class="text-[10px] text-gray-400 flex items-center gap-1">
-                        <span class="w-1 h-1 bg-gray-300 rounded-full"></span>
-                        <span id="store-shipping-text">Envío --</span>
+            <div class="flex items-center justify-between bg-white border border-gray-200 rounded-xl p-3 mb-4">
+                <div class="flex items-center gap-3">
+                    <div class="text-center">
+                        <span class="block text-sm font-bold text-black" id="store-time">-- Min</span>
+                    </div>
+                    <div class="h-6 w-px bg-gray-200"></div>
+                    <div class="flex flex-col">
+                        <span class="text-xs font-bold text-black" id="store-fee">Envío MX$--</span>
+                        <span class="text-[10px] text-gray-400 line-through">MX$52.00</span>
                     </div>
                 </div>
-                <span class="font-bold text-slate-800 text-sm" id="store-fee">MX$--</span>
             </div>
 
-            <!-- Didi Club / Promo Banner Mock -->
-            <div class="bg-orange-100 rounded-lg p-3 flex justify-between items-center relative overflow-hidden">
-                <div class="relative z-10">
-                    <div class="flex items-center gap-1 mb-0.5">
-                        <i class="fa-solid fa-ticket text-orange-600 text-xs"></i>
-                        <span class="text-xs font-bold text-orange-700">Envío gratis</span>
-                    </div>
-                    <span class="text-[10px] font-bold bg-orange-600 text-white px-1.5 py-0.5 rounded">DiDi Club</span>
-                    <span class="text-[10px] text-orange-800 font-medium ml-1">Registrarse</span>
-                </div>
-                <!-- Decor Circles -->
-                <div class="absolute -right-2 -bottom-4 w-12 h-12 bg-orange-200 rounded-full blur-md"></div>
-            </div>
+
         </div>
     </div>
 
     <!-- MAIN SCROLLABLE CONTENT -->
-    <main class="min-h-screen" id="main-container">
+    <main class="min-h-screen pb-24" id="main-container">
 
         <!-- PROMOTIONS SECTION (Horizontal) -->
         <div id="promos-section" class="mb-6 pl-4">
-            <h3 class="font-bold text-lg text-slate-900 mb-3">Promociones</h3>
+            <h3 class="font-bold text-lg text-black mb-3">Promociones</h3>
             <div id="promos-container" class="flex gap-3 overflow-x-auto no-scrollbar pr-4">
                 <!-- JS Injected -->
             </div>
@@ -149,21 +163,21 @@
 
         <!-- FAVORITES SECTION (Top 3) -->
         <div id="favorites-section" class="mb-6 pl-4">
-            <h3 class="font-bold text-lg text-slate-900 mb-3">Favoritos</h3>
+            <h3 class="font-bold text-lg text-black mb-3">Favoritos</h3>
             <div id="favorites-container" class="flex gap-3 overflow-x-auto no-scrollbar pr-4">
                 <!-- JS Injected -->
             </div>
         </div>
 
         <!-- CATEGORY TABS (Sticky) -->
-        <div class="sticky top-[70px] z-40 bg-white pt-2 pb-3 pl-4 border-b border-gray-100/50" id="category-tabs">
+        <div class="sticky top-[64px] z-40 bg-white pt-2 pb-3 pl-4 border-b border-gray-100" id="category-tabs">
             <div class="flex gap-2 overflow-x-auto no-scrollbar pr-4" id="categories-list">
                 <!-- JS Injected Pills -->
             </div>
         </div>
 
         <!-- MENU ITEMS LIST -->
-        <div class="px-4 pt-4 pb-20 space-y-8" id="menu-container">
+        <div class="px-4 pt-4 space-y-8" id="menu-container">
             <!-- JS Injected -->
             <div class="text-center py-10 text-gray-400">
                 <i class="fa-solid fa-utensils text-2xl mb-2"></i>
@@ -176,17 +190,17 @@
 
     <!-- FLOATING CART BUTTON -->
     <div id="floating-cart"
-        class="fixed bottom-6 left-4 right-4 bg-orange-600 text-white rounded-full shadow-2xl p-0 flex justify-between items-center z-50 transform translate-y-32 transition-transform duration-300 cursor-pointer h-14 overflow-hidden"
+        class="fixed bottom-6 left-4 right-4 bg-black text-white rounded-full shadow-2xl shadow-black/30 p-0 flex justify-between items-center z-50 transform translate-y-32 transition-transform duration-300 cursor-pointer h-14 overflow-hidden select-none"
         onclick="openCheckout()">
 
         <div class="h-full pl-6 flex flex-col justify-center">
-            <span class="font-extrabold text-base" id="cart-total">$0.00</span>
-            <span class="text-[10px] text-orange-100 font-medium leading-none" id="cart-savings">Ahorraste $0.00</span>
+            <span class="font-bold text-lg" id="cart-total">$0.00</span>
+            <span class="text-[10px] text-gray-300 font-medium leading-none" id="cart-savings">Ahorraste $0.00</span>
         </div>
 
-        <div class="h-full pr-6 flex items-center gap-2 bg-black/10 px-6">
-            <span class="font-bold text-sm">Carrito</span>
-            <div class="bg-white text-orange-600 w-5 h-5 rounded-full flex items-center justify-center font-bold text-xs"
+        <div class="h-full pr-5 flex items-center gap-3">
+            <span class="font-bold text-sm">Ver carrito</span>
+            <div class="bg-white text-black w-6 h-6 rounded-full flex items-center justify-center font-bold text-xs"
                 id="cart-count">0</div>
         </div>
     </div>
@@ -195,54 +209,88 @@
     <!-- PRODUCT DETAIL MODAL -->
     <div id="product-modal"
         class="modal fixed inset-0 z-[60] flex items-end justify-center bg-black/60 backdrop-blur-[2px]">
-        <div class="modal-content bg-white w-full max-w-md rounded-t-[2rem] h-[92vh] flex flex-col relative shadow-2xl">
+        <div
+            class="modal-content bg-white w-full max-w-md rounded-t-[2rem] h-[95vh] flex flex-col relative shadow-2xl overflow-hidden">
 
             <!-- Close Btn -->
             <button onclick="closeProductModal()"
-                class="absolute top-4 left-4 z-20 w-10 h-10 bg-white rounded-full shadow-md flex items-center justify-center text-slate-900">
-                <i class="fa-solid fa-xmark text-lg"></i>
-            </button>
-            <button
-                class="absolute top-4 right-4 z-20 w-10 h-10 bg-white rounded-full shadow-md flex items-center justify-center text-slate-900">
-                <i class="fa-solid fa-share-nodes text-sm"></i>
+                class="absolute top-4 left-4 z-20 w-9 h-9 bg-white/90 backdrop-blur rounded-full shadow-sm flex items-center justify-center text-black transition hover:bg-white border border-gray-200">
+                <i class="fa-solid fa-chevron-down text-sm"></i>
             </button>
 
             <!-- Image Header -->
-            <div class="h-72 w-full shrink-0 relative bg-gray-100">
+            <div class="h-64 w-full shrink-0 relative bg-gray-100">
                 <img id="detail-img" src="" class="w-full h-full object-cover">
-                <div class="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-white to-transparent"></div>
             </div>
 
             <!-- Content -->
-            <div class="px-6 flex-1 overflow-y-auto no-scrollbar -mt-6 relative z-10">
-                <div class="flex justify-between items-start mb-2">
-                    <h2 class="text-2xl font-bold text-slate-900 leading-tight w-[70%]" id="detail-title">Nombre</h2>
+            <div class="px-5 pt-5 flex-1 overflow-y-auto no-scrollbar bg-white relative z-10 rounded-t-3xl -mt-6">
+                <!-- Header Info -->
+                <div class="mb-4">
+                    <h2 class="text-2xl font-bold text-black leading-tight mb-2" id="detail-title">Nombre</h2>
+                    <div class="flex items-center gap-3">
+                        <span class="text-2xl font-bold text-black" id="detail-price">$0.00</span>
+                        <span class="text-sm text-gray-400 line-through" id="detail-old-price">$0.00</span>
+                    </div>
                 </div>
 
-                <p class="text-gray-500 text-sm leading-relaxed mb-6" id="detail-desc">Descripción...</p>
+                <p class="text-gray-500 text-sm leading-relaxed mb-6 border-b border-gray-100 pb-4" id="detail-desc">
+                    Descripción...</p>
 
-                <div class="flex justify-between items-center mb-6">
-                    <span class="text-3xl font-bold text-slate-900" id="detail-price">$0.00</span>
-                    <!-- Old Price if exists -->
+                <!-- Options Row: Cubiertos -->
+                <div class="flex items-center justify-between py-3 border-b border-gray-100">
+                    <div class="flex items-center gap-3">
+                        <i class="fa-solid fa-utensils text-gray-400"></i>
+                        <span class="font-medium text-black text-sm">Cubiertos</span>
+                    </div>
+                    <label class="custom-checkbox relative flex items-center cursor-pointer">
+                        <input type="checkbox" class="sr-only">
+                        <div
+                            class="w-6 h-6 border-2 border-gray-300 rounded flex items-center justify-center transition-colors">
+                            <i class="fa-solid fa-check text-white text-xs hidden"></i>
+                        </div>
+                    </label>
                 </div>
 
-                <div class="bg-gray-50 rounded-xl p-4 mb-6">
-                    <h4 class="font-bold text-sm text-slate-800 mb-2">Adicionales populares</h4>
-                    <p class="text-xs text-gray-400"> (Mock no funcional en demo) </p>
+                <!-- Add Note -->
+                <div
+                    class="flex items-center justify-between py-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 -mx-5 px-5 transition">
+                    <div class="flex items-center gap-3">
+                        <i class="fa-solid fa-pen text-gray-400 text-sm"></i>
+                        <span class="font-medium text-black text-sm">Agregar una nota</span>
+                    </div>
+                    <i class="fa-solid fa-chevron-right text-xs text-gray-300"></i>
+                </div>
+
+                <!-- UPSELLS -->
+                <div class="mt-6 mb-24">
+                    <h4 class="font-bold text-base text-black mb-3">Comprado habitualmente con:</h4>
+                    <div class="flex gap-3 overflow-x-auto no-scrollbar pb-2" id="upsells-container">
+                        <!-- JS Injected -->
+                    </div>
                 </div>
             </div>
 
-            <!-- Bottom Actions -->
-            <div class="p-4 border-t border-gray-100 flex items-center gap-4 bg-white pb-8">
-                <div class="flex items-center border border-gray-200 rounded-full h-12 px-2 shadow-sm">
+            <!-- Bottom Actions Fixed -->
+            <div
+                class="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-100 bg-white flex items-center justify-between z-20 shadow-[0_-5px_20px_rgba(0,0,0,0.05)]">
+
+                <!-- Qty Control -->
+                <div class="flex items-center gap-4">
                     <button onclick="adjustDetailQty(-1)"
-                        class="w-10 h-full flex items-center justify-center text-slate-600 hover:text-orange-600 disabled:opacity-30 text-xl font-bold">-</button>
-                    <span id="detail-qty" class="w-6 text-center font-bold text-slate-800">1</span>
+                        class="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center text-black font-bold hover:border-black transition disabled:opacity-30 disabled:border-gray-200">
+                        <i class="fa-solid fa-minus text-sm"></i>
+                    </button>
+                    <span id="detail-qty" class="text-lg font-bold text-black w-4 text-center">1</span>
                     <button onclick="adjustDetailQty(1)"
-                        class="w-10 h-full flex items-center justify-center text-slate-600 hover:text-orange-600 text-xl font-bold">+</button>
+                        class="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center text-black font-bold hover:border-black transition">
+                        <i class="fa-solid fa-plus text-sm"></i>
+                    </button>
                 </div>
+
+                <!-- Add Button -->
                 <button onclick="addToCartFromDetail()"
-                    class="flex-1 h-12 bg-orange-600 text-white font-bold rounded-full shadow-xl shadow-orange-500/20 active:scale-95 transition flex justify-between px-6 items-center">
+                    class="bg-black text-white font-bold h-12 px-8 rounded-full shadow-lg shadow-black/20 active:scale-95 transition flex items-center gap-2 hover:bg-gray-900">
                     <span>Agregar</span>
                     <span id="detail-btn-total">$0.00</span>
                 </button>
@@ -252,118 +300,225 @@
 
 
     <!-- CHECKOUT MODAL -->
-    <div id="checkout-modal" class="modal fixed inset-0 z-[70] bg-gray-50 overflow-y-auto">
+    <div id="checkout-modal" class="modal fixed inset-0 z-[70] bg-white overflow-y-auto">
         <!-- Header -->
-        <div class="sticky top-0 bg-white px-4 py-4 flex items-center gap-4 shadow-sm z-10">
-            <button onclick="closeCheckout()" class="text-slate-900 w-8 h-8 flex items-center justify-center -ml-2"><i
-                    class="fa-solid fa-arrow-left text-xl"></i></button>
-            <h2 class="font-bold text-lg">Tu pedido</h2>
+        <div class="sticky top-0 bg-white px-4 py-3 flex items-center gap-4 shadow-sm z-20 border-b border-gray-100">
+            <button onclick="closeCheckout()"
+                class="text-black w-8 h-8 flex items-center justify-center -ml-2 hover:bg-gray-100 rounded-full transition"><i
+                    class="fa-solid fa-chevron-left text-xl"></i></button>
+            <h2 class="font-bold text-lg text-black">Enviar pedido</h2>
         </div>
 
-        <div class="p-4 space-y-4 pb-32">
+        <div class="p-4 space-y-4 pb-48">
 
             <!-- Address Card -->
-            <div class="bg-white rounded-2xl p-4 shadow-sm flex items-center justify-between cursor-pointer">
+            <div class="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
+                <div class="flex gap-3 mb-4 border-b border-gray-100 pb-3">
+                    <i class="fa-solid fa-location-dot text-black mt-1"></i>
+                    <div class="flex-1">
+                        <p class="font-bold text-sm text-black leading-tight mb-0.5" id="checkout-address">Casa</p>
+                        <p class="text-xs text-gray-500 leading-tight">Calle Ejemplo 123, Colonia Centro...</p>
+                        <p class="text-xs text-black font-bold mt-1 underline decoration-dotted">Cambiar destinatario
+                        </p>
+                    </div>
+                    <i class="fa-solid fa-chevron-right text-xs text-gray-300"></i>
+                </div>
+
+                <!-- Delivery Note Input -->
+                <div class="mt-3 border-t border-gray-100 pt-3">
+                    <div class="flex items-center gap-2 mb-2">
+                        <i class="fa-regular fa-comment-dots text-gray-400 text-xs"></i>
+                        <label for="delivery-note" class="text-xs font-bold text-black">Notas para la entrega</label>
+                    </div>
+                    <textarea id="delivery-note" rows="2"
+                        class="w-full bg-gray-50 border border-gray-200 rounded-lg p-3 text-sm focus:ring-1 focus:ring-black outline-none resize-none transition placeholder-gray-400"
+                        placeholder="Ej: Tocar el timbre, dejar en recepción, casa blanca..."></textarea>
+                </div>
+
+                <!-- Time -->
+                <div class="flex gap-3 items-center">
+                    <i class="fa-regular fa-clock text-black"></i>
+                    <p class="font-bold text-sm text-black">35 - 50 min</p>
+                </div>
+            </div>
+
+            <!-- Pay Method Summary -->
+            <div class="bg-white rounded-xl p-4 border border-gray-200 shadow-sm flex justify-between items-center cursor-pointer"
+                onclick="openPaymentMethods()">
                 <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center text-orange-600">
-                        <i class="fa-solid fa-location-dot"></i>
-                    </div>
-                    <div>
-                        <p class="font-bold text-sm text-slate-900" id="checkout-address">Casa</p>
-                        <p class="text-xs text-gray-400">Agregar detalles de entrega</p>
-                    </div>
+                    <div class="w-6 h-4 bg-black rounded-sm flex items-center justify-center text-[10px] text-white"><i
+                            class="fa-solid fa-dollar-sign"></i></div>
+                    <span class="font-bold text-sm text-black" id="checkout-min-payment">Pago en efectivo</span>
                 </div>
                 <i class="fa-solid fa-chevron-right text-xs text-gray-300"></i>
             </div>
 
+
             <!-- Items -->
-            <div class="bg-white rounded-2xl p-4 shadow-sm">
-                <h3 class="font-bold text-base mb-4 flex items-center gap-2">
-                    <i class="fa-solid fa-shop text-gray-400 text-xs"></i> <span id="checkout-store-name">Tienda</span>
-                </h3>
-                <div id="checkout-items-list" class="space-y-6"></div>
+            <div class="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
+                <div class="flex justify-between items-center mb-4">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-shop text-black"></i>
+                        <h3 class="font-bold text-sm text-black" id="checkout-store-name">Tienda</h3>
+                    </div>
+                    <i class="fa-solid fa-chevron-down text-xs text-gray-300"></i>
+                </div>
+                <div id="checkout-items-list" class="space-y-4"></div>
             </div>
 
-            <!-- Tip -->
-            <div class="bg-white rounded-2xl p-4 shadow-sm">
-                <div class="flex justify-between items-center mb-3">
-                    <h3 class="font-bold text-sm">Propina para el repartidor</h3>
-                    <div class="bg-orange-100 text-orange-700 text-[10px] font-bold px-2 py-0.5 rounded-full">100% para
-                        ellos</div>
+            <!-- Tip (Agradecimiento) -->
+            <div class="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
+                <div class="flex items-center gap-2 mb-1">
+                    <h3 class="font-bold text-sm text-black">Agradecimiento</h3>
+                    <i class="fa-regular fa-circle-question text-gray-400 text-xs"></i>
                 </div>
+                <p class="text-xs text-gray-400 mb-3">Apoyo para tu repartidor. Recibirá el 100%.</p>
+
                 <div class="flex gap-2">
-                    <button onclick="setTip(0)"
-                        class="tip-btn flex-1 py-3 rounded-xl bg-gray-100 text-xs font-bold text-gray-500 border-2 border-transparent transition">No</button>
+                    <button onclick="setTip(5)"
+                        class="tip-btn flex-1 py-2.5 rounded-lg bg-gray-100 text-xs font-bold text-gray-600 border border-transparent transition">5%</button>
                     <button onclick="setTip(10)"
-                        class="tip-btn flex-1 py-3 rounded-xl bg-orange-50 text-xs font-bold text-orange-600 border-2 border-orange-500 transition">10%</button>
+                        class="tip-btn flex-1 py-2.5 rounded-lg bg-black text-xs font-bold text-white border border-black transition">🤩
+                        10%</button>
                     <button onclick="setTip(15)"
-                        class="tip-btn flex-1 py-3 rounded-xl bg-gray-100 text-xs font-bold text-gray-500 border-2 border-transparent transition">15%</button>
+                        class="tip-btn flex-1 py-2.5 rounded-lg bg-gray-100 text-xs font-bold text-gray-600 border border-transparent transition">15%</button>
                     <button onclick="setTip(20)"
-                        class="tip-btn flex-1 py-3 rounded-xl bg-gray-100 text-xs font-bold text-gray-500 border-2 border-transparent transition">20%</button>
+                        class="tip-btn flex-1 py-2.5 rounded-lg bg-gray-100 text-xs font-bold text-gray-600 border border-transparent transition">20%</button>
+                    <button onclick="setTip('custom')"
+                        class="tip-btn w-12 py-2.5 rounded-lg bg-gray-100 text-xs font-bold text-gray-600 border border-transparent transition">Otro</button>
                 </div>
             </div>
 
-            <!-- Summary -->
-            <div class="space-y-2 py-2">
-                <div class="flex justify-between text-sm text-gray-600">
-                    <span>Subtotal</span>
-                    <span id="summ-products">$0.00</span>
+            <!-- Summary Text -->
+            <div class="px-2 pt-2 pb-4">
+                <div class="flex justify-between text-sm text-gray-600 mb-2">
+                    <span>Total en productos</span>
+                    <span class="text-black font-medium" id="summ-products">$0.00</span>
                 </div>
-                <div class="flex justify-between text-sm text-gray-600">
-                    <span>Envío</span>
-                    <span id="summ-shipping">$0.00</span>
+                <div class="flex justify-between text-sm text-gray-600 mb-2">
+                    <span>Descuento</span>
+                    <span class="text-black font-medium" id="summ-discount">-$0.00</span>
+                </div>
+                <div class="flex justify-between text-sm text-gray-600 mb-2">
+                    <span>Tarifa de entrega <i class="fa-regular fa-circle-question text-[10px]"></i></span>
+                    <span class="text-black font-medium" id="summ-shipping">$0.00</span>
+                </div>
+                <div class="flex justify-between text-sm text-gray-600 mb-2">
+                    <span>Otros cargos</span>
+                    <span class="text-black font-medium">$6.00</span>
                 </div>
                 <div class="flex justify-between text-sm text-gray-600">
                     <span>Propina</span>
-                    <span id="summ-tip">$0.00</span>
-                </div>
-                <div class="flex justify-between text-sm text-gray-600">
-                    <span>Tarifa de servicio</span>
-                    <span>$6.00</span>
-                </div>
-                <div class="flex justify-between text-base font-bold text-slate-900 pt-2 border-t border-gray-200 mt-2">
-                    <span>Total</span>
-                    <span id="final-total">$0.00</span>
+                    <span class="text-black font-medium" id="summ-tip">$0.00</span>
                 </div>
             </div>
+
         </div>
 
-        <!-- Sticky Pay Button -->
-        <div class="fixed bottom-0 left-0 right-0 bg-white p-4 shadow-[0_-5px_30px_rgba(0,0,0,0.1)] rounded-t-3xl">
-            <div class="flex items-center gap-3 mb-4 cursor-pointer" onclick="openPaymentMethods()">
-                <div class="w-8 h-5 rounded border border-gray-300 flex items-center justify-center bg-white shadow-sm">
-                    <i class="fa-solid fa-money-bill text-green-600 text-xs"></i>
+        <!-- Sticky Footer -->
+        <div class="fixed bottom-0 left-0 right-0 bg-white rounded-t-3xl shadow-[0_-5px_30px_rgba(0,0,0,0.08)] z-30">
+
+
+            <div class="p-4 flex items-center justify-between gap-4">
+                <div>
+                    <h3 class="font-extrabold text-2xl text-black" id="final-total">$0.00</h3>
+                    <span class="text-xs font-bold text-gray-500" id="final-savings">Ahorraste MX$0.00</span>
                 </div>
-                <span class="text-xs font-medium text-slate-700 underline decoration-dotted"
-                    id="checkout-payment-label">Efectivo</span>
-                <i class="fa-solid fa-chevron-down text-[10px] text-gray-400"></i>
+                <button onclick="submitOrder()"
+                    class="bg-black text-white font-bold py-3.5 px-8 rounded-full shadow-lg shadow-black/30 text-base active:scale-95 transition flex-1 text-center hover:bg-gray-900">
+                    Pagar
+                </button>
             </div>
-            <button onclick="submitOrder()"
-                class="w-full bg-orange-600 text-white font-bold py-4 rounded-full shadow-lg shadow-orange-500/30 text-lg hover:bg-orange-700 active:scale-95 transition">
-                Realizar pedido
-            </button>
         </div>
     </div>
 
-    <!-- PAYMENT SELECTION -->
+    <!-- STRIPE MODAL -->
+    <div id="stripe-modal"
+        class="modal fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm hidden">
+        <div class="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl relative">
+            <button onclick="closeStripe()" class="absolute top-4 right-4 text-gray-400 hover:text-black"><i
+                    class="fa-solid fa-times text-xl"></i></button>
+            <div class="text-center mb-6">
+                <i class="fa-brands fa-stripe text-5xl text-indigo-600 mb-2"></i>
+                <h3 class="font-bold text-xl text-black">Pago Seguro</h3>
+                <p class="text-sm text-gray-400">Introduce los datos de tu tarjeta</p>
+            </div>
+
+            <form id="payment-form">
+                <div id="card-element"
+                    class="p-4 border border-gray-200 rounded-xl bg-gray-50 mb-4 focus-within:ring-2 focus-within:ring-black transition">
+                    <!-- Stripe Element injeceted here -->
+                </div>
+                <div id="card-errors" role="alert" class="text-red-500 text-xs font-bold mb-4 text-center"></div>
+
+                <button id="submit-payment"
+                    class="w-full bg-black text-white font-bold py-3.5 rounded-full shadow-lg hover:bg-gray-900 transition flex items-center justify-center gap-2">
+                    <span id="pay-btn-text">Pagar Ahora</span>
+                    <i class="fa-solid fa-lock text-xs opacity-70"></i>
+                </button>
+            </form>
+            <p class="text-[10px] text-gray-300 text-center mt-4">Transacción encriptada de extremo a extremo.</p>
+        </div>
+    </div>
+
+    <!-- PAYMENT SELECTION MODAL -->
     <div id="payment-modal"
         class="modal fixed inset-0 z-[80] flex items-end justify-center bg-black/60 backdrop-blur-sm">
-        <div class="modal-content bg-white w-full max-w-md rounded-t-3xl p-6 pb-10">
-            <h3 class="font-bold text-lg mb-6">Método de pago</h3>
-            <div class="space-y-3">
-                <div onclick="selectPayment('Efectivo')"
-                    class="flex items-center gap-4 p-4 rounded-xl border border-gray-200 hover:border-orange-500 bg-white cursor-pointer">
-                    <i class="fa-solid fa-money-bill text-green-500 text-xl"></i>
-                    <span class="font-bold text-slate-700">Efectivo</span>
+        <div class="modal-content bg-white w-full max-w-md rounded-t-3xl min-h-[50vh] p-4">
+            <!-- Header -->
+            <div class="flex items-center gap-4 mb-6 pt-2">
+                <button onclick="closePaymentMethods()" class="text-black"><i
+                        class="fa-solid fa-chevron-left text-lg"></i></button>
+                <h2 class="font-bold text-lg text-black">Método de pago</h2>
+            </div>
+
+            <!-- IAFOOD PAY Card (Monochrome) -->
+            <div onclick="selectPayment('Tarjeta')" id="pay-opt-card"
+                class="bg-black rounded-2xl p-4 text-white mb-4 shadow-lg shadow-black/20 relative overflow-hidden cursor-pointer border-2 border-transparent transition">
+                <div class="relative z-10">
+                    <div class="flex items-center gap-2 mb-4">
+                        <i class="fa-brands fa-google-wallet text-xl"></i>
+                        <span class="font-bold text-sm">IAFOOD PAY</span>
+                    </div>
+                    <div class="bg-white rounded-xl p-3 text-black mb-2 flex justify-between items-center">
+                        <div class="flex items-center gap-2 text-black text-sm font-bold">
+                            <i class="fa-regular fa-credit-card"></i>
+                            <span>Tarjeta</span>
+                        </div>
+                        <!-- Check -->
+                        <div class="w-5 h-5 rounded-full border-2 border-gray-300 flex items-center justify-center text-white"
+                            id="check-card">
+                            <i class="fa-solid fa-check text-[10px] text-black hidden" id="icon-card"></i>
+                        </div>
+                    </div>
                 </div>
-                <div onclick="selectPayment('Tarjeta')"
-                    class="flex items-center gap-4 p-4 rounded-xl border border-gray-200 hover:border-orange-500 bg-white cursor-pointer">
-                    <i class="fa-regular fa-credit-card text-blue-500 text-xl"></i>
-                    <span class="font-bold text-slate-700">Tarjeta (Nuevo)</span>
+                <!-- Decor -->
+                <i class="fa-solid fa-credit-card absolute -right-4 -top-4 text-white/20 text-9xl rotate-12"></i>
+            </div>
+
+            <!-- Cash Option -->
+            <div onclick="selectPayment('Efectivo')"
+                class="bg-white rounded-xl p-4 flex items-center justify-between shadow-sm cursor-pointer border-2 border-transparent transition"
+                id="pay-opt-cash">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-5 bg-black rounded text-white flex items-center justify-center text-xs"><i
+                            class="fa-solid fa-dollar-sign"></i></div>
+                    <div>
+                        <p class="font-bold text-black text-sm">Efectivo</p>
+                        <p class="text-[10px] text-gray-400">Límite de pago de MXN$1,000.00</p>
+                    </div>
+                </div>
+                <div class="w-5 h-5 rounded-full border-2 border-gray-300 flex items-center justify-center text-white"
+                    id="check-cash">
+                    <div class="w-full h-full bg-black rounded-full hidden" id="check-cash-inner"></div>
+                    <i class="fa-solid fa-check text-[10px] hidden" id="icon-cash"></i>
                 </div>
             </div>
+
             <button onclick="closePaymentMethods()"
-                class="w-full mt-6 bg-gray-100 text-slate-600 font-bold py-3 rounded-xl">Cancelar</button>
+                class="w-full mt-auto bg-black text-white font-bold py-3.5 rounded-full shadow-lg text-base fixed bottom-4 left-4 right-4 w-[calc(100%-2rem)] hover:bg-gray-900">
+                Confirmar
+            </button>
         </div>
     </div>
 
@@ -381,25 +536,58 @@
         let USER_PHONE = "5500000000";
         let ACTIVE_CATEGORY = '';
 
+        // STRIPE INIT
+        const stripe = Stripe('pk_live_51OZF7oDKTVLpE1Bjbj9mxym6tHWLiRURKGTYAg1eXlA8ikjGPqdHfl0WRshcGtbZZta2XoUheE3M7ucpVw1RmiVt00UVZYBudP');
+        let elements;
+        let card;
+
         // --- INIT ---
         document.addEventListener('DOMContentLoaded', () => {
             const params = new URLSearchParams(window.location.search);
             const slug = params.get('slug');
 
-            if (!slug) {
-                window.location.href = 'index.html';
-                return;
-            }
-
+            const userLocation = JSON.parse(localStorage.getItem('menuia_user_location'));
             const userData = JSON.parse(localStorage.getItem('menuia_user_data'));
-            if (userData) {
-                USER_ADDRESS = userData.address || "Mi ubicación";
-                USER_PHONE = userData.phone;
+
+            if (userLocation && userLocation.address) {
+                USER_ADDRESS = userLocation.address;
+            } else if (userData && userData.address) {
+                USER_ADDRESS = userData.address;
             }
 
-            initSocket(slug);
-            fetchShop(slug);
+            if (userData) {
+                USER_PHONE = userData.phone || "5500000000";
+            }
+
+            if (slug) {
+                initSocket(slug);
+                fetchShop(slug);
+            } else {
+                mockRender();
+            }
         });
+
+        function mockRender() {
+            SHOP_DATA = {
+                config: { name: "Taquería El Zarape", shipping: { costPerKm: 15 } },
+                menu: {
+                    promos: [
+                        { name: "Taco de Pastor", price: 27.75, oldPrice: 37.00, image: "https://images.unsplash.com/photo-1599974579688-8dbdd335c77f?auto=format&fit=crop&q=80&w=200" },
+                        { name: "Taco de Bistec", price: 27.75, oldPrice: 37.00, image: "https://images.unsplash.com/photo-1613514785940-daed07799d9b?auto=format&fit=crop&q=80&w=200" },
+                        { name: "Taco de Chorizo", price: 30.00, oldPrice: 40.00, image: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=200" }
+                    ],
+                    clasicos: [
+                        { name: "Taco de Pastor", desc: "Delicioso taco con piña y cilantro.", price: 27.75, oldPrice: 37.00, image: "https://images.unsplash.com/photo-1599974579688-8dbdd335c77f?auto=format&fit=crop&q=80&w=200" },
+                        { name: "Gringa", desc: "Queso fundido con carne al pastor.", price: 55.00, image: "https://images.unsplash.com/photo-1613514785940-daed07799d9b?auto=format&fit=crop&q=80&w=200" }
+                    ],
+                    extras: [
+                        { name: "Coca Cola", price: 25 }
+                    ]
+                }
+            };
+            renderShop();
+            document.getElementById('page-loader').classList.add('hidden');
+        }
 
         function initSocket(slug) {
             try {
@@ -412,7 +600,6 @@
                     CART = [];
                     updateCartUI();
                     closeCheckout();
-                    window.location.href = 'index.html';
                 });
             } catch (e) { console.error("Socket error", e); }
         }
@@ -425,8 +612,7 @@
                 renderShop();
                 document.getElementById('page-loader').classList.add('hidden');
             } catch (e) {
-                alert("Error cargando la tienda");
-                // window.location.href = 'index.html';
+                mockRender();
             }
         }
 
@@ -434,30 +620,31 @@
             const config = SHOP_DATA.config;
             const menu = SHOP_DATA.menu;
 
-            // Info
-            document.getElementById('store-time').innerText = "30-45 Min";
-            document.getElementById('store-shipping-text').innerText = `Envío $${config.shipping?.costPerKm || 15}`;
-            document.getElementById('store-fee').innerText = `MX$${config.shipping?.costPerKm || 15}.00`;
+            document.getElementById('store-title').innerText = config.name;
+            document.getElementById('store-time').innerText = config.prepTime || "30-45 Min";
+            document.getElementById('store-fee').innerText = `Envío MX$${config.shipping?.costPerKm || 15}.00`;
             document.getElementById('checkout-store-name').innerText = config.name;
-
 
             // 1. PROMOTIONS
             const promos = menu.promos || [];
             if (promos.length > 0) {
                 document.getElementById('promos-container').innerHTML = promos.map(p => `
-                    <div onclick='openDetail(${JSON.stringify(p).replace(/'/g, "&#39;")})' class="min-w-[260px] h-36 bg-orange-50 rounded-lg relative overflow-hidden cursor-pointer flex border border-orange-100">
-                        <div class="w-[55%] p-3 flex flex-col justify-center relative z-10">
-                            <span class="bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full self-start mb-2 shadow-sm">25% OFF</span>
-                            <h4 class="font-bold text-slate-800 text-sm leading-tight line-clamp-2 mb-1">${p.name}</h4>
-                            <div class="flex items-center gap-2">
-                                <span class="text-orange-600 font-bold">$${p.price}</span>
-                                ${p.oldPrice ? `<span class="text-[10px] text-gray-400 line-through">$${p.oldPrice}</span>` : ''}
+                    <div onclick='openDetail(${JSON.stringify(p).replace(/'/g, "&#39;")})' class="min-w-[140px] w-[140px] cursor-pointer group">
+                        <div class="relative w-full h-32 rounded-2xl overflow-hidden mb-2 shadow-sm bg-gray-100">
+                            <img src="${p.image || 'https://placehold.co/200'}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500 transition-all"> 
+                             <!-- Discount Badge (Black) -->
+                            <div class="absolute bottom-2 left-2 bg-black text-white text-[10px] font-bold px-1.5 py-0.5 rounded-md shadow-sm">25% OFF</div>
+                            <!-- Add Btn Overlay (Black) -->
+                            <div class="absolute bottom-2 right-2 w-7 h-7 bg-white/90 backdrop-blur rounded-full flex items-center justify-center text-black shadow-sm">
+                                <i class="fa-solid fa-plus text-xs font-bold"></i>
                             </div>
                         </div>
-                        <div class="w-[45%] h-full relative">
-                            <!-- Decor shape -->
-                            <div class="absolute inset-0 bg-gradient-to-r from-orange-50 to-transparent z-10"></div>
-                            <img src="${p.image || 'https://placehold.co/200'}" class="w-full h-full object-cover">
+                        <div class="px-1">
+                            <h4 class="font-bold text-black text-sm leading-tight line-clamp-1 mb-0.5">${p.name}</h4>
+                            <div class="flex flex-col leading-none">
+                                <span class="text-black font-bold text-sm">MX$${parseFloat(p.price).toFixed(2)}</span>
+                                ${p.oldPrice ? `<span class="text-[10px] text-gray-400 line-through">MX$${p.oldPrice}</span>` : ''}
+                            </div>
                         </div>
                     </div>
                 `).join('');
@@ -466,21 +653,23 @@
             }
 
             // 2. FAVORITES (Top 3)
-            // Mock ranking based on "popular" or just first 3 of clasicos
             const allItems = [...(menu.clasicos || []), ...(menu.speciales || [])];
-            // Take first 3 for demo
             const favorites = allItems.slice(0, 3);
 
             if (favorites.length > 0) {
                 document.getElementById('favorites-container').innerHTML = favorites.map((p, idx) => `
-                    <div onclick='openDetail(${JSON.stringify(p).replace(/'/g, "&#39;")})' class="min-w-[140px] w-[140px] cursor-pointer relative">
-                         <div class="relative w-full h-32 rounded-xl overflow-hidden mb-2">
+                    <div onclick='openDetail(${JSON.stringify(p).replace(/'/g, "&#39;")})' class="min-w-[140px] w-[140px] cursor-pointer relative group">
+                         <div class="relative w-full h-32 rounded-2xl overflow-hidden mb-2 bg-gray-100 shadow-sm">
                             <img src="${p.image || 'https://placehold.co/150'}" class="w-full h-full object-cover">
-                            <!-- RANK NUMBER -->
-                            <span class="absolute -bottom-4 -left-1 text-[80px] font-bold text-green-500 leading-none rank-number drop-shadow-md z-10 italic">${idx + 1}</span>
+                            <!-- RANK NUMBER (Black/Dark) -->
+                            <span class="absolute -bottom-5 -left-1 text-[80px] font-bold text-black leading-none rank-number drop-shadow-md z-10 italic">${idx + 1}</span>
+                             <!-- Add Btn Overlay -->
+                            <div class="absolute bottom-2 right-2 w-7 h-7 bg-white/90 backdrop-blur rounded-full flex items-center justify-center text-black shadow-sm">
+                                <i class="fa-solid fa-plus text-xs font-bold"></i>
+                            </div>
                          </div>
                          <div class="pl-2 pt-2">
-                            <h4 class="font-bold text-slate-900 text-sm text-center leading-snug line-clamp-1">${p.name}</h4>
+                            <div class="h-1"></div> 
                          </div>
                     </div>
                 `).join('');
@@ -488,9 +677,7 @@
                 document.getElementById('favorites-section').style.display = 'none';
             }
 
-
-            // 3. CATEGORIES (Pills)
-            // Order: Promo, Especiales, Clasicos, Extras
+            // 3. CATEGORIES
             const cats = ['promos', 'especiales', 'clasicos', 'extras'];
             const catContainer = document.getElementById('categories-list');
             const menuContainer = document.getElementById('menu-container');
@@ -503,17 +690,15 @@
                 const title = config.categoryTitles?.[key] || key.charAt(0).toUpperCase() + key.slice(1);
 
                 if (items.length > 0) {
-                    // Pill
                     catHtml += `
-                        <button onclick="scrollToCat('${key}')" id="btn-cat-${key}" class="cat-pill whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-medium transition bg-gray-100 text-gray-500 hover:bg-gray-200">
+                        <button onclick="scrollToCat('${key}')" id="btn-cat-${key}" class="cat-pill whitespace-nowrap px-4 py-2 rounded-full text-xs font-bold transition bg-white border border-gray-200 text-gray-500 hover:bg-gray-100">
                             ${title}
                         </button>
                     `;
 
-                    // Section
                     menuHtml += `
                         <div id="cat-section-${key}" class="scroll-mt-36 product-section">
-                            <h3 class="font-extrabold text-xl text-slate-900 mb-4 capitalize">${title}</h3>
+                            <h3 class="font-extrabold text-lg text-black mb-4 capitalize">${title}</h3>
                             <div class="space-y-6">
                                 ${items.map(item => renderFullCard(item)).join('')}
                             </div>
@@ -525,7 +710,6 @@
             catContainer.innerHTML = catHtml;
             menuContainer.innerHTML = menuHtml;
 
-            // Highlight first cat
             if (cats.length > 0) setActiveCat(cats[0]);
         }
 
@@ -533,27 +717,29 @@
         function renderFullCard(item) {
             const jsonItem = JSON.stringify(item).replace(/'/g, "&#39;");
             return `
-                <div class="flex gap-3 justify-between group item-card-dom" data-name="${item.name.toLowerCase()}" onclick='openDetail(${jsonItem})'>
+                <div class="flex gap-4 justify-between group item-card-dom" data-name="${item.name.toLowerCase()}" onclick='openDetail(${jsonItem})'>
                     <!-- Text Info -->
                     <div class="flex-1 flex flex-col justify-start">
-                        <h4 class="font-bold text-slate-800 text-[15px] mb-1 leading-snug">${item.name}</h4>
-                        <p class="text-xs text-gray-500 line-clamp-2 leading-normal mb-2 pr-2">${item.desc || 'Descripción del platillo disponible para visualización.'}</p>
+                        <h4 class="font-bold text-black text-base mb-1 leading-tight">${item.name}</h4>
+                        <p class="text-xs text-gray-500 line-clamp-2 leading-relaxed mb-3 pr-2 font-medium">${item.desc || 'Descripción del platillo.'}</p>
                         <div class="mt-auto flex items-center gap-2">
-                            <span class="font-bold text-slate-900 text-base">$${parseFloat(item.price).toFixed(2)}</span>
-                            ${item.oldPrice ? `<span class="text-xs text-slate-400 line-through font-normal">$${item.oldPrice}</span>` : ''}
+                             <div class="flex flex-col leading-none">
+                                <span class="font-bold text-black text-base">MX$${parseFloat(item.price).toFixed(2)}</span>
+                                ${item.oldPrice ? `<span class="text-xs text-gray-400 line-through">MX$${item.oldPrice}</span>` : ''}
+                            </div>
                         </div>
                     </div>
 
                     <!-- Image & Add Btn -->
                     <div class="relative w-32 h-28 shrink-0">
-                         <img src="${item.image || 'https://placehold.co/150'}" class="w-full h-full object-cover rounded-xl bg-gray-100">
+                         <img src="${item.image || 'https://placehold.co/150'}" class="w-full h-full object-cover rounded-xl bg-gray-100 shadow-sm border border-gray-100 transition">
                          <!-- Add Button Absolute -->
-                         <button class="absolute bottom-[-8px] right-[-8px] w-9 h-9 bg-white rounded-full shadow-md border border-gray-100 flex items-center justify-center text-orange-600 active:scale-90 transition">
+                         <button class="absolute -bottom-2 -right-2 w-9 h-9 bg-white rounded-full shadow-md border border-gray-200 flex items-center justify-center text-black active:scale-90 transition z-10">
                              <i class="fa-solid fa-plus text-sm font-bold"></i>
                          </button>
                     </div>
                 </div>
-                <hr class="border-gray-50/50 last:hidden">
+                <hr class="border-gray-100 last:hidden">
              `;
         }
 
@@ -561,7 +747,6 @@
         function scrollToCat(key) {
             const el = document.getElementById(`cat-section-${key}`);
             if (el) {
-                // Offset calculation (header + sticky tabs) = approx 120px
                 const y = el.getBoundingClientRect().top + window.scrollY - 120;
                 window.scrollTo({ top: y, behavior: 'smooth' });
                 setActiveCat(key);
@@ -569,15 +754,12 @@
         }
 
         function setActiveCat(key) {
-            // Reset all
             document.querySelectorAll('.cat-pill').forEach(b => {
-                b.className = "cat-pill whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-medium transition bg-gray-100 text-gray-500 hover:bg-gray-200";
+                b.className = "cat-pill whitespace-nowrap px-4 py-2 rounded-full text-xs font-bold transition bg-white border border-gray-200 text-gray-500 hover:bg-gray-100";
             });
-            // Activate one
             const btn = document.getElementById(`btn-cat-${key}`);
             if (btn) {
-                btn.className = "cat-pill whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-bold transition bg-orange-600 text-white shadow-md shadow-orange-500/30";
-                // Scroll pill into view
+                btn.className = "cat-pill whitespace-nowrap px-4 py-2 rounded-full text-xs font-bold transition bg-black text-white border border-black shadow-md shadow-black/20";
                 btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
             }
             ACTIVE_CATEGORY = key;
@@ -589,7 +771,6 @@
                 const name = el.getAttribute('data-name');
                 if (name.includes(q)) {
                     el.style.display = 'flex';
-                    // also show the hr
                     if (el.nextElementSibling && el.nextElementSibling.tagName === 'HR') el.nextElementSibling.style.display = 'block';
                 } else {
                     el.style.display = 'none';
@@ -603,11 +784,51 @@
         function openDetail(item) {
             CURRENT_ITEM = { ...item, qty: 1 };
             document.getElementById('detail-title').innerText = item.name;
-            document.getElementById('detail-price').innerText = '$' + parseFloat(item.price).toFixed(2);
-            document.getElementById('detail-desc').innerText = item.desc || "Sin descripción";
+            document.getElementById('detail-price').innerText = 'MX$' + parseFloat(item.price).toFixed(2);
+            if (item.oldPrice) {
+                document.getElementById('detail-old-price').innerText = 'MX$' + parseFloat(item.oldPrice).toFixed(2);
+                document.getElementById('detail-old-price').style.display = 'block';
+            } else {
+                document.getElementById('detail-old-price').style.display = 'none';
+            }
+
+            document.getElementById('detail-desc').innerText = item.desc || "";
             document.getElementById('detail-img').src = item.image || 'https://placehold.co/400';
             updateDetailTotal();
+
+            // Populate Upsells (Random)
+            const allItems = [...(SHOP_DATA.menu.clasicos || []), ...(SHOP_DATA.menu.extras || [])];
+            const upsells = allItems.sort(() => 0.5 - Math.random()).slice(0, 5);
+            document.getElementById('upsells-container').innerHTML = upsells.map(u => `
+                 <div class="min-w-[120px] flex flex-col gap-2 cursor-pointer group" onclick='addUpsell(${JSON.stringify(u).replace(/'/g, "&#39;")})'>
+                    <div class="relative w-full h-28 bg-gray-100 rounded-xl overflow-hidden shadow-sm">
+                        <img src="${u.image}" class="w-full h-full object-cover">
+                         <div class="absolute bottom-1 right-1 w-6 h-6 bg-white/90 rounded-full flex items-center justify-center text-black shadow-sm">
+                            <i class="fa-solid fa-plus text-[10px] font-bold"></i>
+                         </div>
+                    </div>
+                    <div>
+                         <span class="text-xs font-medium text-slate-800 line-clamp-1">${u.name}</span>
+                         <span class="text-xs font-bold text-black">MX$${u.price}</span>
+                    </div>
+                 </div>
+             `).join('');
+
             document.getElementById('product-modal').classList.add('active');
+        }
+
+        function addUpsell(item) {
+            const cartItem = {
+                id: Date.now(),
+                name: item.name,
+                price: parseFloat(item.price),
+                qty: 1,
+                total: parseFloat(item.price),
+                image: item.image
+            };
+            CART.push(cartItem);
+            updateCartUI();
+            alert(`Añadido: ${item.name}`);
         }
 
         function closeProductModal() {
@@ -624,7 +845,7 @@
 
         function updateDetailTotal() {
             const total = (parseFloat(CURRENT_ITEM.price) * CURRENT_ITEM.qty).toFixed(2);
-            document.getElementById('detail-btn-total').innerText = `$${total}`;
+            document.getElementById('detail-btn-total').innerText = `MX$${total}`;
         }
 
         function addToCartFromDetail() {
@@ -648,9 +869,8 @@
             const bar = document.getElementById('floating-cart');
 
             document.getElementById('cart-count').innerText = count;
-            document.getElementById('cart-total').innerText = `$${total.toFixed(2)}`;
+            document.getElementById('cart-total').innerText = `MX$${total.toFixed(2)}`;
 
-            // Show/Hide Bar
             if (count > 0) {
                 bar.classList.remove('translate-y-32');
             } else {
@@ -658,41 +878,48 @@
             }
 
             // Sync checkout
-            document.getElementById('summ-products').innerText = `$${total.toFixed(2)}`;
-            const shipping = 15;
-            const service = 6;
-            const tipVal = (total * (SELECTED_TIP / 100));
-            document.getElementById('summ-shipping').innerText = `$${shipping.toFixed(2)}`;
-            document.getElementById('summ-tip').innerText = `$${tipVal.toFixed(2)}`;
+            document.getElementById('summ-products').innerText = `MX$${total.toFixed(2)}`;
+            const shipping = 52.00;
+            const service = 6.00;
+            const discount = 9.25;
+            document.getElementById('summ-discount').innerText = `-MX$${discount.toFixed(2)}`;
 
-            const final = total + shipping + service + tipVal;
-            document.getElementById('final-total').innerText = `$${final.toFixed(2)}`;
+            const tipVal = (total * (SELECTED_TIP / 100));
+            document.getElementById('summ-shipping').innerText = `MX$${shipping.toFixed(2)}`;
+            document.getElementById('summ-tip').innerText = `MX$${tipVal.toFixed(2)}`;
+
+            const final = total + shipping + service + tipVal - discount;
+            document.getElementById('final-total').innerText = `MX$${final.toFixed(2)}`;
         }
 
         // --- CHECKOUT ---
         function openCheckout() {
             document.getElementById('checkout-modal').classList.add('active');
+            document.getElementById('checkout-address').innerText = USER_ADDRESS || "Dirección no disponible";
 
             const list = document.getElementById('checkout-items-list');
             list.innerHTML = CART.map(i => `
                 <div class="flex gap-3">
                      <img src="${i.image || 'https://placehold.co/60'}" class="w-14 h-14 rounded-lg bg-gray-100 object-cover border border-gray-100">
                      <div class="flex-1">
-                        <div class="flex justify-between items-start mb-1">
-                            <span class="text-sm font-bold text-slate-800 line-clamp-2 leading-tight">${i.name}</span>
-                            <span class="text-sm font-bold">$${i.total.toFixed(2)}</span>
+                        <div class="flex justify-between items-start mb-0.5">
+                            <span class="text-sm font-bold text-black line-clamp-1">${i.name}</span>
+                            <span class="text-sm font-bold text-black">MX$${i.total.toFixed(2)}</span>
                         </div>
+                        <p class="text-xs text-gray-400 mb-2">Sin cubiertos</p>
                         <div class="flex items-center gap-3">
-                             <div class="flex items-center border rounded px-1.5 py-0.5 text-xs font-bold text-slate-700 bg-gray-50 border-gray-200">
-                                <span>x${i.qty}</span>
+                             <div class="flex items-center border rounded px-2 py-0.5 text-xs font-bold text-black bg-white border-gray-200 shadow-sm">
+                                <span>${i.qty}</span>
+                                <i class="fa-solid fa-chevron-down text-[8px] ml-2 text-gray-400"></i>
                              </div>
-                             <button onclick="removeItem(${i.id})" class="text-xs text-gray-400 font-medium underline">Eliminar</button>
+                             <div class="flex-1 text-right">
+                                <button onclick="removeItem(${i.id})" class="text-xs text-gray-400 font-medium">Editar</button>
+                             </div>
                         </div>
                      </div>
                 </div>
             `).join('');
 
-            document.getElementById('checkout-address').innerText = USER_ADDRESS;
             updateCartUI();
         }
 
@@ -708,48 +935,212 @@
         }
 
         function setTip(pct) {
-            SELECTED_TIP = pct;
+            if (pct === 'custom') {
+                const input = prompt("Ingresa el porcentaje de propina (0-100):", SELECTED_TIP);
+                if (input === null) return;
+                const val = parseFloat(input);
+                if (isNaN(val) || val < 0) return alert("Porcentaje inválido");
+                SELECTED_TIP = val;
+            } else {
+                SELECTED_TIP = pct;
+            }
+
+            const standardTips = [5, 10, 15, 20];
+            const isStandard = standardTips.includes(SELECTED_TIP);
+
             document.querySelectorAll('.tip-btn').forEach(btn => {
-                // Reset
-                btn.className = 'tip-btn flex-1 py-3 rounded-xl bg-gray-100 text-xs font-bold text-gray-500 border-2 border-transparent transition';
-                // Activate
-                if ((pct === 0 && btn.innerText === 'No') || btn.innerText.includes(pct + '%')) {
-                    btn.className = 'tip-btn flex-1 py-3 rounded-xl bg-orange-50 text-xs font-bold text-orange-600 border-2 border-orange-500 transition';
+                // Reset Common Classes
+                let baseClass = 'tip-btn flex-1 py-2.5 rounded-lg text-xs font-bold border transition ';
+                if (btn.innerText === "Otro") baseClass = 'tip-btn w-12 py-2.5 rounded-lg text-xs font-bold border transition ';
+
+                // inactive style
+                let styleClass = 'bg-gray-100 text-gray-600 border-transparent';
+
+                // Check if active
+                let isActive = false;
+                if (isStandard) {
+                    if (btn.innerText === SELECTED_TIP + '%') isActive = true;
+                } else {
+                    // Custom tip -> Highlight 'Otro'
+                    if (btn.innerText === "Otro") isActive = true;
                 }
+
+                if (isActive) {
+                    styleClass = 'bg-black text-white border-black';
+                }
+
+                btn.className = baseClass + styleClass;
             });
             updateCartUI();
         }
 
         function openPaymentMethods() {
             document.getElementById('payment-modal').classList.add('active');
+            updatePaymentSelectionUI();
         }
         function closePaymentMethods() {
             document.getElementById('payment-modal').classList.remove('active');
         }
         function selectPayment(method) {
             SELECTED_PAYMENT = method;
-            document.getElementById('checkout-payment-label').innerText = method;
+            document.getElementById('checkout-min-payment').innerText = method;
+            updatePaymentSelectionUI();
             closePaymentMethods();
         }
 
-        function submitOrder() {
+        function updatePaymentSelectionUI() {
+            // Cash Elements
+            const rowCash = document.getElementById('pay-opt-cash');
+            const checkCash = document.getElementById('check-cash');
+            const iconCash = document.getElementById('icon-cash');
+
+            // Card Elements
+            const rowCard = document.getElementById('pay-opt-card');
+            const checkCard = document.getElementById('check-card');
+            const iconCard = document.getElementById('icon-card');
+
+            // Reset Cash
+            rowCash.classList.remove('border-black', 'bg-gray-50');
+            rowCash.classList.add('border-transparent', 'bg-white');
+            checkCash.classList.remove('bg-black', 'border-black');
+            checkCash.classList.add('border-gray-300');
+            iconCash.classList.add('hidden');
+
+            // Reset Card
+            rowCard.classList.remove('ring-2', 'ring-white'); // visual highlight for black card
+            checkCard.classList.remove('bg-black', 'border-black');
+            checkCard.classList.add('border-gray-300');
+            iconCard.classList.add('hidden');
+
+            if (SELECTED_PAYMENT === 'Efectivo') {
+                rowCash.classList.add('border-black', 'bg-gray-50');
+                rowCash.classList.remove('border-transparent', 'bg-white');
+                checkCash.classList.add('bg-black', 'border-black');
+                checkCash.classList.remove('border-gray-300');
+                iconCash.classList.remove('hidden');
+            } else if (SELECTED_PAYMENT === 'Tarjeta') {
+                // Highlight Card
+                rowCard.classList.add('ring-2', 'ring-white');
+                checkCard.classList.add('bg-black', 'border-black');
+                checkCard.classList.remove('border-gray-300');
+                iconCard.classList.remove('hidden');
+                iconCard.classList.add('text-white'); // White check on black bg
+                iconCard.classList.remove('text-black');
+            }
+        }
+
+        async function submitOrder() {
             if (CART.length === 0) return;
-            // logic
+
+            // Remove currency symbol and commas for clean parsing
+            const rawTotal = document.getElementById('final-total').innerText.replace('MX$', '').replace(/,/g, '');
+            const totalAmount = parseFloat(rawTotal);
+
+            console.log("Submit Order: Payment Method =", SELECTED_PAYMENT);
+
+            if (SELECTED_PAYMENT === 'Tarjeta') {
+                console.log("Opening Stripe Modal...");
+                openStripeModal(totalAmount);
+                return;
+            }
+
+            processOrderSubmission('pending');
+        }
+
+        function processOrderSubmission(status) {
             const orderPayload = {
-                slug: SHOP_DATA.slug,
+                slug: SHOP_DATA ? SHOP_DATA.slug : 'demo',
                 order: {
                     ref: 'APP-' + Math.floor(Math.random() * 10000),
                     customerPhone: USER_PHONE,
                     address: USER_ADDRESS,
+                    note: document.getElementById('delivery-note')?.value || '',
                     paymentMethod: SELECTED_PAYMENT,
                     type: 'delivery',
                     items: CART,
                     total: document.getElementById('final-total').innerText,
-                    status: 'pending'
+                    status: status
                 }
             };
-            socket.emit('register-order', orderPayload);
+            console.log("Submitting", orderPayload);
+            if (socket) socket.emit('register-order', orderPayload);
+            else alert("Modo Demo: Pedido 'Enviado'");
         }
+
+        // --- STRIPE LOGIC ---
+        let currentClientSecret = null;
+
+        async function openStripeModal(amount) {
+            document.getElementById('stripe-modal').classList.remove('hidden');
+
+            // Re-mount if needed
+            if (!elements) {
+                elements = stripe.elements();
+                const style = {
+                    base: {
+                        color: "#32325d",
+                        fontFamily: '"Inter", sans-serif',
+                        fontSmoothing: "antialiased",
+                        fontSize: "16px",
+                        "::placeholder": { color: "#aab7c4" }
+                    },
+                    invalid: { color: "#fa755a", iconColor: "#fa755a" }
+                };
+                card = elements.create("card", { style: style });
+                card.mount("#card-element");
+            }
+
+            document.getElementById('pay-btn-text').innerText = "Procesando...";
+            document.getElementById('submit-payment').disabled = true;
+
+            // Fetch ClientSecret
+            try {
+                const res = await fetch(`${API_URL}/api/create-payment-intent`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ amount: Math.round(amount * 100), currency: 'mxn' }) // cents
+                });
+                const data = await res.json();
+                currentClientSecret = data.clientSecret;
+
+                document.getElementById('pay-btn-text').innerText = `Pagar MX$${amount.toFixed(2)}`;
+                document.getElementById('submit-payment').disabled = false;
+            } catch (e) {
+                alert("Error iniciando pago: " + e.message);
+                closeStripe();
+            }
+        }
+
+        function closeStripe() {
+            document.getElementById('stripe-modal').classList.add('hidden');
+        }
+
+        document.getElementById('payment-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!currentClientSecret) return;
+
+            document.getElementById('submit-payment').disabled = true;
+            document.getElementById('pay-btn-text').innerText = "Confirmando...";
+
+            const result = await stripe.confirmCardPayment(currentClientSecret, {
+                payment_method: {
+                    card: card,
+                    billing_details: { name: USER_PHONE } // Simple placeholder
+                }
+            });
+
+            if (result.error) {
+                document.getElementById('card-errors').textContent = result.error.message;
+                document.getElementById('submit-payment').disabled = false;
+                document.getElementById('pay-btn-text').innerText = "Reintentar";
+            } else {
+                if (result.paymentIntent.status === 'succeeded') {
+                    document.getElementById('card-errors').textContent = "";
+                    closeStripe();
+                    processOrderSubmission('paid'); // Submit as PAID
+                }
+            }
+        });
 
     </script>
 </body>
