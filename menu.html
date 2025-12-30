@@ -1100,13 +1100,26 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ amount: Math.round(amount * 100), currency: 'mxn' }) // cents
                 });
-                const data = await res.json();
+
+                const text = await res.text();
+                // console.log("Raw Response:", text); // Debugging
+
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (e) {
+                    console.error("Error parsing JSON:", text);
+                    throw new Error("El servidor devolvió algo que no es JSON (posiblemente un error o protección hCaptcha).");
+                }
+
+                if (!res.ok) throw new Error(data.error || "Error en el servidor");
                 currentClientSecret = data.clientSecret;
 
                 document.getElementById('pay-btn-text').innerText = `Pagar MX$${amount.toFixed(2)}`;
                 document.getElementById('submit-payment').disabled = false;
             } catch (e) {
-                alert("Error iniciando pago: " + e.message);
+                alert("Error: " + e.message);
+                console.error(e);
                 closeStripe();
             }
         }
