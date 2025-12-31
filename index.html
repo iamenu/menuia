@@ -109,6 +109,12 @@
 </head>
 
 <body class="bg-slate-50">
+    <!-- PWA INSTALL BUTTON (Always Visible & Fixed on Top) -->
+    <button id="pwa-install-btn" onclick="installPWA()"
+        class="fixed top-4 right-4 z-[9999] bg-blue-600 text-white px-4 py-2 rounded-full shadow-xl font-bold text-sm animate-bounce hover:bg-blue-700 transition"
+        style="position: fixed; top: 20px; right: 20px; z-index: 99999;">
+        <i class="fa-solid fa-download"></i> Instalar App
+    </button>
 
     <!-- APP HEADER (Mobile/Web Hybrid) -->
     <header class="bg-black px-4 pt-10 pb-16 rounded-b-[2rem] shadow-lg relative z-30 mb-8">
@@ -338,11 +344,7 @@
             </div>
 
             <div class="p-8">
-                <!-- PWA INSTALL BUTTON (Always Visible) -->
-                <button id="pwa-install-btn" onclick="installPWA()"
-                    class="fixed top-4 right-4 z-[9999] bg-blue-600 text-white px-4 py-2 rounded-full shadow-xl font-bold text-sm animate-bounce hover:bg-blue-700 transition">
-                    <i class="fa-solid fa-download"></i> Instalar App
-                </button>
+
 
                 <!-- LOGIN FORM -->
                 <form id="form-login" onsubmit="event.preventDefault(); handleUserLogin();" class="space-y-4">
@@ -1680,4 +1682,3 @@
 </body>
 
 </html>
-
