@@ -682,21 +682,87 @@
             }
             document.getElementById('checkout-store-name').innerText = config.name;
 
-            // 1. PROMOTIONS
-            const promos = menu.promos || [];
-            if (promos.length > 0) {
-                document.getElementById('promos-container').innerHTML = promos.map(p => {
-                    const old = p.originalPrice || p.oldPrice;
-                    const discount = old && old > p.price ? Math.round(((old - p.price) / old) * 100) : 0;
+            // 1. PROMOTIONS & OFFERS (Advanced + Auto-Sort)
+            let allPromos = [];
+
+            // A) Legacy Promos
+            if (menu.promos && Array.isArray(menu.promos)) {
+                allPromos = [...menu.promos];
+            }
+
+            // B) Auto-Detect Discounts in Categories
+            const promoIgnoreKeys = ['groups', 'promos'];
+            const promoAllKeys = Object.keys(menu).filter(k => !promoIgnoreKeys.includes(k));
+
+            promoAllKeys.forEach(k => {
+                const items = menu[k] || [];
+                items.forEach(item => {
+                    if (item.oldPrice && parseFloat(item.oldPrice) > parseFloat(item.price)) {
+                        // Check if already in list to avoid dups
+                        const exists = allPromos.find(p => p.name === item.name);
+                        if (!exists) {
+                            allPromos.push({ ...item, _autoLabel: 'Oferta' });
+                        }
+                    }
+                });
+            });
+
+            // C) Advanced Promos (from Admin)
+            const advancedPromos = SHOP_DATA.promotions || [];
+            // Merge them in. Structure is different, so we adapt.
+            advancedPromos.forEach(ap => {
+                if (!ap.active) return;
+
+                // Construct a displayable item
+                let promoItem = {
+                    id: ap.id,
+                    name: ap.title,
+                    price: ap.price || 0,
+                    image: 'https://cdn-icons-png.flaticon.com/512/726/726476.png', // Default icon
+                    _isAdvanced: true,
+                    _type: ap.type,
+                    _data: ap // Store full data
+                };
+
+                if (ap.type === '2x1') {
+                    promoItem.image = 'https://cdn-icons-png.flaticon.com/512/5305/5305244.png';
+                    promoItem.desc = ap.desc;
+                    promoItem.price = ap.price; // Usually price of 1
+                } else if (ap.type === 'flash') {
+                    promoItem.image = 'https://cdn-icons-png.flaticon.com/512/3600/3600926.png'; // Lightning
+                    promoItem.price = ap.price;
+                    promoItem.desc = `Vence: ${moment(ap.expiresAt).fromNow()}`;
+                } else if (ap.type === 'discount') {
+                    promoItem.oldPrice = ap.originalPrice;
+                    promoItem.price = ap.price;
+                }
+
+                allPromos.push(promoItem);
+            });
+
+
+            if (allPromos.length > 0) {
+                document.getElementById('promos-section').style.display = 'block';
+                document.getElementById('promos-container').innerHTML = allPromos.map(p => {
                     const itemId = registerItem(p);
+
+                    // Badge Logic
+                    let badgeHtml = '';
+                    if (p._type === '2x1') badgeHtml = `<div class="absolute bottom-2 left-2 bg-purple-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-md shadow-sm">2x1</div>`;
+                    else if (p._type === 'flash') badgeHtml = `<div class="absolute bottom-2 left-2 bg-yellow-400 text-black text-[10px] font-bold px-2 py-0.5 rounded-md shadow-sm">⚡ FLASH</div>`;
+                    else {
+                        // Discount math
+                        const old = p.originalPrice || p.oldPrice;
+                        const discount = old && old > p.price ? Math.round(((old - p.price) / old) * 100) : 0;
+                        if (discount > 0) badgeHtml = `<div class="absolute bottom-2 left-2 bg-black text-white text-[10px] font-bold px-1.5 py-0.5 rounded-md shadow-sm">-${discount}%</div>`;
+                    }
 
                     return `
                     <div onclick="openDetail('${itemId}')" class="min-w-[140px] w-[140px] cursor-pointer group">
                         <div class="relative w-full h-32 rounded-2xl overflow-hidden mb-2 shadow-sm bg-gray-100">
                             <img src="${p.image || 'https://placehold.co/200'}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500 transition-all"> 
-                             <!-- Discount Badge (Black) -->
-                            ${discount > 0 ? `<div class="absolute bottom-2 left-2 bg-black text-white text-[10px] font-bold px-1.5 py-0.5 rounded-md shadow-sm">${discount}% OFF</div>` : ''}
-                            <!-- Add Btn Overlay (Black) -->
+                            ${badgeHtml}
+                             <!-- Add Btn Overlay -->
                             <div class="absolute bottom-2 right-2 w-7 h-7 bg-white/90 backdrop-blur rounded-full flex items-center justify-center text-black shadow-sm">
                                 <i class="fa-solid fa-plus text-xs font-bold pointer-events-none"></i>
                             </div>
@@ -705,8 +771,9 @@
                             <h4 class="font-bold text-black text-sm leading-tight line-clamp-1 mb-0.5">${p.name}</h4>
                             <div class="flex flex-col leading-none">
                                 <span class="text-black font-bold text-sm">MX$${parseFloat(p.price).toFixed(2)}</span>
-                                ${old ? `<span class="text-[10px] text-gray-400 line-through">MX$${old}</span>` : ''}
+                                ${p.oldPrice || p.originalPrice ? `<span class="text-[10px] text-gray-400 line-through">MX$${p.oldPrice || p.originalPrice}</span>` : ''}
                             </div>
+                            ${p.desc ? `<p class="text-[10px] text-gray-500 line-clamp-1 mt-0.5">${p.desc}</p>` : ''}
                         </div>
                     </div>
                 `}).join('');
