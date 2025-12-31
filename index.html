@@ -1561,6 +1561,21 @@
             }
         }
 
+        // HIDE BUTTON IF INSTALLED
+        function checkInstalledState() {
+            if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
+                console.log("✅ App is running in standalone mode (Installed)");
+                const btn = document.getElementById('pwa-install-btn');
+                if (btn) btn.style.display = 'none';
+            }
+        }
+        window.addEventListener('load', checkInstalledState);
+        window.addEventListener('appinstalled', () => {
+            console.log("🎉 App Installed Successfully!");
+            const btn = document.getElementById('pwa-install-btn');
+            if (btn) btn.style.display = 'none';
+        });
+
         // 2. Init Global Listener
         function initGlobalNotifications() {
             if (typeof socket === 'undefined') return;
