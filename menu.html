@@ -1148,6 +1148,11 @@
         // --- CHECKOUT ---
         function openCheckout() {
             document.getElementById('checkout-modal').classList.add('active');
+
+            // Auto-fill user data if available from session
+            if (document.getElementById('checkout-name')) document.getElementById('checkout-name').value = USER_NAME || '';
+            if (document.getElementById('checkout-phone')) document.getElementById('checkout-phone').value = USER_PHONE || '';
+
             document.getElementById('checkout-address').innerText = USER_ADDRESS || "Dirección no disponible";
 
             const list = document.getElementById('checkout-items-list');
@@ -1317,6 +1322,19 @@
         function buildOrderPayload(status) {
             // Helper to extract values from DOM for consistency
             const getVal = (id) => parseFloat(document.getElementById(id).innerText.replace(/[^0-9.]/g, '')) || 0;
+
+            // Capture User Data from Inputs directly (User might have edited them)
+            const nameInput = document.getElementById('checkout-name');
+            const phoneInput = document.getElementById('checkout-phone');
+
+            if (nameInput && nameInput.value.trim()) {
+                USER_NAME = nameInput.value.trim();
+                localStorage.setItem('user_name', USER_NAME);
+            }
+            if (phoneInput && phoneInput.value.trim()) {
+                USER_PHONE = phoneInput.value.trim();
+                localStorage.setItem('user_phone', USER_PHONE);
+            }
 
             const costs = {
                 subtotal: getVal('summ-products'),
