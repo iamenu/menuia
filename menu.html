@@ -599,23 +599,27 @@
         }
 
         // REGISTRY FOR CLICK HANDLING (Fixes syntax errors with special chars)
-        let RENDERED_ITEMS = {};
+        window.RENDERED_ITEMS = {};
 
-        function registerItem(item) {
+        window.registerItem = function (item) {
             const id = 'item_' + Math.random().toString(36).substr(2, 9);
-            RENDERED_ITEMS[id] = item;
+            window.RENDERED_ITEMS[id] = item;
             return id;
         }
 
-        function openDetailById(id) {
-            const item = RENDERED_ITEMS[id];
+        window.openDetailById = function (id) {
+            console.log("OpenDetailById called for:", id);
+            const item = (window.RENDERED_ITEMS || RENDERED_ITEMS)[id];
             if (item) openDetail(item);
-            else console.error("Item not found in registry:", id);
+            else {
+                console.error("Item not found:", id);
+                alert("Error: Item no encontrado. ID: " + id);
+            }
         }
 
         function renderShop() {
             // Reset Registry on re-render
-            RENDERED_ITEMS = {};
+            window.RENDERED_ITEMS = {};
 
             const config = SHOP_DATA.config;
             const menu = SHOP_DATA.menu;
