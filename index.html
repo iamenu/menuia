@@ -1,0 +1,1656 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MenúIA - Tu Ciudad, Tus Compras</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Leaflet CSS & JS (OpenStreetMap) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <!-- Socket.io para rastreo en tiempo real -->
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <!-- QR CODE LIBRARY -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <link rel="manifest" href="manifest.json">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+        }
+
+        /* Animaciones */
+        @keyframes fade-in {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-fade-in {
+            animation: fade-in 0.5s ease-out forwards;
+        }
+
+        /* Cards */
+        .shop-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid #e2e8f0;
+        }
+
+        .shop-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px -5px rgba(0, 0, 0, 0.1);
+            border-color: #3b82f6;
+        }
+
+        /* Hero Pattern */
+        .hero-bg {
+            background-color: #0f172a;
+            background-image: radial-gradient(#334155 1px, transparent 1px);
+            background-size: 30px 30px;
+        }
+
+        /* Modal */
+        .modal {
+            transition: opacity 0.3s ease, visibility 0.3s;
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            transform: scale(0.95);
+            transition: all 0.3s;
+        }
+
+        .modal.active .modal-content {
+            transform: scale(1);
+        }
+
+        /* Chat Styles */
+        .chat-bubble {
+            max-width: 85%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            margin-bottom: 12px;
+            font-size: 0.9rem;
+            position: relative;
+            animation: fade-in 0.3s;
+        }
+
+        .chat-bubble.bot {
+            background: #f1f5f9;
+            color: #334155;
+            border-bottom-left-radius: 4px;
+        }
+
+        .chat-bubble.user {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+            border-bottom-right-radius: 4px;
+            align-self: flex-end;
+            text-align: right;
+        }
+    </style>
+</head>
+
+<body class="bg-slate-50">
+
+    <!-- APP HEADER (Mobile/Web Hybrid) -->
+    <header class="bg-black px-4 pt-10 pb-16 rounded-b-[2rem] shadow-lg relative z-30 mb-8">
+        <!-- Top Bar: Location & User/Cart -->
+        <div class="flex justify-between items-start mb-6">
+            <!-- Location Selector -->
+            <div class="flex-1 mr-4 cursor-pointer group" onclick="openAddressModal()">
+                <div class="flex items-center text-gray-300 text-xs font-bold mb-0.5">
+                    <i class="fa-solid fa-location-dot mr-1"></i> Entregar en:
+                </div>
+                <div class="flex items-center text-white">
+                    <span id="header-address-text"
+                        class="font-bold text-lg truncate block max-w-[200px] leading-tight">Ubicación actual</span>
+                    <i
+                        class="fa-solid fa-chevron-down ml-2 text-sm opacity-70 group-hover:translate-y-0.5 transition"></i>
+                </div>
+                <div id="location-status" class="hidden text-[10px] text-gray-400 mt-1 font-medium"></div>
+            </div>
+
+            <!-- Icons (Cart & Profile) -->
+            <div class="flex items-center gap-3">
+                <!-- User Profile (Hidden on mobile if bottom nav exists, but good for desktop) -->
+                <div id="header-user-icon"
+                    class="hidden md:flex items-center justify-center w-10 h-10 bg-white/20 rounded-full text-white cursor-pointer hover:bg-white/30 transition"
+                    onclick="openLoginModal()">
+                    <i class="fa-regular fa-user"></i>
+                </div>
+
+                <!-- Cart -->
+                <div class="relative cursor-pointer" onclick="toggleCartSidebar()">
+                    <div
+                        class="w-10 h-10 bg-white rounded-full flex items-center justify-center text-black shadow-lg hover:scale-105 transition">
+                        <i class="fa-solid fa-cart-shopping"></i>
+                    </div>
+                    <span id="cart-count-badge"
+                        class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-black hidden">0</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="relative shadow-xl">
+            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <i class="fa-solid fa-magnifying-glass text-gray-400"></i>
+            </div>
+            <input type="text" id="search-input" onkeyup="filterShops()"
+                class="block w-full pl-11 pr-4 py-4 rounded-full text-gray-900 placeholder-gray-400 text-base focus:outline-none focus:ring-2 focus:ring-gray-400 transition"
+                placeholder="¿Qué se te antoja hoy? (Sushi, Pizza...)">
+        </div>
+    </header>
+
+    <!-- Global Tracker Original Position (Hidden, logic will move content or we reuse this ID) -->
+    <!-- Global Tracker Dynamic Pill (iOS Island Style) -->
+    <div id="global-order-tracker"
+        class="hidden fixed top-4 left-1/2 transform -translate-x-1/2 z-50 w-[90%] max-w-sm transition-all duration-500">
+        <div
+            class="bg-black/90 backdrop-blur-md text-white rounded-full shadow-2xl px-1 py-1 flex items-center justify-between border border-white/10 ring-1 ring-black/5">
+            <!-- Icon Circle -->
+            <div
+                class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center shrink-0 animate-pulse relative">
+                <i class="fa-solid fa-motorcycle text-white text-xs"></i>
+                <div class="absolute inset-0 border-2 border-white/20 rounded-full animate-ping opacity-50"></div>
+            </div>
+
+            <!-- Content -->
+            <div class="flex-1 px-3 min-w-0">
+                <p class="text-[9px] text-gray-400 font-bold uppercase tracking-wider">Tu Pedido</p>
+                <h3 class="font-bold text-sm truncate" id="global-tracker-msg">En camino...</h3>
+            </div>
+
+            <!-- Action -->
+        </div>
+    </div>
+
+    <!-- AI Personalization Banner REMOVED -->
+
+    <!-- CATEGORIES ROW (Horizontal Scroll) -->
+    <div class="max-w-7xl mx-auto px-4 mb-4">
+        <div class="flex gap-4 overflow-x-auto pb-4 no-scrollbar" id="categories-container">
+            <!-- Items -->
+            <button onclick="filterCategory('Restaurante')" class="flex flex-col items-center gap-2 group min-w-[70px]">
+                <div
+                    class="w-14 h-14 rounded-2xl bg-orange-50 text-orange-500 flex items-center justify-center text-2xl shadow-sm group-hover:scale-110 transition border border-orange-100">
+                    🍔
+                </div>
+                <span class="text-xs font-bold text-gray-600">Comida</span>
+            </button>
+            <button onclick="filterCategory('Abarrotes')" class="flex flex-col items-center gap-2 group min-w-[70px]">
+                <div
+                    class="w-14 h-14 rounded-2xl bg-green-50 text-green-500 flex items-center justify-center text-2xl shadow-sm group-hover:scale-110 transition border border-green-100">
+                    🥬
+                </div>
+                <span class="text-xs font-bold text-gray-600">Súper</span>
+            </button>
+            <button onclick="filterCategory('Farmacia')" class="flex flex-col items-center gap-2 group min-w-[70px]">
+                <div
+                    class="w-14 h-14 rounded-2xl bg-blue-50 text-blue-500 flex items-center justify-center text-2xl shadow-sm group-hover:scale-110 transition border border-blue-100">
+                    💊
+                </div>
+                <span class="text-xs font-bold text-gray-600">Farmacia</span>
+            </button>
+            <button onclick="filterCategory('Bebidas')" class="flex flex-col items-center gap-2 group min-w-[70px]">
+                <div
+                    class="w-14 h-14 rounded-2xl bg-purple-50 text-purple-500 flex items-center justify-center text-2xl shadow-sm group-hover:scale-110 transition border border-purple-100">
+                    🥤
+                </div>
+                <span class="text-xs font-bold text-gray-600">Bebidas</span>
+            </button>
+            <button onclick="filterCategory('Postres')" class="flex flex-col items-center gap-2 group min-w-[70px]">
+                <div
+                    class="w-14 h-14 rounded-2xl bg-pink-50 text-pink-500 flex items-center justify-center text-2xl shadow-sm group-hover:scale-110 transition border border-pink-100">
+                    🍩
+                </div>
+                <span class="text-xs font-bold text-gray-600">Postres</span>
+            </button>
+            <button onclick="filterCategory('Café')" class="flex flex-col items-center gap-2 group min-w-[70px]">
+                <div
+                    class="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-2xl shadow-sm group-hover:scale-110 transition border border-amber-100">
+                    ☕
+                </div>
+                <span class="text-xs font-bold text-gray-600">Café</span>
+            </button>
+            <button onclick="filterCategory('Mascotas')" class="flex flex-col items-center gap-2 group min-w-[70px]">
+                <div
+                    class="w-14 h-14 rounded-2xl bg-yellow-50 text-yellow-600 flex items-center justify-center text-2xl shadow-sm group-hover:scale-110 transition border border-yellow-100">
+                    🐾
+                </div>
+                <span class="text-xs font-bold text-gray-600">Mascotas</span>
+            </button>
+            <button onclick="filterCategory('all')" class="flex flex-col items-center gap-2 group min-w-[70px]">
+                <div
+                    class="w-14 h-14 rounded-2xl bg-gray-50 text-gray-500 flex items-center justify-center text-2xl shadow-sm group-hover:scale-110 transition border border-gray-100">
+                    🔎
+                </div>
+                <span class="text-xs font-bold text-gray-600">Ver Todo</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- BRANDS CAROUSEL (Mobile App Style) -->
+    <div class="max-w-7xl mx-auto px-4 mb-8">
+        <h3 class="font-bold text-slate-800 mb-3 text-sm flex items-center gap-2">
+            <i class="fa-solid fa-crown text-blue-500"></i> Marcas Populares
+        </h3>
+        <div class="flex gap-4 overflow-x-auto pb-2 no-scrollbar" id="popular-brands-container">
+            <!-- Loaded Dynamically -->
+        </div>
+    </div>
+    </div>
+
+    <!-- TOP STORES (Horizontal Scroll) -->
+    <div class="max-w-7xl mx-auto px-4 mb-8">
+        <div class="flex justify-between items-center mb-3">
+            <h3 class="font-bold text-slate-800 text-lg">Top Comercios 🏆</h3>
+            <button
+                class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 hover:bg-gray-200 transition">
+                <i class="fa-solid fa-chevron-right text-xs"></i>
+            </button>
+        </div>
+        <div class="flex gap-4 overflow-x-auto pb-4 no-scrollbar" id="top-shops-container">
+            <!-- Loaded Dynamically -->
+        </div>
+    </div>
+
+    <!-- FLASH DEALS GRID -->
+    <div class="max-w-7xl mx-auto px-4 mb-8">
+        <h3 class="font-bold text-slate-800 text-lg mb-3">Ofertas Relámpago ⚡</h3>
+        <div class="grid grid-cols-2 gap-3" id="deals-container">
+            <!-- Mock Deal -->
+            <div
+                class="bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl p-4 text-white relative overflow-hidden cursor-pointer hover:scale-[1.02] transition">
+                <div class="relative z-10">
+                    <span
+                        class="bg-white text-orange-600 text-[10px] font-bold px-2 py-0.5 rounded-full mb-1 inline-block">30%
+                        OFF</span>
+                    <h4 class="font-bold text-lg leading-tight w-2/3">Combo Familiar</h4>
+                    <p class="text-xs opacity-90 mt-1">Termina en 2h</p>
+                    <button class="mt-3 bg-white text-orange-600 px-3 py-1 rounded-full text-xs font-bold">Ver
+                        Promo</button>
+                </div>
+                <img src="https://pngimg.com/d/burger_sandwich_PNG9670.png"
+                    class="absolute -bottom-4 -right-4 w-28 drop-shadow-lg rotate-12">
+            </div>
+            <!-- Mock Deal 2 -->
+            <div
+                class="bg-gradient-to-br from-green-500 to-emerald-700 rounded-2xl p-4 text-white relative overflow-hidden cursor-pointer hover:scale-[1.02] transition">
+                <div class="relative z-10">
+                    <span
+                        class="bg-white text-green-600 text-[10px] font-bold px-2 py-0.5 rounded-full mb-1 inline-block">2x1</span>
+                    <h4 class="font-bold text-lg leading-tight w-2/3">Farmacia Basic</h4>
+                    <p class="text-xs opacity-90 mt-1">Solo hoy</p>
+                    <button class="mt-3 bg-white text-black px-3 py-1 rounded-full text-xs font-bold">Comprar</button>
+                </div>
+                <img src="https://assets.stickpng.com/images/580b57fbd9996e24bc43c080.png"
+                    class="absolute -bottom-2 -right-4 w-24 drop-shadow-lg">
+            </div>
+        </div>
+    </div>
+
+    <!-- Shops Grid -->
+    <div class="max-w-7xl mx-auto px-4 pb-20">
+        <h2 class="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+            <i class="fa-solid fa-store text-blue-500"></i> Comercios Disponibles
+        </h2>
+        <div id="shops-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Shops injected via JS -->
+            <div class="col-span-full text-center py-20 text-gray-400">
+                <i class="fa-solid fa-circle-notch fa-spin text-3xl mb-3"></i>
+                <p>Cargando comercios...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE LOGIN (Copia Adaptada) -->
+    <div id="user-modal"
+        class="modal fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
+        <div class="modal-content bg-white w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden relative">
+
+            <!-- TABS -->
+            <div class="bg-gray-50 border-b border-gray-200 flex">
+                <button onclick="switchAuthTab('login')" id="tab-login"
+                    class="flex-1 py-4 text-sm font-bold text-blue-600 border-b-2 border-blue-600 transition">Iniciar
+                    Sesión</button>
+                <button onclick="switchAuthTab('register')" id="tab-register"
+                    class="flex-1 py-4 text-sm font-medium text-gray-500 hover:text-gray-700 transition">Crear
+                    Cuenta</button>
+            </div>
+
+            <div class="p-8">
+                <button onclick="toggleUserModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600"><i
+                        class="fa-solid fa-xmark text-lg"></i></button>
+
+                <!-- LOGIN FORM -->
+                <form id="form-login" onsubmit="event.preventDefault(); handleUserLogin();" class="space-y-4">
+                    <div class="text-center mb-6">
+                        <div
+                            class="w-14 h-14 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl">
+                            <i class="fa-solid fa-user-astronaut"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-slate-800">¡Hola de nuevo!</h3>
+                        <p class="text-xs text-gray-500 mt-1">Accede para ver tus recomendaciones.</p>
+                    </div>
+
+                    <input type="tel" id="login-phone"
+                        class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-slate-800 focus:ring-2 focus:ring-blue-500 outline-none text-sm font-medium"
+                        placeholder="Tu celular" required>
+                    <input type="password" id="login-pass"
+                        class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-slate-800 focus:ring-2 focus:ring-blue-500 outline-none text-sm font-medium"
+                        placeholder="Contraseña" required>
+                    <button type="submit"
+                        class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-blue-500/30 transition transform active:scale-95">Entrar</button>
+                </form>
+
+                <!-- REGISTER FORM -->
+                <form id="form-register" onsubmit="event.preventDefault(); handleUserRegister();"
+                    class="space-y-4 hidden">
+                    <div class="text-center mb-6">
+                        <h3 class="text-xl font-bold text-slate-800">Crear Cuenta</h3>
+                        <p class="text-xs text-gray-500 mt-1">Es rápido y fácil.</p>
+                    </div>
+
+                    <input type="text" id="reg-name"
+                        class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-slate-800 focus:ring-2 focus:ring-blue-500 outline-none text-sm font-medium"
+                        placeholder="Nombre Completo" required>
+                    <input type="tel" id="reg-phone"
+                        class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-slate-800 focus:ring-2 focus:ring-blue-500 outline-none text-sm font-medium"
+                        placeholder="Celular" required>
+                    <input type="text" id="reg-address"
+                        class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-slate-800 focus:ring-2 focus:ring-blue-500 outline-none text-sm font-medium"
+                        placeholder="Dirección (opcional)">
+                    <input type="password" id="reg-pass"
+                        class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-slate-800 focus:ring-2 focus:ring-blue-500 outline-none text-sm font-medium"
+                        placeholder="Contraseña" required>
+                    <button type="submit"
+                        class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3.5 rounded-xl shadow-lg transition transform active:scale-95">Registrarme</button>
+                </form>
+
+                <!-- USER INFO -->
+                <!-- USER INFO -->
+                <div id="user-logged-info" class="hidden text-center">
+                    <div class="relative w-24 h-24 mx-auto mb-4 group">
+                        <img id="profile-img-preview" src="https://ui-avatars.com/api/?name=Usuario&background=random"
+                            class="w-full h-full rounded-full object-cover border-4 border-blue-50 shadow-md">
+
+                        <label for="profile-upload"
+                            class="absolute bottom-0 right-0 bg-blue-600 text-white w-8 h-8 rounded-full flex items-center justify-center cursor-pointer shadow-lg hover:bg-blue-700 transition transform hover:scale-110">
+                            <i class="fa-solid fa-camera text-xs"></i>
+                        </label>
+                        <input type="file" id="profile-upload" class="hidden" accept="image/*"
+                            onchange="uploadProfileImage(this)">
+                    </div>
+
+                    <h3 class="font-bold text-lg text-slate-800" id="display-user-name">Usuario</h3>
+                    <p class="text-xs text-gray-500 mb-6" id="display-user-phone">...</p>
+
+
+
+                    <button onclick="logoutUser()"
+                        class="text-red-500 font-bold text-sm hover:underline py-2 w-full border border-red-100 rounded-xl hover:bg-red-50 transition">Cerrar
+                        Sesión</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI MARKETPLACE CHAT MODAL -->
+    <div id="ai-modal"
+        class="modal fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div
+            class="bg-white w-full max-w-sm rounded-3xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col h-[600px] animate-fade-in relative">
+            <!-- Header -->
+            <div
+                class="bg-white/80 backdrop-blur-md p-4 border-b border-gray-100 flex justify-between items-center z-10 sticky top-0">
+                <div class="flex items-center gap-3">
+                    <div class="relative">
+                        <div
+                            class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg shadow-purple-500/20">
+                            <i class="fa-solid fa-map-location-dot text-white text-lg"></i>
+                        </div>
+                        <span
+                            class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-white rounded-full"></span>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-slate-800 text-sm">Guía Gastronómico</h3>
+                        <p class="text-[10px] text-blue-500 flex items-center gap-1"><span
+                                class="w-1 h-1 bg-blue-500 rounded-full animate-pulse"></span> Gemini AI</p>
+                    </div>
+                </div>
+                <button onclick="toggleAI()"
+                    class="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 flex items-center justify-center transition"><i
+                        class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <!-- Chat Area -->
+            <div id="chat-container"
+                class="flex-1 p-4 overflow-y-auto flex flex-col gap-3 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] bg-fixed">
+                <!-- Messages -->
+            </div>
+
+            <!-- Input Area -->
+            <div class="p-4 bg-white border-t border-gray-100 z-10">
+                <form id="ai-chat-form" onsubmit="event.preventDefault(); handleMarketplaceChat();" class="flex gap-2">
+                    <input type="text" id="ai-user-input" placeholder="Ej: Busco medicina para el dolor..."
+                        class="flex-1 border border-gray-200 bg-gray-50 rounded-full px-4 py-2 text-sm focus:ring-2 focus:ring-blue-100 outline-none transition">
+                    <button type="submit"
+                        class="w-10 h-10 bg-indigo-600 text-white rounded-full flex items-center justify-center hover:bg-indigo-700 transition shadow-md">
+                        <i class="fa-solid fa-paper-plane text-xs"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = "https://menuia.onrender.com";
+        // const API_URL = "http://localhost:3000"; // Descomentar para pruebas locales
+
+        // Init Socket
+        let socket;
+        try {
+            socket = io(API_URL);
+            console.log("🔌 Connecting socket to", API_URL);
+        } catch (e) { console.error("Socket init error:", e); }
+        let ALL_SHOPS = [];
+        let DISPLAYED_SHOPS = [];
+        let CURRENT_FILTER = 'all';
+        let USER_DATA = JSON.parse(localStorage.getItem('menuia_user_data')) || null;
+        let USER_TASTES = JSON.parse(localStorage.getItem('menuia_user_tastes')) || null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initUser();
+            refreshUserProfile(); // AUTO-SYNC FIX
+            initAutoLocation(); // Auto-start location
+            loadShops();
+        });
+
+        // --- AUTH & USER DATA LOGIC ---
+        // NEW SYNC FUNCTION
+        async function refreshUserProfile() {
+            if (!USER_DATA || !USER_DATA.phone || !USER_DATA.password) return;
+
+            try {
+                // Silently refresh profile
+                const res = await fetch(`${API_URL}/api/customer/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone: USER_DATA.phone, password: USER_DATA.password })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    const pass = USER_DATA.password; // Keep stored pass
+                    USER_DATA = data.customer;
+                    USER_DATA.password = pass;
+                    localStorage.setItem('menuia_user_data', JSON.stringify(USER_DATA));
+
+                    // Update Tastes
+                    if (data.customer.tastes) {
+                        USER_TASTES = data.customer.tastes;
+                        localStorage.setItem('menuia_user_tastes', JSON.stringify(USER_TASTES));
+                    }
+
+                    initUser(); // Re-render UI with fresh data
+                    console.log("🔄 Perfil sincronizado con servidor");
+                }
+            } catch (e) { console.warn("Sync error", e); }
+        }
+        function initUser() {
+            if (USER_DATA) {
+                const navName = document.getElementById('nav-user-name');
+                if (navName) navName.innerText = USER_DATA.name.split(' ')[0];
+
+                const dispName = document.getElementById('display-user-name');
+                if (dispName) dispName.innerText = USER_DATA.name;
+
+                const dispPhone = document.getElementById('display-user-phone');
+                if (dispPhone) dispPhone.innerText = USER_DATA.phone;
+
+                // Set Profile Image
+                const img = document.getElementById('profile-img-preview');
+                if (img) {
+                    img.src = USER_DATA.profileImage || `https://ui-avatars.com/api/?name=${USER_DATA.name}&background=random`;
+                }
+
+                // Set Navbar Avatar (Persistence)
+                const navIconWrapper = document.getElementById('nav-user-icon-wrapper');
+                if (navIconWrapper) {
+                    if (USER_DATA.profileImage) {
+                        navIconWrapper.innerHTML = `<img src="${USER_DATA.profileImage}" class="w-full h-full rounded-full object-cover">`;
+                    } else {
+                        navIconWrapper.innerHTML = `<div
+        class="w-full h-full rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">
+        ${USER_DATA.name.charAt(0)}</div>`;
+                    }
+                }
+
+                const loginForm = document.getElementById('form-login');
+                if (loginForm) loginForm.classList.add('hidden');
+
+                const regForm = document.getElementById('form-register');
+                if (regForm) regForm.classList.add('hidden');
+
+                const tabs = document.querySelector('.bg-gray-50.border-b');
+                if (tabs) tabs.classList.add('hidden');
+
+                const loggedInfo = document.getElementById('user-logged-info');
+                if (loggedInfo) loggedInfo.classList.remove('hidden');
+
+                const mTitle = document.getElementById('modal-title');
+                if (mTitle) mTitle.innerText = "Tu Perfil";
+
+                // CHECK ACTIVE ORDERS
+                checkGlobalActiveOrders();
+
+                if (typeof checkAndShowAISuggestion === 'function') checkAndShowAISuggestion();
+            } else {
+                const navName = document.getElementById('nav-user-name');
+                if (navName) navName.innerText = "Ingresar";
+
+                const loginForm = document.getElementById('form-login');
+                if (loginForm) loginForm.classList.remove('hidden');
+
+                const regForm = document.getElementById('form-register');
+                if (regForm) regForm.classList.add('hidden');
+
+                const tabs = document.querySelector('.bg-gray-50.border-b');
+                if (tabs) tabs.classList.remove('hidden');
+
+                const loggedInfo = document.getElementById('user-logged-info');
+                if (loggedInfo) loggedInfo.classList.add('hidden');
+
+                if (typeof switchAuthTab === 'function') switchAuthTab('login');
+            }
+        }
+
+        async function handleUserLogin() {
+            const phone = document.getElementById('login-phone').value;
+            const password = document.getElementById('login-pass').value;
+            const btn = document.querySelector('#form-login button');
+            const originalText = btn.innerText;
+            btn.innerText = "..."; btn.disabled = true;
+
+            try {
+                const res = await fetch(`${API_URL}/api/customer/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone, password })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    USER_DATA = data.customer;
+                    USER_DATA.password = password; // Guardar pass para sesiones futuras (simple)
+                    localStorage.setItem('menuia_user_data', JSON.stringify(USER_DATA));
+
+                    // Recuperar gustos
+                    if (data.customer.tastes) {
+                        USER_TASTES = data.customer.tastes;
+                        localStorage.setItem('menuia_user_tastes', JSON.stringify(USER_TASTES));
+                    }
+
+                    initUser();
+                    toggleUserModal();
+                } else {
+                    alert("Credenciales incorrectas");
+                }
+            } catch (e) { alert("Error de conexión"); }
+            btn.innerText = originalText; btn.disabled = false;
+        }
+
+        // Initialize Real-time Updates Listener
+        if (typeof socket !== 'undefined') {
+            console.log("✅ Socket Client Initialized");
+            socket.on('shop-config-updated', (data) => {
+                console.log("⚡ SOCKET EVENT:", data);
+
+                const shopIndex = ALL_SHOPS.findIndex(s => s.slug === data.slug);
+                if (shopIndex !== -1) {
+                    // Update Local State directly
+                    const shop = ALL_SHOPS[shopIndex];
+                    if (!shop.config) shop.config = {};
+
+                    if (data.type === 'featured') {
+                        shop.config.isFeatured = data.value;
+                        console.log(`Updated Featured: ${shop.config.name} -> ${data.value}`);
+                    }
+                    if (data.type === 'brand') {
+                        shop.config.isPopularBrand = data.value;
+                        console.log(`Updated Brand: ${shop.config.name} -> ${data.value}`);
+                    }
+
+                    // Force Re-render with delay to ensure DOM is ready
+                    setTimeout(() => {
+                        renderTopShops();
+                        renderPopularBrands();
+                    }, 50);
+                } else {
+                    console.warn("Shop not in cache, reloading all...");
+                    loadShops();
+                }
+            });
+        }
+
+        function logoutUser() {
+            localStorage.removeItem('menuia_user_data');
+            localStorage.removeItem('menuia_user_tastes');
+            USER_DATA = null;
+            USER_TASTES = null;
+            initUser();
+            location.reload(); // Recargar para limpiar estados de IA
+        }
+
+        async function uploadProfileImage(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            // MongoDB Document Limit is 16MB. Base64 adds ~33%.
+            // Safety limit: 10MB max file size.
+            if (file.size > 10 * 1024 * 1024) {
+                alert("La imagen es muy pesada (Máx 10MB). Por favor elige una más ligera.");
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = async function (e) {
+                const base64 = e.target.result;
+
+                // Optimistic UI Update (Profile Panel)
+                document.getElementById('profile-img-preview').src = base64;
+
+                // Optimistic UI Update (Navbar)
+                const navIconWrapper = document.getElementById('nav-user-icon-wrapper');
+                if (navIconWrapper) {
+                    navIconWrapper.innerHTML = `<img src="${base64}" class="w-full h-full rounded-full object-cover">`;
+                }
+
+                // Send to Server
+                try {
+                    const res = await fetch(`${API_URL}/api/customer/upload-profile`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            phone: USER_DATA.phone,
+                            image: base64
+                        })
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        // Update LocalStorage
+                        USER_DATA.profileImage = base64;
+                        localStorage.setItem('menuia_user_data', JSON.stringify(USER_DATA));
+                    } else {
+                        alert("Error al guardar en la nube: " + (data.error || "Intenta con una imagen más pequeña."));
+                    }
+                } catch (err) {
+                    console.error(err);
+                    alert("Error de conexión al subir imagen");
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+
+
+
+
+        function toggleUserModal() {
+            const m = document.getElementById('user-modal');
+            m.classList.toggle('active');
+        }
+
+        // --- SHOPS LOGIC ---
+        async function loadShops() {
+            try {
+                const res = await fetch(`${API_URL}/api/shops/public`);
+                const data = await res.json();
+                if (data.success) {
+                    ALL_SHOPS = data.shops;
+                    filterShops();
+                }
+            } catch (e) {
+                console.error("Error loading shops", e);
+                document.getElementById('shops-grid').innerHTML = `<p class="col-span-full text-center text-red-400">Error cargando
+        tiendas.</p>`;
+            }
+        }
+
+        function renderShops(shops) {
+            const grid = document.getElementById('shops-grid');
+            if (shops.length === 0) {
+                grid.innerHTML = `<div class="col-span-full text-center py-10 opacity-50"><i
+            class="fa-solid fa-store-slash text-4xl mb-2"></i>
+        <p>No se encontraron restaurantes.</p>
+    </div>`;
+                return;
+            }
+
+            // LOGIC: If we are opening this file locally (file://), we want links to go to the real domain
+            const baseUrl = window.location.protocol === 'file:' ? 'https://www.iafood.shop/' : '';
+
+            grid.innerHTML = shops.map(shop => {
+                const isOpen = isShopOpen(shop.config?.hours);
+                const statusHtml = isOpen
+                    ? `<span
+        class="bg-green-100 text-green-700 text-[10px] font-bold px-2 py-1 rounded-full border border-green-200">ABIERTO</span>`
+                    : `<span
+        class="bg-red-100 text-red-700 text-[10px] font-bold px-2 py-1 rounded-full border border-red-200">CERRADO</span>`;
+
+                const logo = shop.config.logo || 'https://placehold.co/50?text=Logo';
+
+                // Fix "General" label to be more descriptive
+                let typeDisplay = shop.config?.businessType || 'Variedad';
+                if (typeDisplay === 'General' || typeDisplay === 'Comida General') typeDisplay = 'Variedad';
+
+                return `
+    <a href="${baseUrl}menu.html?slug=${shop.slug}"
+        class="shop-card bg-white rounded-2xl overflow-hidden block group relative">
+        <div class="relative h-40 overflow-hidden">
+            <img src="${shop.config.heroImage || 'https://placehold.co/600x400?text=Cover'}"
+                alt="${shop.config.name}"
+                class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" onerror="this.src='https://placehold.co/600x400?text=No+Image'">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+            <div class="absolute bottom-3 left-3 text-white max-w-[75%]">
+                <h3 class="font-bold text-lg leading-tight shadow-black drop-shadow-md truncate">${shop.config.name}</h3>
+                <p
+                    class="text-[10px] opacity-90 font-medium tracking-wide border px-1.5 py-0.5 rounded border-white/30 bg-black/20 backdrop-blur-sm inline-block mt-1">
+                    ${typeDisplay}</p>
+            </div>
+            <!-- LOGO OVERLAY -->
+            <img src="${logo}" class="absolute bottom-2 right-2 w-12 h-12 rounded-full border-2 border-white object-cover shadow-md bg-white z-10" onerror="this.src='https://placehold.co/50?text=Logo'">
+        </div>
+        <div class="absolute top-3 right-3">${statusHtml}</div>
+        ${shop.config?.highDemand ? `<div
+            class="absolute bottom-0 left-0 w-full bg-orange-500 text-white text-[10px] font-bold px-3 py-1 text-center">
+            🔥 ALTA DEMANDA</div>` : ''}
+        <div class="p-5">
+            <h3 class="font-bold text-lg text-slate-800 mb-1 group-hover:text-blue-600 transition">${shop.config?.name
+                    || 'Tienda Sin Nombre'}</h3>
+            <p class="text-xs text-gray-500 font-medium uppercase tracking-wide mb-3">${typeDisplay}</p>
+            <div class="flex items-center gap-2 text-xs text-gray-400">
+                <span><i class="fa-solid fa-clock"></i> ${shop.config?.hours?.open || 9}:00 -
+                    ${shop.config?.hours?.close || 22}:00</span>
+                ${shop.distanceKm ? `<span class="text-blue-500 font-bold"><i class="fa-solid fa-location-arrow"></i>
+                    ${shop.distanceKm} km</span>` : ''}
+                <span>•</span>
+                <span><i class="fa-solid fa-location-dot"></i> ${shop.config?.address ? 'Ver mapa' : 'Ubicación'}</span>
+            </div>
+        </div>
+    </a>`;
+            }).join('');
+        }
+
+        function isShopOpen(hours) {
+            if (!hours) return true;
+            const h = new Date().getHours();
+            return h >= (hours.open || 0) && h < (hours.close || 24);
+        } function filterCategory(cat) {
+            CURRENT_FILTER = cat;
+            document.querySelectorAll('.cat-pill').forEach(b => {
+                b.classList.remove('bg-blue-600', 'text-white');
+                b.classList.add('bg-white', 'text-gray-600');
+                if (b.innerText.includes(cat) || (cat === 'all' && b.innerText === 'Todas')) {
+                    b.classList.add('bg-blue-600', 'text-white');
+                    b.classList.remove('bg-white', 'text-gray-600');
+                }
+            });
+            filterShops();
+        }
+
+        function filterShops() {
+            const term = document.getElementById('search-input').value.toLowerCase();
+            const filtered = ALL_SHOPS.filter(s => {
+                const matchesSearch = (s.config?.name || '').toLowerCase().includes(term) || (s.config?.businessType || '').toLowerCase().includes(term);
+                const matchesCat = CURRENT_FILTER === 'all' || (s.config?.businessType || '').includes(CURRENT_FILTER);
+
+                // Location Filter Check
+                let matchesLoc = true;
+                if (window.userLat && window.userLng) {
+                    const shopLat = s.config?.coords?.lat;
+                    const shopLng = s.config?.coords?.lng;
+
+                    if (shopLat && shopLng) {
+                        const dist = calculateDistance(window.userLat, window.userLng, shopLat, shopLng);
+                        s.distanceKm = dist.toFixed(1);
+                        // 4km radius filter enforced if loc known
+                        // matchesLoc = dist <= 4; 
+                    } else {
+                        s.distanceKm = null;
+                    }
+                }
+                return matchesSearch && matchesCat && matchesLoc;
+            });
+
+            // Sort by distance if location active
+            if (window.userLat && window.userLng) {
+                filtered.sort((a, b) => (parseFloat(a.distanceKm) || 999) - (parseFloat(b.distanceKm) || 999));
+            }
+
+            DISPLAYED_SHOPS = filtered;
+            renderShops(filtered);
+            return filtered;
+        }
+
+        // --- GEOLOCATION LOGIC ---
+
+        // --- LOCATION & ADDRESS LOGIC ---
+
+        function initAutoLocation() {
+            // Check if we have a stored address
+            const stored = JSON.parse(localStorage.getItem('menuia_user_location'));
+            if (stored) {
+                setClientLocation(stored.lat, stored.lng, stored.address, false);
+            } else {
+                // If not, try auto-detect silently
+                detectUserLocation();
+            }
+        }
+
+        function setClientLocation(lat, lng, address, save = true) {
+            window.userLat = parseFloat(lat);
+            window.userLng = parseFloat(lng);
+            window.userAddress = address;
+
+            // Updated UI for new header
+            const addressText = document.getElementById('header-address-text');
+            if (addressText) {
+                // Keep it short
+                addressText.innerText = address.substring(0, 25) + (address.length > 25 ? '...' : '');
+            }
+
+            if (save) {
+                localStorage.setItem('menuia_user_location', JSON.stringify({ lat, lng, address }));
+            }
+
+            // Re-filter shops with new location
+            filterShops();
+        }
+
+        function detectUserLocation() {
+            const status = document.getElementById('location-status');
+            status.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Calibrando GPS (< 20m)...';
+            status.classList.remove('hidden');
+
+            if (!navigator.geolocation) {
+                // Fallback immediately if no Geo support
+                detectLocationByIP();
+                return;
+            }
+
+            let watchId = null;
+            let bestAccuracy = Infinity;
+            let bestPos = null;
+            const TARGET_ACCURACY = 20; // meters
+            const MAX_WAIT_TIME = 10000; // Reduced to 10s for faster fallback
+
+            // Timeout fallback
+            const timeoutId = setTimeout(() => {
+                if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+
+                if (bestPos && bestAccuracy <= 100) {
+                    // If we have a decent GPS position (~100m), accept it
+                    finishDetection(bestPos, `Margen: ~${Math.round(bestAccuracy)}m`);
+                } else {
+                    // No signal or very poor signal -> IP FALLBACK
+                    status.innerHTML = "⚠️ Señal GPS débil. Buscando por internet...";
+                    detectLocationByIP();
+                }
+            }, MAX_WAIT_TIME);
+
+            watchId = navigator.geolocation.watchPosition(
+                (pos) => {
+                    const acc = pos.coords.accuracy;
+                    console.log(`GPS Update: Accuracy ${acc}m`);
+
+                    if (acc < bestAccuracy) {
+                        bestAccuracy = acc;
+                        bestPos = pos;
+                    }
+
+                    // Feedback
+                    status.innerHTML = `<i class="fa-solid fa-satellite-dish fa-fade"></i> Calibrando: ${Math.round(acc)}m (Meta: < 20m)...`;
+
+                    // Success Condition
+                    if (acc <= TARGET_ACCURACY) {
+                        clearTimeout(timeoutId);
+                        navigator.geolocation.clearWatch(watchId);
+                        finishDetection(pos, "");
+                    }
+                },
+                (err) => {
+                    console.error("GPS Error", err);
+                    // On error (denied/timeout/unavailable), try IP immediately
+                    if (err.code === 1 || err.code === 2 || err.code === 3) {
+                        clearTimeout(timeoutId);
+                        if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+                        status.innerHTML = "⚠️ GPS no disponible. Usando red...";
+                        detectLocationByIP();
+                    }
+                },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+            );
+
+            async function finishDetection(pos, msg) {
+                const lat = pos.coords.latitude;
+                const lng = pos.coords.longitude;
+                const accuracy = pos.coords.accuracy;
+
+                try {
+                    const res = await fetch(`${API_URL}/api/utils/reverse-geocode`, {
+                        method: 'POST',
+                        body: JSON.stringify({ lat, lng }),
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    const data = await res.json();
+                    setClientLocation(lat, lng, data.success ? data.address : "Mi Ubicación");
+                    status.innerHTML = "";
+                    status.classList.add('hidden');
+                    if (msg && accuracy > 20) alert("Ubicación fijada. " + msg);
+                } catch (e) {
+                    setClientLocation(lat, lng, "Ubicación Detectada");
+                    status.classList.add('hidden');
+                }
+            }
+        }
+
+        async function detectLocationByIP() {
+            const status = document.getElementById('location-status');
+            status.innerHTML = '<i class="fa-solid fa-globe fa-spin"></i> Localizando por IP...';
+            status.classList.remove('hidden');
+
+            try {
+                // Using ipapi.co as a free fallback (Rate limited but good for backup)
+                // Alternative: ip-api.com (HTTP only often), ipwho.is (Free)
+                const res = await fetch('https://ipapi.co/json/');
+                if (!res.ok) throw new Error("IP Service Failed");
+                const data = await res.json();
+
+                if (data.latitude && data.longitude) {
+                    const lat = data.latitude;
+                    const lng = data.longitude;
+                    const addr = `${data.city}, ${data.region_code}`; // Approximate address
+
+                    console.log("✅ IP Location Found:", lat, lng, addr);
+                    setClientLocation(lat, lng, addr || "Ubicación Aproximada (Red)");
+
+                    status.innerHTML = "";
+                    status.classList.add('hidden');
+                    // Optional: Alert user we used rough location
+                    // alert("No pudimos usar tu GPS, así que usamos tu ubicación aproximada de internet.");
+                } else {
+                    throw new Error("Invalid IP Data");
+                }
+            } catch (e) {
+                console.warn("IP Fallback failed:", e);
+                status.innerHTML = "❌ Ubicación fallida. Selecciona manual.";
+                setTimeout(() => {
+                    openAddressModal(); // Final Fallback: Manual
+                }, 1500);
+            }
+        }
+
+        let mapInstance = null;
+        let markerInstance = null;
+
+        function openAddressModal() {
+            let modalHtml = `
+            <div id="address-modal"
+                class="fixed inset-0 z-[70] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade-in">
+                <div class="bg-white w-full max-w-lg rounded-2xl p-6 shadow-2xl relative flex flex-col max-h-[90vh]">
+                    <button onclick="closeAddressModal()"
+                        class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 z-10"><i
+                            class="fa-solid fa-xmark text-xl"></i></button>
+                    <h3 class="text-xl font-bold text-slate-800 mb-2">📍 ¿Dónde te encuentras?</h3>
+                    <p class="text-sm text-gray-500 mb-4">Ingresa tu dirección o selecciona en el mapa.</p>
+
+                    <div class="relative mb-4 z-20">
+                        <div class="flex gap-2">
+                            <input type="text" id="manual-address-input" onkeyup="handleAddressInput(this)"
+                                placeholder="Escribe tu dirección..."
+                                class="flex-1 border border-gray-300 rounded-lg px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                                autocomplete="off">
+                            <button type="button" onclick="searchManualAddress()"
+                                class="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-blue-700 transition"><i
+                                    class="fa-solid fa-search"></i></button>
+                        </div>
+                        <div id="address-suggestions"
+                            class="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-100 rounded-lg shadow-xl z-50 hidden max-h-60 overflow-y-auto">
+                        </div>
+                    </div>
+
+                    <!-- MAP AREA -->
+                    <div id="customer-map"
+                        class="w-full h-64 bg-gray-100 rounded-lg border border-gray-200 mb-4 relative z-0"></div>
+
+                    <button type="button" onclick="confirmMapSelection()"
+                        class="w-full bg-slate-900 text-white py-3 rounded-xl font-bold shadow-lg hover:bg-slate-800 transition">Confirmar
+                        Ubicación</button>
+
+                    <div class="text-center border-t border-gray-100 pt-4 mt-2">
+                        <button type="button" onclick="closeAddressModal(); detectUserLocation()"
+                            class="text-blue-600 text-sm font-bold hover:underline"><i
+                                class="fa-solid fa-location-crosshairs"></i> Usar mi ubicación actual</button>
+                    </div>
+                </div>
+            </div>`;
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            document.getElementById('manual-address-input').focus();
+
+            // Init Map
+            setTimeout(() => {
+                const startLat = window.userLat || 19.4326; // Default CDMX
+                const startLng = window.userLng || -99.1332;
+
+                mapInstance = L.map('customer-map').setView([startLat, startLng], 15);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; OpenStreetMap'
+                }).addTo(mapInstance);
+
+                markerInstance = L.marker([startLat, startLng], { draggable: true }).addTo(mapInstance);
+
+                markerInstance.on('dragend', async function (e) {
+                    const { lat, lng } = e.target.getLatLng();
+                    // Reverse code
+                    try {
+                        const res = await fetch(`${API_URL}/api/utils/reverse-geocode`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ lat, lng })
+                        });
+                        const data = await res.json();
+                        if (data.success) {
+                            document.getElementById('manual-address-input').value = data.address;
+                        }
+                    } catch (e) { }
+                });
+
+                // Update input initially if user had location
+                if (window.userAddress) {
+                    document.getElementById('manual-address-input').value = window.userAddress;
+                }
+            }, 300);
+        }
+
+        function closeAddressModal() {
+            if (mapInstance) { mapInstance.remove(); mapInstance = null; }
+            if (document.getElementById('address-modal')) document.getElementById('address-modal').remove();
+        }
+
+        function confirmMapSelection() {
+            if (!markerInstance) return;
+            const { lat, lng } = markerInstance.getLatLng();
+            const addr = document.getElementById('manual-address-input').value || "Ubicación en mapa";
+            setClientLocation(lat, lng, addr);
+            closeAddressModal();
+        }
+
+        let debounceTimer;
+        function handleAddressInput(input) {
+            clearTimeout(debounceTimer);
+            const val = input.value.trim();
+            const list = document.getElementById('address-suggestions');
+
+            if (val.length < 3) { list.classList.add('hidden'); return; } debounceTimer = setTimeout(async () => {
+                list.innerHTML = `<div class="p-3 text-xs text-gray-400 text-center">
+                    <i class="fa-solid fa-circle-notch fa-spin"></i> Buscando...
+                </div>`;
+                list.classList.remove('hidden');
+
+                try {
+                    const res = await fetch(`${API_URL}/api/utils/search-address`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ query: val })
+                    });
+                    const data = await res.json();
+
+                    if (data.success && data.results.length > 0) {
+                        list.innerHTML = data.results.map(spot => {
+                            const safeSpot = JSON.stringify(spot).replace(/'/g, "&apos;");
+                            return `
+                <div onclick='selectSuggestedAddress(${safeSpot})'
+                    class="p-3 border-b border-gray-50 hover:bg-blue-50 cursor-pointer flex items-start gap-3 transition last:border-0">
+                    <div class="mt-0.5 text-gray-400"><i class="fa-solid fa-map-pin"></i></div>
+                    <div class="text-sm text-gray-700 leading-tight">${spot.address}</div>
+                </div>`;
+                        }).join('');
+                    } else {
+                        list.innerHTML = '<div class="p-3 text-xs text-gray-400 text-center">No hay sugerencias</div>';
+                    }
+                } catch (e) {
+                    list.classList.add('hidden');
+                }
+            }, 500); // 500ms debounce
+        }
+
+        function selectSuggestedAddress(spot) {
+            // Update map logic instead of closing immediately
+            document.getElementById('manual-address-input').value = spot.address;
+            document.getElementById('address-suggestions').classList.add('hidden');
+
+            if (mapInstance && markerInstance) {
+                mapInstance.setView([spot.lat, spot.lng], 16);
+                markerInstance.setLatLng([spot.lat, spot.lng]);
+            }
+        }
+
+        async function searchManualAddress() {
+            const input = document.getElementById('manual-address-input');
+            const val = input.value.trim();
+            if (!val) return;
+
+            const originalBtn = event.target.innerHTML;
+            event.target.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i>';
+            event.target.disabled = true;
+
+            try {
+                const res = await fetch(`${API_URL}/api/utils/parse-map`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ input: val })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    // Update map instead of closing
+                    if (mapInstance && markerInstance) {
+                        const newLat = parseFloat(data.lat);
+                        const newLng = parseFloat(data.lng);
+                        mapInstance.setView([newLat, newLng], 16);
+                        markerInstance.setLatLng([newLat, newLng]);
+                        document.getElementById('manual-address-input').value = data.address || val;
+                    }
+                } else {
+                    alert("No encontramos esa dirección. Intenta agregar Ciudad y Estado.");
+                }
+            } catch (e) {
+                alert("Error de conexión");
+            }
+
+            event.target.innerHTML = originalBtn;
+            event.target.disabled = false;
+        }
+
+        function filterByLocation() {
+            openAddressModal();
+        }
+
+        function filterShops() {
+            const term = document.getElementById('search-input').value.toLowerCase();
+            const grid = document.getElementById('shops-grid');
+
+            // 1. Calculate distances & Sort
+            let shopsWithDist = ALL_SHOPS.map(s => {
+                let dist = null;
+                let inRange = true; // Default true if no user location known
+
+                if (window.userLat && window.userLng && s.config?.coords?.lat) {
+                    dist = calculateDistance(window.userLat, window.userLng, s.config.coords.lat, s.config.coords.lng);
+
+                    // CHECK RADIUS
+                    // Default radius 5km if not set by shop
+                    const maxRadius = s.config.shipping?.maxRadius || 5.0;
+
+                    if (dist > maxRadius) {
+                        inRange = false;
+                    }
+                }
+
+                return { ...s, _dist: dist, _inRange: inRange };
+            });
+
+            // 2. Filter
+            const filtered = shopsWithDist.filter(s => {
+                const matchesSearch = (s.config?.name || '').toLowerCase().includes(term) || (s.config?.businessType ||
+                    '').toLowerCase().includes(term);
+                const matchesCat = CURRENT_FILTER === 'all' || (s.config?.businessType || '').includes(CURRENT_FILTER);
+
+                // If we know user location, we strictly filter by range
+                // If we DON'T know user location, we show everything (or maybe prompt for location?)
+                // Strategy: If user location is set, hide out of range.
+                const matchesLoc = window.userLat ? s._inRange : true;
+
+                return matchesSearch && matchesCat && matchesLoc;
+            });
+
+            // 3. Sort (Open first, then by distance)
+            filtered.sort((a, b) => {
+                const aOpen = isShopOpen(a.config?.hours) ? 1 : 0;
+                const bOpen = isShopOpen(b.config?.hours) ? 1 : 0;
+
+                if (aOpen !== bOpen) return bOpen - aOpen; // Open first
+
+                // Then distance
+                const d1 = a._dist !== null ? a._dist : 9999;
+                const d2 = b._dist !== null ? b._dist : 9999;
+                return d1 - d2;
+            });
+
+            DISPLAYED_SHOPS = filtered; // Sync for AI
+            renderShops(filtered);
+            return filtered; // Return for manual calls
+        }
+
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371; // km
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return R * c;
+        }
+
+        // --- AI LOGIC FOR MARKETPLACE ---
+
+        function toggleAI() {
+            const m = document.getElementById('ai-modal');
+            m.classList.toggle('active');
+            if (m.classList.contains('active')) {
+                const c = document.getElementById('chat-container');
+                if (c.innerHTML === '') {
+                    addMsg("👋 ¡Hola! Soy tu guía de la ciudad. Dime qué se te antoja y te diré dónde ir.", true);
+                }
+            }
+        }
+
+        async function handleMarketplaceChat() {
+            const input = document.getElementById('ai-user-input');
+            const txt = input.value.trim();
+            if (!txt) return;
+
+            addMsg(txt, false);
+            input.value = '';
+
+            const loadingId = 'load-' + Date.now();
+            addMsg('<i class="fa-solid fa-circle-notch fa-spin"></i> Buscando lugares...', true, loadingId);
+
+            try {
+                // RE-RUN FILTER TO GET FRESH STATE
+                // Trust what the user sees first (DISPLAYED_SHOPS). If empty, try re-filtering.
+                const shopsToUse = (DISPLAYED_SHOPS && DISPLAYED_SHOPS.length > 0) ? DISPLAYED_SHOPS : (filterShops() ||
+                    []);
+
+                if (shopsToUse.length === 0) {
+                    console.warn("⚠️ AI Chat: No shops found. Returning early.");
+                    addMsg("Lo siento, no veo restaurantes disponibles en tu zona exacta. 😔", true);
+                    document.getElementById(loadingId).remove();
+                    return;
+                }
+
+                console.log(`🤖 AI Chat: Prepared context with ${shopsToUse.length} shops. Sending request to ${API_URL}/api/ai/generate...`);
+
+                const shopsContext = shopsToUse.slice(0, 50).map(s => ({
+                    name: s.config?.name,
+                    type: s.config?.businessType,
+                    desc: s.config?.description || ''
+                }));
+
+                // Inyectar gustos del usuario
+                let userContext = "";
+                if (USER_TASTES && USER_TASTES.categories) {
+                    const top = Object.keys(USER_TASTES.categories).join(', ');
+                    userContext = `(El usuario prefiere: ${top})`;
+                }
+
+                const res = await fetch(`${API_URL}/api/ai/generate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        task: 'marketplace_assistant',
+                        context: {
+                            shops: shopsContext,
+                            userMsg: txt + " " + userContext
+                        }
+                    })
+                });
+
+                const data = await res.json();
+                document.getElementById(loadingId).remove();
+
+                if (!res.ok || !data.success) {
+                    console.error("AI Error:", data);
+                    const errMsg = data.error || "Respuesta del servidor inválida";
+                    addMsg(`Error del servidor: ${errMsg}`, true);
+                    return;
+                }
+
+                addMsg(data.result, true);
+
+            } catch (e) {
+                document.getElementById(loadingId).remove();
+                console.error("❌ CONNECTION ERROR:", e);
+                // Check if it looks like a CORs or Network error
+                let friendlyMsg = `Error de conexión: ${e.message || 'Desconocido'}`;
+                if (e.message.includes('Failed to fetch')) {
+                    friendlyMsg += " <br><small>(Verifica que el servidor esté encendido y la URL sea correcta)</small>";
+                }
+                addMsg(friendlyMsg, true);
+            }
+        }
+
+        function addMsg(html, isBot, id) {
+            const c = document.getElementById('chat-container');
+            const d = document.createElement('div');
+            d.className = `chat-bubble ${isBot ? 'bot' : 'user'}`;
+            if (id) d.id = id;
+            d.innerHTML = html;
+            c.appendChild(d);
+            c.scrollTop = c.scrollHeight;
+        }
+
+        function checkAndShowAISuggestion() {
+            // Function disabled (Banner removed)
+            return;
+        }
+
+        function resetIdleTimer() {
+            // Logic for idle timer would go here
+        }
+
+        function renderTopShops() {
+            const container = document.getElementById('top-shops-container');
+            if (!container) return;
+            if (!ALL_SHOPS || ALL_SHOPS.length === 0) {
+                container.innerHTML = '<p class="text-xs text-gray-400 pl-4">No hay comercios destacados aún.</p>';
+                return;
+            }
+
+            // FILTER: Only show "isFeatured" shops
+            let topShops = ALL_SHOPS.filter(s => s.config?.isFeatured === true);
+
+            if (topShops.length === 0) {
+                container.innerHTML = '<div class="pl-4 text-sm text-gray-500 italic">Próximamente tiendas destacadas... 🌟</div>';
+                return;
+            }
+
+            container.innerHTML = topShops.map(s => {
+                const img = s.config.heroImage || s.config.logo || 'https://placehold.co/400x200?text=Shop';
+                const logo = s.config.logo || 'https://placehold.co/50?text=Logo';
+                const rating = s.trendValue ? (4 + (s.trendValue / 100)).toFixed(1) : '5.0';
+
+                // Shipping Badge
+                let badgeHtml = '';
+                const shipCfg = s.config.shipping;
+                if (shipCfg && shipCfg.freeShippingActive) {
+                    badgeHtml = `<div class="absolute top-2 right-2 bg-green-500 text-white text-[10px] font-bold px-2 py-1 rounded-full shadow-sm flex items-center gap-1"><i class="fa-solid fa-truck-fast"></i> Envío Gratis</div>`;
+                } else {
+                    badgeHtml = `<div class="absolute top-2 right-2 bg-white/90 backdrop-blur text-gray-700 text-[10px] font-bold px-2 py-1 rounded-full shadow-sm flex items-center gap-1 border border-gray-100"><i class="fa-solid fa-clock"></i> ${s.config.prepTime || '30m'}</div>`;
+                }
+
+                return `
+                <div onclick="window.location.href='menu.html?slug=${s.slug}'" class="min-w-[280px] w-72 bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden shrink-0 cursor-pointer hover:shadow-md transition group">
+                    <div class="relative h-40 bg-gray-200 overflow-hidden">
+                        <img src="${s.config.heroImage || 'https://placehold.co/600x400'}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                        
+                         ${badgeHtml}
+
+                         <div class="absolute bottom-3 left-3 text-white">
+                             <h3 class="font-bold text-lg leading-tight shadow-black drop-shadow-md">${s.config.name}</h3> 
+                         </div>
+                    </div>
+                    <div class="p-3">
+                        <div class="flex justify-between items-center text-xs text-gray-500 mb-2">
+                            <span class="bg-gray-100 text-gray-600 px-2 py-0.5 rounded flex items-center gap-1"><i class="fa-solid fa-star text-orange-400"></i> ${s.rating || '4.8'}</span>
+                             <span>${s.config.address ? s.config.address.split(',')[0] : 'Ubicación'}</span>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1 truncate">${s.config.businessType || 'Comercio'} • $$</p>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function renderPopularBrands() {
+            const container = document.getElementById('popular-brands-container');
+            if (!container) return;
+
+            const brands = ALL_SHOPS.filter(s => s.config?.isPopularBrand === true);
+
+            if (brands.length === 0) {
+                container.innerHTML = '<div class="pl-2 text-xs text-gray-400 italic">No hay marcas destacadas aún.</div>';
+                return;
+            }
+
+            container.innerHTML = brands.map(s => {
+                const logo = s.config.logo || 'https://placehold.co/150?text=Brand';
+                return `
+                <div onclick="window.location.href='menu.html?slug=${s.slug}'" class="flex flex-col items-center min-w-[4rem] cursor-pointer hover:opacity-80 transition">
+                    <div class="w-16 h-16 rounded-full bg-white border border-gray-100 shadow-sm flex items-center justify-center overflow-hidden p-2">
+                        <img src="${logo}" class="w-full h-full object-contain" alt="${s.config.name}" onerror="this.src='https://placehold.co/150?text=Logo'"> 
+                    </div>
+                    <span class="text-[10px] font-bold text-gray-500 mt-1 truncate w-16 text-center">${s.config.name}</span>
+                </div>`;
+            }).join('');
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadShops();
+            initAutoLocation();
+            resetIdleTimer();
+        });
+
+        // Ensure functions called after shops loaded
+        const originalFilterShops = filterShops;
+        filterShops = function () {
+            const res = originalFilterShops();
+
+            // Re-render Dynamic Sections
+            renderTopShops();
+            renderPopularBrands();
+
+            return res;
+        };
+
+        // --- GLOBAL ORDER TRACKER LOGIC ---
+        let globalOrders = [];
+        async function checkGlobalActiveOrders() {
+            if (!USER_DATA || !USER_DATA.phone) return;
+            try {
+                const res = await fetch(`${API_URL}/api/customer/orders/${USER_DATA.phone}`);
+                const data = await res.json();
+
+                if (data.success && data.orders.length > 0) {
+                    globalOrders = data.orders;
+
+                    // --- CRITICAL FIX FOR CROSS-DEVICE/ANDROID ---
+                    // Save the most recent order to localStorage so the Socket listener can track it.
+                    const latest = globalOrders[0];
+                    if (latest) {
+                        const currentStoredId = localStorage.getItem('last_active_order');
+
+                        // If we found a newer/different order, update storage and re-init socket
+                        if (latest._id !== currentStoredId) {
+                            console.log("🔄 Syncing remote order to local device:", latest._id);
+                            localStorage.setItem('last_active_order', latest._id);
+                            if (latest.shopSlug) localStorage.setItem('active_shop_slug', latest.shopSlug);
+
+                            // Re-init listener now that we have the ID
+                            initGlobalNotifications();
+                        }
+                    }
+
+                    renderGlobalTracker();
+                } else {
+                    document.getElementById('global-order-tracker').classList.add('hidden');
+                }
+            } catch (e) { console.error("Error checking orders", e); }
+        }
+
+        function renderGlobalTracker() {
+            const container = document.getElementById('global-order-tracker');
+            // const title = document.getElementById('global-tracker-title'); // REMOVED
+            const msg = document.getElementById('global-tracker-msg');
+            // const list = document.getElementById('global-orders-list'); // REMOVED
+
+            if (!globalOrders.length) {
+                if (container) container.classList.add('hidden');
+                return;
+            }
+
+            if (container) container.classList.remove('hidden');
+
+            // Show summary of most recent
+            const mainOrder = globalOrders[0];
+
+            const statusMap = {
+                'pending': '⏳ Confirmando...',
+                'preparing': '🔥 Preparando...',
+                'ready': '📦 Listo para salir',
+                'delivering': '🏍️ En Camino'
+            };
+
+            if (msg) msg.innerText = statusMap[mainOrder.status] || "Procesando...";
+        }
+
+
+
+
+        // --- GLOBAL NOTIFICATIONS SYSTEM ---
+
+        // 1. Register Service Worker (Global)
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('./sw.js').catch(e => console.log(e));
+        }
+
+        // 2. Init Global Listener
+        function initGlobalNotifications() {
+            if (typeof socket === 'undefined') return;
+
+            const myOrderId = localStorage.getItem('last_active_order');
+            const myShopSlug = localStorage.getItem('active_shop_slug');
+
+            if (myOrderId && myShopSlug) {
+                console.log("🌍 Global Tracker Active for:", myShopSlug, myOrderId);
+
+                socket.emit('join-store', myShopSlug);
+
+                socket.on('order-status-updated', (data) => {
+                    // Loose check
+                    if (data.orderId == myOrderId) {
+                        console.log("📣 Global Update:", data.status);
+                        const statusText = translateStatusGlobal(data.status);
+
+                        // System Notify
+                        if (Notification.permission === "granted") {
+                            new Notification("Actualización de Pedido", {
+                                body: `Tu pedido está: ${statusText}`,
+                                icon: 'https://cdn-icons-png.flaticon.com/512/3075/3075977.png'
+                            });
+                        }
+
+                        // App Toast
+                        showGlobalToast(statusText);
+
+                        // Optional: Update global tracker UI
+                        updateGlobalTrackerUI(statusText);
+                    }
+                });
+            }
+        }
+
+        function translateStatusGlobal(s) {
+            const map = {
+                'pending': 'Pendiente', 'preparing': 'En Cocina',
+                'ready': 'Listo', 'delivering': 'En Camino', 'completed': 'Entregado'
+            };
+            return map[s] || s;
+        }
+
+        function showGlobalToast(text) {
+            let container = document.getElementById('global-toast-container');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'global-toast-container';
+                container.className = "fixed top-4 left-4 right-4 z-[99999] flex flex-col gap-2 pointer-events-none";
+                document.body.appendChild(container);
+            }
+            const el = document.createElement('div');
+            el.className = "bg-slate-900 border-l-4 border-blue-500 text-white shadow-2xl p-4 rounded-r-lg flex items-center gap-4 transform transition-all duration-500 translate-y-[-100%] opacity-0 pointer-events-auto";
+            el.innerHTML = `
+                <div class="bg-blue-600 w-10 h-10 rounded-full flex items-center justify-center shrink-0 animate-pulse">
+                    <i class="fa-solid fa-bell"></i>
+                </div>
+                <div class="flex-1">
+                    <p class="text-[10px] font-bold text-blue-300 uppercase">MenúIA Central</p>
+                    <p class="font-bold text-sm text-white">${text}</p>
+                </div>
+            `;
+            container.appendChild(el);
+
+            // Audio
+            new Audio('https://assets.mixkit.co/sfx/preview/mixkit-software-interface-start-2574.mp3').play().catch(() => { });
+
+            requestAnimationFrame(() => el.classList.remove('translate-y-[-100%]', 'opacity-0'));
+            setTimeout(() => {
+                el.classList.add('translate-y-[-100%]', 'opacity-0');
+                setTimeout(() => el.remove(), 500);
+            }, 5000);
+        }
+
+        function updateGlobalTrackerUI(status) {
+            const tracker = document.getElementById('global-order-tracker');
+            const msg = document.getElementById('global-tracker-msg');
+            if (tracker && msg) {
+                tracker.classList.remove('hidden');
+                msg.innerText = status;
+                tracker.classList.add('animate-pulse');
+                setTimeout(() => tracker.classList.remove('animate-pulse'), 2000);
+            }
+        }
+
+        // Delay init to ensure socket ready
+        setTimeout(initGlobalNotifications, 1000);
+
+    </script>
+    <!-- BOTTOM NAVIGATION (App Style) -->
+    <nav
+        class="fixed bottom-0 w-full bg-white border-t border-gray-200 py-3 px-6 flex justify-between items-center z-50 md:hidden pb-safe">
+        <a href="#" class="flex flex-col items-center gap-1 text-black">
+            <i class="fa-solid fa-house text-xl"></i>
+            <span class="text-[10px] font-bold">Inicio</span>
+        </a>
+        <a href="#" class="flex flex-col items-center gap-1 text-gray-400 hover:text-black transition">
+            <i class="fa-solid fa-magnifying-glass text-xl"></i>
+            <span class="text-[10px] font-medium">Buscar</span>
+        </a>
+        <a href="#" class="flex flex-col items-center gap-1 text-gray-400 hover:text-black transition relative">
+            <div
+                class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center -mt-8 border-4 border-slate-50 shadow-lg text-black">
+                <i class="fa-solid fa-basket-shopping text-xl"></i>
+            </div>
+            <span class="text-[10px] font-medium">Pedidos</span>
+        </a>
+        <a href="#" class="flex flex-col items-center gap-1 text-gray-400 hover:text-black transition">
+            <i class="fa-regular fa-heart text-xl"></i>
+            <span class="text-[10px] font-medium">Favoritos</span>
+        </a>
+        <a href="#" onclick="toggleUserModal()"
+            class="flex flex-col items-center gap-1 text-gray-400 hover:text-black transition">
+            <i class="fa-regular fa-user text-xl"></i>
+            <span class="text-[10px] font-medium">Perfil</span>
+        </a>
+    </nav>
+</body>
+
+</html>
