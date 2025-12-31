@@ -1,5 +1,6 @@
-{{
+{
     "name": "ia food tienda",
+    "id": "/admin.html",
     "short_name": "ia food tienda",
     "start_url": "./admin.html",
     "display": "standalone",
