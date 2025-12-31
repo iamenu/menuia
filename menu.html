@@ -1348,7 +1348,7 @@
             return {
                 slug: SHOP_DATA ? SHOP_DATA.slug : 'demo',
                 order: {
-                    ref: 'APP-' + Math.floor(Math.random() * 10000),
+                    ref: Math.floor(Math.random() * 10000).toString(),
                     customerName: USER_NAME,
                     customerPhone: USER_PHONE,
                     address: USER_ADDRESS,
