@@ -338,8 +338,11 @@
             </div>
 
             <div class="p-8">
-                <button onclick="toggleUserModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600"><i
-                        class="fa-solid fa-xmark text-lg"></i></button>
+                <!-- PWA INSTALL BUTTON (Always Visible) -->
+                <button id="pwa-install-btn" onclick="installPWA()"
+                    class="fixed top-4 right-4 z-[9999] bg-blue-600 text-white px-4 py-2 rounded-full shadow-xl font-bold text-sm animate-bounce hover:bg-blue-700 transition">
+                    <i class="fa-solid fa-download"></i> Instalar App
+                </button>
 
                 <!-- LOGIN FORM -->
                 <form id="form-login" onsubmit="event.preventDefault(); handleUserLogin();" class="space-y-4">
@@ -1541,19 +1544,19 @@
             console.log("📲 App is installable! Event fired.");
             e.preventDefault();
             deferredPrompt = e;
-
-            // Show our custom install button
-            const btn = document.getElementById('pwa-install-btn');
-            if (btn) btn.classList.remove('hidden');
+            // Native prompt is ready
         });
 
         async function installPWA() {
-            if (!deferredPrompt) return;
-            deferredPrompt.prompt();
-            const { outcome } = await deferredPrompt.userChoice;
-            console.log(`User response: ${outcome}`);
-            deferredPrompt = null;
-            document.getElementById('pwa-install-btn').classList.add('hidden');
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                console.log(`User response: ${outcome}`);
+                deferredPrompt = null;
+            } else {
+                // FALLBACK for iOS or if browser is strict
+                alert("📲 Para instalar la App:\n\n1. Toca el menú de opciones (3 puntos o botón compartir).\n2. Busca 'Agregar a pantalla principal' o 'Instalar aplicación'.");
+            }
         }
 
         // 2. Init Global Listener
@@ -1677,3 +1680,4 @@
 </body>
 
 </html>
+
