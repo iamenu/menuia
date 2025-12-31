@@ -658,9 +658,10 @@
                 document.getElementById('promos-container').innerHTML = allPromos.map(p => {
                     const old = p._oldPrice || p.originalPrice || p.oldPrice;
                     const discount = old && old > p.price ? Math.round(((old - p.price) / old) * 100) : 0;
+                    const safeItem = encodeURIComponent(JSON.stringify(p));
 
                     return `
-                    <div onclick='openDetail(${JSON.stringify(p).replace(/'/g, "&#39;")})' class="min-w-[140px] w-[140px] cursor-pointer group">
+                    <div onclick='openDetail(JSON.parse(decodeURIComponent("${safeItem}")))' class="min-w-[140px] w-[140px] cursor-pointer group">
                         <div class="relative w-full h-32 rounded-2xl overflow-hidden mb-2 shadow-sm bg-gray-100">
                             <img src="${p.image || 'https://placehold.co/200'}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500 transition-all"> 
                              <!-- Discount Badge (Black) -->
@@ -689,8 +690,10 @@
             const favorites = allItems.slice(0, 3);
 
             if (favorites.length > 0) {
-                document.getElementById('favorites-container').innerHTML = favorites.map((p, idx) => `
-                    <div onclick='openDetail(${JSON.stringify(p).replace(/'/g, "&#39;")})' class="min-w-[140px] w-[140px] cursor-pointer relative group">
+                document.getElementById('favorites-container').innerHTML = favorites.map((p, idx) => {
+                    const safeItem = encodeURIComponent(JSON.stringify(p));
+                    return `
+                    <div onclick='openDetail(JSON.parse(decodeURIComponent("${safeItem}")))' class="min-w-[140px] w-[140px] cursor-pointer relative group">
                          <div class="relative w-full h-32 rounded-2xl overflow-hidden mb-2 bg-gray-100 shadow-sm">
                             <img src="${p.image || 'https://placehold.co/150'}" class="w-full h-full object-cover">
                             <!-- RANK NUMBER (Black/Dark) -->
@@ -704,7 +707,7 @@
                             <div class="h-1"></div> 
                          </div>
                     </div>
-                `).join('');
+                `}).join('');
             } else {
                 document.getElementById('favorites-section').style.display = 'none';
             }
@@ -780,9 +783,9 @@
 
 
         function renderFullCard(item) {
-            const jsonItem = JSON.stringify(item).replace(/'/g, "&#39;");
+            const safeItem = encodeURIComponent(JSON.stringify(item));
             return `
-                <div class="flex gap-4 justify-between group item-card-dom" data-name="${item.name.toLowerCase()}" onclick='openDetail(${jsonItem})'>
+                <div class="flex gap-4 justify-between group item-card-dom" data-name="${item.name.toLowerCase()}" onclick='openDetail(JSON.parse(decodeURIComponent("${safeItem}")))' style="cursor: pointer;">
                     <!-- Text Info -->
                     <div class="flex-1 flex flex-col justify-start">
                         <h4 class="font-bold text-black text-base mb-1 leading-tight">${item.name}</h4>
@@ -798,6 +801,7 @@
                     <!-- Image & Add Btn -->
                     <div class="relative w-32 h-28 shrink-0">
                          <img src="${item.image || 'https://placehold.co/150'}" class="w-full h-full object-cover rounded-xl bg-gray-100 shadow-sm border border-gray-100 transition">
+
                          <!-- Add Button Absolute -->
                          <button class="absolute -bottom-2 -right-2 w-9 h-9 bg-white rounded-full shadow-md border border-gray-200 flex items-center justify-center text-black active:scale-90 transition z-10">
                              <i class="fa-solid fa-plus text-sm font-bold"></i>
