@@ -158,24 +158,25 @@
     </header>
 
     <!-- Global Tracker Original Position (Hidden, logic will move content or we reuse this ID) -->
-    <div id="global-order-tracker" class="hidden max-w-2xl mx-auto px-4 -mt-12 relative z-40 mb-6">
-        <div class="bg-blue-600 rounded-xl shadow-xl p-1 text-white overflow-hidden ring-4 ring-white">
-            <div class="p-3 flex items-center justify-between gap-4 cursor-pointer"
-                onclick="toggleGlobalTrackerDetails()">
-                <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center animate-pulse">
-                        <i class="fa-solid fa-motorcycle text-sm"></i>
-                    </div>
-                    <div>
-                        <h3 class="font-bold text-xs" id="global-tracker-title">Tu Pedido</h3>
-                        <p class="text-[10px] opacity-90" id="global-tracker-msg">En camino...</p>
-                    </div>
-                </div>
-                <i class="fa-solid fa-chevron-down opacity-70"></i>
+    <!-- Global Tracker Dynamic Pill (iOS Island Style) -->
+    <div id="global-order-tracker"
+        class="hidden fixed top-4 left-1/2 transform -translate-x-1/2 z-50 w-[90%] max-w-sm transition-all duration-500">
+        <div
+            class="bg-black/90 backdrop-blur-md text-white rounded-full shadow-2xl px-1 py-1 flex items-center justify-between border border-white/10 ring-1 ring-black/5">
+            <!-- Icon Circle -->
+            <div
+                class="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center shrink-0 animate-pulse relative">
+                <i class="fa-solid fa-motorcycle text-white text-xs"></i>
+                <div class="absolute inset-0 border-2 border-white/20 rounded-full animate-ping opacity-50"></div>
             </div>
-            <div id="global-tracker-details" class="hidden p-3 border-t border-white/10 mt-1 bg-blue-700">
-                <div id="global-orders-list" class="space-y-2"></div>
+
+            <!-- Content -->
+            <div class="flex-1 px-3 min-w-0">
+                <p class="text-[9px] text-gray-400 font-bold uppercase tracking-wider">Tu Pedido</p>
+                <h3 class="font-bold text-sm truncate" id="global-tracker-msg">En camino...</h3>
             </div>
+
+            <!-- Action -->
         </div>
     </div>
 
@@ -1477,17 +1478,19 @@
 
         function renderGlobalTracker() {
             const container = document.getElementById('global-order-tracker');
-            const title = document.getElementById('global-tracker-title');
+            // const title = document.getElementById('global-tracker-title'); // REMOVED
             const msg = document.getElementById('global-tracker-msg');
-            const list = document.getElementById('global-orders-list');
+            // const list = document.getElementById('global-orders-list'); // REMOVED
 
-            if (!globalOrders.length) { container.classList.add('hidden'); return; }
+            if (!globalOrders.length) {
+                if (container) container.classList.add('hidden');
+                return;
+            }
 
-            container.classList.remove('hidden');
+            if (container) container.classList.remove('hidden');
 
             // Show summary of most recent
             const mainOrder = globalOrders[0];
-            title.innerText = `Tu pedido en ${mainOrder.shopName}`;
 
             const statusMap = {
                 'pending': '⏳ Confirmando...',
@@ -1495,26 +1498,109 @@
                 'ready': '📦 Listo para salir',
                 'delivering': '🏍️ En Camino'
             };
-            msg.innerText = statusMap[mainOrder.status] || "Procesando...";
 
-            // Render Full List
-            list.innerHTML = globalOrders.map(o => `
-                <div class="flex items-center justify-between text-sm py-2 border-b border-white/20 last:border-0">
-                    <div>
-                        <div class="font-bold">${o.shopName} <span class="text-xs opacity-70">#${(o.dailyId || '...').toString().slice(-4)}</span></div>
-                        <div class="text-xs">${o.items.length} items • $${o.total}</div>
-                    </div>
-                    <div class="text-right">
-                         <div class="font-bold text-xs bg-white/20 px-2 py-1 rounded">${statusMap[o.status] || o.status}</div>
-                         <button onclick="window.location.href='menu.html?slug=${o.shopSlug}'" class="text-[10px] underline mt-1 hover:text-blue-200">Ver Detalles</button>
-                    </div>
+            if (msg) msg.innerText = statusMap[mainOrder.status] || "Procesando...";
+        }
+
+
+
+
+        // --- GLOBAL NOTIFICATIONS SYSTEM ---
+
+        // 1. Register Service Worker (Global)
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js').catch(e => console.log(e));
+        }
+
+        // 2. Init Global Listener
+        function initGlobalNotifications() {
+            if (typeof socket === 'undefined') return;
+
+            const myOrderId = localStorage.getItem('last_active_order');
+            const myShopSlug = localStorage.getItem('active_shop_slug');
+
+            if (myOrderId && myShopSlug) {
+                console.log("🌍 Global Tracker Active for:", myShopSlug, myOrderId);
+
+                socket.emit('join-store', myShopSlug);
+
+                socket.on('order-status-updated', (data) => {
+                    // Loose check
+                    if (data.orderId == myOrderId) {
+                        console.log("📣 Global Update:", data.status);
+                        const statusText = translateStatusGlobal(data.status);
+
+                        // System Notify
+                        if (Notification.permission === "granted") {
+                            new Notification("Actualización de Pedido", {
+                                body: `Tu pedido está: ${statusText}`,
+                                icon: 'https://cdn-icons-png.flaticon.com/512/3075/3075977.png'
+                            });
+                        }
+
+                        // App Toast
+                        showGlobalToast(statusText);
+
+                        // Optional: Update global tracker UI
+                        updateGlobalTrackerUI(statusText);
+                    }
+                });
+            }
+        }
+
+        function translateStatusGlobal(s) {
+            const map = {
+                'pending': 'Pendiente', 'preparing': 'En Cocina',
+                'ready': 'Listo', 'delivering': 'En Camino', 'completed': 'Entregado'
+            };
+            return map[s] || s;
+        }
+
+        function showGlobalToast(text) {
+            let container = document.getElementById('global-toast-container');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'global-toast-container';
+                container.className = "fixed top-4 left-4 right-4 z-[99999] flex flex-col gap-2 pointer-events-none";
+                document.body.appendChild(container);
+            }
+            const el = document.createElement('div');
+            el.className = "bg-slate-900 border-l-4 border-blue-500 text-white shadow-2xl p-4 rounded-r-lg flex items-center gap-4 transform transition-all duration-500 translate-y-[-100%] opacity-0 pointer-events-auto";
+            el.innerHTML = `
+                <div class="bg-blue-600 w-10 h-10 rounded-full flex items-center justify-center shrink-0 animate-pulse">
+                    <i class="fa-solid fa-bell"></i>
                 </div>
-            `).join('');
+                <div class="flex-1">
+                    <p class="text-[10px] font-bold text-blue-300 uppercase">MenúIA Central</p>
+                    <p class="font-bold text-sm text-white">${text}</p>
+                </div>
+            `;
+            container.appendChild(el);
+
+            // Audio
+            new Audio('https://assets.mixkit.co/sfx/preview/mixkit-software-interface-start-2574.mp3').play().catch(() => { });
+
+            requestAnimationFrame(() => el.classList.remove('translate-y-[-100%]', 'opacity-0'));
+            setTimeout(() => {
+                el.classList.add('translate-y-[-100%]', 'opacity-0');
+                setTimeout(() => el.remove(), 500);
+            }, 5000);
         }
 
-        function toggleGlobalTrackerDetails() {
-            document.getElementById('global-tracker-details').classList.toggle('hidden');
+        function updateGlobalTrackerUI(status) {
+            const tracker = document.getElementById('global-order-tracker');
+            const msg = document.getElementById('global-tracker-msg');
+            if (tracker && msg) {
+                tracker.classList.remove('hidden');
+                msg.innerText = status;
+                tracker.classList.add('animate-pulse');
+                setTimeout(() => tracker.classList.remove('animate-pulse'), 2000);
+            }
         }
+
+        // Delay init to ensure socket ready
+        setTimeout(initGlobalNotifications, 1000);
+
     </script>
     <!-- BOTTOM NAVIGATION (App Style) -->
     <nav
