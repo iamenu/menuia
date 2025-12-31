@@ -81,10 +81,11 @@
         .custom-checkbox input:checked+div i {
             display: block;
         }
-        
+
         /* Fix for buttons inside clickable divs */
         button {
-            pointer-events: auto; /* Ensure buttons are clickable */
+            pointer-events: auto;
+            /* Ensure buttons are clickable */
         }
     </style>
 </head>
@@ -512,6 +513,7 @@
         let SELECTED_PAYMENT = 'Efectivo';
         let USER_ADDRESS = "Ubicación actual";
         let USER_PHONE = "5500000000";
+        let USER_NAME = "Cliente"; // DEFAULT
         let ACTIVE_CATEGORY = '';
         const OTHER_CHARGES = 6;
 
@@ -539,6 +541,29 @@
 
             if (userData) {
                 USER_PHONE = userData.phone || "5500000000";
+                if (userData.name) USER_NAME = userData.name;
+            }
+
+            // --- STRIPE SUCCESS HANDLER ---
+            if (params.get('status') === 'success') {
+                const pendingOrder = localStorage.getItem('pending_stripe_order');
+                if (pendingOrder) {
+                    try {
+                        const payload = JSON.parse(pendingOrder);
+                        // Ensure socket is ready (small delay or wait for connection)
+                        setTimeout(() => {
+                            if (socket) {
+                                payload.order.status = 'paid'; // Confirm status
+                                payload.order.paymentMethod = 'Tarjeta';
+                                socket.emit('register-order', payload);
+                                localStorage.removeItem('pending_stripe_order'); // Clear
+                                alert("¡Pago Exitoso! Tu pedido ha sido registrado.");
+                                // Clean URL
+                                window.history.replaceState({}, document.title, window.location.pathname + "?slug=" + slug);
+                            }
+                        }, 1500);
+                    } catch (e) { console.error("Error restoring order", e); }
+                }
             }
 
             if (slug) {
@@ -616,8 +641,8 @@
 
         function renderShop() {
             // Reset registry on re-render
-            window.MENU_ITEMS = {}; 
-            
+            window.MENU_ITEMS = {};
+
             const config = SHOP_DATA.config;
             const menu = SHOP_DATA.menu;
 
@@ -828,7 +853,7 @@
         // --- MODALS & CART ---
         function openDetail(arg) {
             console.log("Opening detail for:", arg);
-            
+
             // Retrieve item from registry if arg is string ID
             let item;
             if (typeof arg === 'string') {
@@ -920,8 +945,8 @@
             const allItems = [...(SHOP_DATA.menu.clasicos || []), ...(SHOP_DATA.menu.extras || [])];
             const upsells = allItems.sort(() => 0.5 - Math.random()).slice(0, 5);
             document.getElementById('upsells-container').innerHTML = upsells.map(u => {
-                 const upId = registerItem(u);
-                 return `
+                const upId = registerItem(u);
+                return `
                  <div class="min-w-[120px] flex flex-col gap-2 cursor-pointer group" onclick="addUpsell('${upId}')">
                     <div class="relative w-full h-28 bg-gray-100 rounded-xl overflow-hidden shadow-sm">
                         <img src="${u.image}" class="w-full h-full object-cover">
@@ -946,8 +971,8 @@
             } else {
                 item = arg;
             }
-            
-            if(!item) return;
+
+            if (!item) return;
 
             const cartItem = {
                 id: Date.now(),
@@ -1269,21 +1294,39 @@
             processOrderSubmission('pending');
         }
 
-        function processOrderSubmission(status) {
-            const orderPayload = {
+        function buildOrderPayload(status) {
+            // Helper to extract values from DOM for consistency
+            const getVal = (id) => parseFloat(document.getElementById(id).innerText.replace(/[^0-9.]/g, '')) || 0;
+
+            const costs = {
+                subtotal: getVal('summ-products'),
+                discount: getVal('summ-discount'),
+                shipping: getVal('summ-shipping'),
+                tip: getVal('summ-tip'),
+                service: 6.00, // Hardcoded in UI
+                total: getVal('final-total')
+            };
+
+            return {
                 slug: SHOP_DATA ? SHOP_DATA.slug : 'demo',
                 order: {
                     ref: 'APP-' + Math.floor(Math.random() * 10000),
+                    customerName: USER_NAME,
                     customerPhone: USER_PHONE,
                     address: USER_ADDRESS,
                     note: document.getElementById('delivery-note')?.value || '',
                     paymentMethod: SELECTED_PAYMENT,
                     type: 'delivery',
                     items: CART,
+                    costs: costs,
                     total: document.getElementById('final-total').innerText,
                     status: status
                 }
             };
+        }
+
+        function processOrderSubmission(status) {
+            const orderPayload = buildOrderPayload(status);
             console.log("Submitting", orderPayload);
             if (socket) socket.emit('register-order', orderPayload);
             else alert("Modo Demo: Pedido 'Enviado'");
@@ -1295,6 +1338,12 @@
             const originalText = btn.innerText;
             btn.innerText = "Redirigiendo...";
             btn.disabled = true;
+
+            // SAVE PENDING ORDER STATE
+            try {
+                const payload = buildOrderPayload('pending_payment');
+                localStorage.setItem('pending_stripe_order', JSON.stringify(payload));
+            } catch (e) { console.error("Error saving pending order", e); }
 
             try {
                 const res = await fetch(`${API_URL}/api/create-checkout-session`, {
