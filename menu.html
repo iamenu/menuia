@@ -869,7 +869,6 @@
             container.innerHTML = '';
 
             // Handle groups (Array of IDs or Objects)
-            // Strategy: Look in SHOP_DATA.menu.groups for matching IDs, or use embedded
             const itemGroups = item.groups || item.modifierGroups || [];
             const definitions = SHOP_DATA.menu.groups || [];
 
@@ -882,236 +881,224 @@
 
                 if (!groupDef) return;
 
-                // DETERMINE TYPE
-                // Prioritize new 'multiSelect' prop, fallback to legacy logic
+                // DETERMINE TYPE & MODE
                 const isMulti = groupDef.multiSelect !== undefined ? groupDef.multiSelect : ((groupDef.type !== 'single') && (groupDef.max !== 1));
-                const allowRepeats = groupDef.allowRepeats === true; // New prop
+                const allowRepeats = groupDef.allowRepeats === true;
                 const maxSel = parseInt(groupDef.maxSelection) || 0;
                 const isRequired = groupDef.required === true;
+
+                // Explicit Mode
+                let mode = 'single'; // Default: Radio
+                if (isMulti) {
+                    if (allowRepeats) mode = 'multi-step';
+                    else mode = 'multi-check';
+                }
 
                 let optionsHtml = '';
 
                 // RENDER STRATEGY
-                if (isMulti && allowRepeats) {
+                if (mode === 'multi-step') {
                     // CASE 3: STEPPERS (Repeats Allowed)
                     optionsHtml = (groupDef.options || []).map(opt => `
-                        <div class="flex items-center justify-between py-2 border-b border-dashed border-gray-100 last:border-0 option-item" 
-                             data-price="${opt.price || 0}" data-name="${opt.name}">
-                            <div class="flex-1">
-                                <p class="text-sm text-gray-700 font-medium">${opt.name}</p>
-                                <p class="text-xs text-gray-500 font-medium">+MX$${parseFloat(opt.price || 0).toFixed(2)}</p>
-                            </div>
-                            <div class="flex items-center gap-3 bg-gray-50 rounded-lg p-1">
-                                <button onclick="updateOptionQty(this, -1)" class="w-6 h-6 flex items-center justify-center bg-white rounded shadow-sm text-gray-600 hover:text-black transition" disabled><i class="fa-solid fa-minus text-[10px]"></i></button>
-                                <span class="text-sm font-bold w-4 text-center option-qty-display">0</span>
-                                <button onclick="updateOptionQty(this, 1)" class="w-6 h-6 flex items-center justify-center bg-white rounded shadow-sm text-black hover:bg-gray-200 transition btn-plus"><i class="fa-solid fa-plus text-[10px]"></i></button>
-                            </div>
-                            <!-- Hidden Input for logic compatibility -->
-                            <input type="checkbox" class="sr-only option-input" data-name="${opt.name}" data-price="${opt.price || 0}" data-qty="0">
-                        </div>
-                    `).join('');
+                <div class="flex items-center justify-between py-2 border-b border-dashed border-gray-100 last:border-0 option-item" 
+                     data-price="${opt.price || 0}" data-name="${opt.name}">
+                    <div class="flex-1">
+                        <p class="text-sm text-gray-700 font-medium">${opt.name}</p>
+                        <p class="text-xs text-gray-500 font-medium">+MX$${parseFloat(opt.price || 0).toFixed(2)}</p>
+                    </div>
+                    <div class="flex items-center gap-3 bg-gray-50 rounded-lg p-1">
+                        <button onclick="updateOptionQty(this, -1)" class="w-6 h-6 flex items-center justify-center bg-white rounded shadow-sm text-gray-600 hover:text-black transition btn-minus" disabled><i class="fa-solid fa-minus text-[10px]"></i></button>
+                        <span class="text-sm font-bold w-4 text-center option-qty-display">0</span>
+                        <button onclick="updateOptionQty(this, 1)" class="w-6 h-6 flex items-center justify-center bg-white rounded shadow-sm text-black hover:bg-gray-200 transition btn-plus"><i class="fa-solid fa-plus text-[10px]"></i></button>
+                    </div>
+                    <!-- Hidden Input for logic compatibility -->
+                    <input type="checkbox" class="sr-only option-input" data-name="${opt.name}" data-price="${opt.price || 0}" data-qty="0">
+                </div>
+            `).join('');
 
                 } else {
                     // CASE 1 & 2: RADIO (Single) OR CHECKBOX (Multi No-Repeat)
-                    const inputType = isMulti ? 'checkbox' : 'radio';
-                    const inputName = `mod-${groupDef.id || groupDef.name.replace(/\s+/g, '-')}`;
+                    const inputType = (mode === 'multi-check') ? 'checkbox' : 'radio';
+                    const inputName = `mod-${groupDef.id || Math.random().toString(36).substr(2, 9)}`;
 
                     optionsHtml = (groupDef.options || []).map(opt => `
-                        <label class="flex items-center justify-between py-2 cursor-pointer group option-item">
-                            <div class="flex items-center gap-3">
-                                 <input type="${inputType}" name="${inputName}" data-name="${opt.name}" data-price="${opt.price || 0}" 
-                                        onchange="handleOptionChange(this)"
-                                        class="peer sr-only option-input" ${isRequired && !isMulti ? 'required' : ''}>
-                                 <div class="w-5 h-5 rounded border border-gray-300 peer-checked:bg-black peer-checked:border-black flex items-center justify-center transition">
-                                    <span class="text-white text-[10px] hidden peer-checked:block"><i class="fa-solid fa-check"></i></span>
-                                 </div>
-                                 <span class="text-sm text-gray-700 font-medium group-hover:text-black transition">${opt.name}</span>
-                            </div>
-                            <span class="text-xs text-gray-500 font-medium">+MX$${parseFloat(opt.price || 0).toFixed(2)}</span>
-                        </label>
-                    `).join('');
+                <label class="flex items-center justify-between py-2 cursor-pointer group option-item">
+                    <div class="flex items-center gap-3">
+                         <input type="${inputType}" name="${inputName}" data-name="${opt.name}" data-price="${opt.price || 0}" 
+                                 onchange="handleOptionChange(this)"
+                                 class="peer sr-only option-input" ${isRequired && mode === 'single' ? 'required' : ''}>
+                         <div class="w-5 h-5 rounded border border-gray-300 peer-checked:bg-black peer-checked:border-black flex items-center justify-center transition">
+                            <span class="text-white text-[10px] hidden peer-checked:block"><i class="fa-solid fa-check"></i></span>
+                         </div>
+                         <span class="text-sm text-gray-700 font-medium group-hover:text-black transition">${opt.name}</span>
+                    </div>
+                    <span class="text-xs text-gray-500 font-medium">+MX$${parseFloat(opt.price || 0).toFixed(2)}</span>
+                </label>
+            `).join('');
                 }
 
                 // Render Header info
                 let badgeText = isRequired ? 'Obligatorio' : 'Opcional';
-                if (!isMulti) badgeText += ' • Elige 1';
+                if (mode === 'single') badgeText += ' • Elige 1';
                 else if (maxSel > 0) badgeText += ` • Máx ${maxSel}`;
 
-                const html = `
-                    <div class="mb-5 group-wrapper" 
-                         data-id="${groupDef.id}"
-                         data-required="${isRequired}" 
-                         data-multi="${isMulti}" 
-                         data-max="${maxSel}" 
-                         data-repeats="${allowRepeats}"
-                         data-name="${groupDef.name}">
-                        
-                        <div class="flex justify-between items-center mb-2 bg-gray-50 p-2.5 rounded-lg border border-gray-100">
-                            <h4 class="font-bold text-sm text-black">${groupDef.name}</h4>
-                            <span class="text-[10px] ${isRequired ? 'text-red-600 bg-red-50 border-red-100' : 'text-gray-500 bg-white border-gray-200'} border px-2 py-0.5 rounded-full uppercase font-bold tracking-wider">
-                                ${badgeText}
-                            </span>
-                        </div>
-                        <div class="pl-1 space-y-1" id="group-options-${groupDef.id}">
-                            ${optionsHtml}
-                        </div>
-                        ${isMulti && maxSel > 0 ? `<p class="text-[10px] text-right text-gray-400 mt-1 mr-1 max-bg hidden">Límite alcanzado (${maxSel})</p>` : ''}
-                    </div>
-                `;
-                container.innerHTML += html;
+                const div = document.createElement('div');
+                div.className = "mb-5 group-wrapper";
+                div.dataset.id = groupDef.id;
+                div.dataset.required = isRequired;
+                div.dataset.mode = mode; // New explicitly stored mode
+                div.dataset.max = maxSel;
+                div.dataset.name = groupDef.name;
+
+                div.innerHTML = `
+            <div class="flex justify-between items-center mb-2 bg-gray-50 p-2.5 rounded-lg border border-gray-100">
+                <h4 class="font-bold text-sm text-black">${groupDef.name}</h4>
+                <span class="text-[10px] ${isRequired ? 'text-red-600 bg-red-50 border-red-100' : 'text-gray-500 bg-white border-gray-200'} border px-2 py-0.5 rounded-full uppercase font-bold tracking-wider">
+                    ${badgeText}
+                </span>
+            </div>
+            <div class="pl-1 space-y-1" id="group-options-${groupDef.id}">
+                ${optionsHtml}
+            </div>
+            ${(mode !== 'single' && maxSel > 0) ? `<p class="text-[10px] text-right text-orange-500 mt-1 mr-1 max-bg hidden font-bold"><i class="fa-solid fa-triangle-exclamation"></i> Límite alcanzado (${maxSel})</p>` : ''}
+        `;
+
+                container.appendChild(div);
             });
 
-            // Update Total on Modifier Change
-            container.addEventListener('change', updateDetailTotal);
-
+            // Initial Calculation
+            document.getElementById('detail-qty').innerText = 1;
             updateDetailTotal();
-            // Populate Upsells (Random)
-            const allItems = [...(SHOP_DATA.menu.clasicos || []), ...(SHOP_DATA.menu.extras || [])];
-            const upsells = allItems.sort(() => 0.5 - Math.random()).slice(0, 5);
-            document.getElementById('upsells-container').innerHTML = upsells.map(u => `
-                 <div class="min-w-[120px] flex flex-col gap-2 cursor-pointer group" onclick='addUpsell(${JSON.stringify(u).replace(/'/g, "&#39;")})'>
-                    <div class="relative w-full h-28 bg-gray-100 rounded-xl overflow-hidden shadow-sm">
-                        <img src="${u.image}" class="w-full h-full object-cover">
-                         <div class="absolute bottom-1 right-1 w-6 h-6 bg-white/90 rounded-full flex items-center justify-center text-black shadow-sm">
-                            <i class="fa-solid fa-plus text-[10px] font-bold"></i>
-                         </div>
-                    </div>
-                    <div>
-                         <span class="text-xs font-medium text-slate-800 line-clamp-1">${u.name}</span>
-                         <span class="text-xs font-bold text-black">MX$${u.price}</span>
-                    </div>
-                 </div>
-             `).join('');
 
-            document.getElementById('product-modal').classList.add('active');
+            document.getElementById('product-modal').classList.remove('hidden');
         }
-
-        // --- NEW MODIFIER LOGIC ---
 
         function handleOptionChange(input) {
             const wrapper = input.closest('.group-wrapper');
-            enforceGroupLimits(wrapper);
+            if (wrapper) enforceGroupLimits(wrapper);
             updateDetailTotal();
         }
 
         function updateOptionQty(btn, delta) {
             const row = btn.closest('.option-item');
+            const input = row.querySelector('.option-input');
             const display = row.querySelector('.option-qty-display');
-            const hiddenInput = row.querySelector('.option-input');
-            const wrapper = row.closest('.group-wrapper');
+            const wrapper = btn.closest('.group-wrapper');
 
-            let currentQty = parseInt(hiddenInput.getAttribute('data-qty') || 0);
-            let newQty = currentQty + delta;
+            let currentQty = parseInt(input.getAttribute('data-qty') || 0);
+            const newQty = currentQty + delta;
 
-            if (newQty < 0) newQty = 0;
+            if (newQty < 0) return;
 
-            // Check Max Limits before increasing
-            if (delta > 0) {
+            // Preliminary Limit Check before applying
+            if (delta > 0 && wrapper) {
                 const max = parseInt(wrapper.dataset.max) || 0;
-                const currentTotal = getGroupTotalQty(wrapper);
-                if (max > 0 && currentTotal >= max) return; // Block
+                if (max > 0) {
+                    const currentTotal = getGroupTotalQty(wrapper);
+                    if (currentTotal >= max) return; // Should be blocked by UI, but double check
+                }
             }
 
-            hiddenInput.setAttribute('data-qty', newQty);
-            hiddenInput.checked = newQty > 0; // Check logic compliance
+            // Apply
+            input.setAttribute('data-qty', newQty);
             display.innerText = newQty;
 
-            // Manage Minus Button State
-            const minusBtn = row.querySelector('button:first-child');
-            minusBtn.disabled = newQty === 0;
+            // Sync Checkbox state for consistency
+            input.checked = newQty > 0;
+
+            // Visual Feedback for Minus Button
+            const minusBtn = row.querySelector('.btn-minus');
+            if (minusBtn) minusBtn.disabled = newQty === 0;
 
             enforceGroupLimits(wrapper);
             updateDetailTotal();
         }
 
         function getGroupTotalQty(wrapper) {
-            const repeats = wrapper.dataset.repeats === 'true';
-            if (repeats) {
-                let sum = 0;
-                wrapper.querySelectorAll('.option-input').forEach(inp => sum += parseInt(inp.getAttribute('data-qty') || 0));
-                return sum;
+            let total = 0;
+            const mode = wrapper.dataset.mode;
+
+            if (mode === 'multi-step') {
+                wrapper.querySelectorAll('.option-input').forEach(inp => {
+                    total += parseInt(inp.getAttribute('data-qty') || 0);
+                });
+            } else if (mode === 'multi-check') {
+                wrapper.querySelectorAll('input[type="checkbox"]:checked').forEach(() => {
+                    total++;
+                });
             } else {
-                return wrapper.querySelectorAll('.option-input:checked').length;
+                // Single
+                if (wrapper.querySelector('input:checked')) total = 1;
             }
+            return total;
         }
 
         function enforceGroupLimits(wrapper) {
-            if (!wrapper) return;
+            const mode = wrapper.dataset.mode;
             const max = parseInt(wrapper.dataset.max) || 0;
-            const isMulti = wrapper.dataset.multi === 'true';
 
-            if (!isMulti || max === 0) return;
+            // Limits only apply to multi selection with a defined max > 0
+            if (mode === 'single' || max === 0) return;
 
             const currentTotal = getGroupTotalQty(wrapper);
             const reached = currentTotal >= max;
 
-            // Toggle Warning
-            const warn = wrapper.querySelector('.max-bg');
-            if (warn) warn.classList.toggle('hidden', !reached);
+            const msg = wrapper.querySelector('.max-bg');
 
-            const repeats = wrapper.dataset.repeats === 'true';
+            if (reached) {
+                if (msg) msg.classList.remove('hidden');
 
-            if (repeats) {
-                // Disable PLUS buttons if reached
-                wrapper.querySelectorAll('.option-item').forEach(row => {
-                    const plusBtn = row.querySelector('.btn-plus');
-                    if (plusBtn) plusBtn.disabled = reached;
-                });
+                // DISABLE LOGIC
+                if (mode === 'multi-step') {
+                    // Disable ALL PLUS buttons
+                    wrapper.querySelectorAll('.btn-plus').forEach(b => b.disabled = true);
+                    // Ensure Minus buttons are enabled where qty > 0 (handled in updateOptionQty, but safeguard)
+                } else if (mode === 'multi-check') {
+                    // Disable UNCHECKED inputs
+                    wrapper.querySelectorAll('input[type="checkbox"]').forEach(inp => {
+                        if (!inp.checked) {
+                            inp.disabled = true;
+                            inp.parentElement.classList.add('opacity-50', 'cursor-not-allowed');
+                        }
+                    });
+                }
             } else {
-                // Disable Unchecked checkboxes if reached
-                wrapper.querySelectorAll('.option-input[type="checkbox"]').forEach(cb => {
-                    if (!cb.checked) cb.disabled = reached;
-                });
+                if (msg) msg.classList.add('hidden');
+
+                // ENABLE LOGIC
+                if (mode === 'multi-step') {
+                    wrapper.querySelectorAll('.btn-plus').forEach(b => b.disabled = false);
+                } else if (mode === 'multi-check') {
+                    wrapper.querySelectorAll('input[type="checkbox"]').forEach(inp => {
+                        inp.disabled = false;
+                        inp.parentElement.classList.remove('opacity-50', 'cursor-not-allowed');
+                    });
+                }
             }
         }
 
-        function addUpsell(item) {
-            const cartItem = {
-                id: Date.now(),
-                name: item.name,
-                price: parseFloat(item.price),
-                qty: 1,
-                total: parseFloat(item.price),
-                image: item.image
-            };
-            CART.push(cartItem);
-            updateCartUI();
-            alert(`Añadido: ${item.name}`);
-        }
-
-        function closeProductModal() {
-            document.getElementById('product-modal').classList.remove('active');
-        }
-
-        function adjustDetailQty(delta) {
-            const newQty = CURRENT_ITEM.qty + delta;
-            if (newQty < 1) return;
-            CURRENT_ITEM.qty = newQty;
-            document.getElementById('detail-qty').innerText = newQty;
-            updateDetailTotal();
-        }
-
         function updateDetailTotal() {
-            // Base
-            let unitPrice = parseFloat(CURRENT_ITEM.price);
+            let modifiersTotal = 0;
 
-            // Add Modifiers
             document.querySelectorAll('#detail-modifiers .group-wrapper').forEach(grp => {
-                const repeats = grp.dataset.repeats === 'true';
+                const mode = grp.dataset.mode;
 
                 grp.querySelectorAll('.option-input').forEach(inp => {
                     const price = parseFloat(inp.dataset.price || 0);
-                    if (repeats) {
+
+                    if (mode === 'multi-step') {
                         const qty = parseInt(inp.getAttribute('data-qty') || 0);
-                        unitPrice += (price * qty);
+                        modifiersTotal += (price * qty);
                     } else {
-                        if (inp.checked) unitPrice += price;
+                        if (inp.checked) modifiersTotal += price;
                     }
                 });
             });
 
-            const total = (unitPrice * CURRENT_ITEM.qty).toFixed(2);
-            document.getElementById('detail-btn-total').innerText = `MX$${total}`;
+            const itemTotal = (parseFloat(CURRENT_ITEM.price) + modifiersTotal);
+            const grandTotal = itemTotal * CURRENT_ITEM.qty;
+
+            document.getElementById('detail-btn-total').innerText = `MX$${grandTotal.toFixed(2)}`;
         }
 
         function addToCartFromDetail() {
@@ -1123,7 +1110,14 @@
                     const count = getGroupTotalQty(grp);
                     if (count === 0) {
                         valid = false;
-                        alert(`⚠️ Debes seleccionar una opción para: "${grp.dataset.name}"`);
+                        // Shake effect or Alert
+                        grp.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        grp.classList.add('ring-2', 'ring-red-500', 'bg-red-50');
+                        setTimeout(() => grp.classList.remove('ring-2', 'ring-red-500', 'bg-red-50'), 2000);
+
+                        // Also standard alert
+                        alert(`⚠️ "${grp.dataset.name}" es obligatorio. Selecciona al menos una opción.`);
+                        return; // Break inner loop logic (forEach doesn't break, but we set valid=false)
                     }
                 }
             });
@@ -1134,25 +1128,23 @@
             let modifiersTotal = 0;
 
             document.querySelectorAll('#detail-modifiers .group-wrapper').forEach(grp => {
-                const repeats = grp.dataset.repeats === 'true';
+                const mode = grp.dataset.mode;
 
                 grp.querySelectorAll('.option-input').forEach(inp => {
-                    if (inp.checked || (parseInt(inp.getAttribute('data-qty')) > 0)) {
+                    // Check based on mode
+                    const isActive = (mode === 'multi-step') ? (parseInt(inp.getAttribute('data-qty') || 0) > 0) : inp.checked;
+
+                    if (isActive) {
                         const price = parseFloat(inp.dataset.price || 0);
                         const name = inp.dataset.name;
 
-                        if (repeats) {
+                        if (mode === 'multi-step') {
                             const qty = parseInt(inp.getAttribute('data-qty') || 0);
-                            if (qty > 0) {
-                                modifiers.push({ name: `${qty}x ${name}`, price: price * qty });
-                                modifiersTotal += (price * qty);
-                            }
+                            modifiers.push({ name: `${qty}x ${name}`, price: price * qty });
+                            modifiersTotal += (price * qty);
                         } else {
-                            // Checkbox/Radio
-                            if (inp.checked) {
-                                modifiers.push({ name: name, price: price });
-                                modifiersTotal += price;
-                            }
+                            modifiers.push({ name: name, price: price });
+                            modifiersTotal += price;
                         }
                     }
                 });
@@ -1163,7 +1155,6 @@
             const cutlery = document.getElementById('detail-cutlery').checked;
 
             // 3. Calc Total
-            // (Base + Modifiers) * Qty
             const unitPrice = parseFloat(CURRENT_ITEM.price) + modifiersTotal;
             const total = unitPrice * CURRENT_ITEM.qty;
 
@@ -1422,18 +1413,46 @@
         }
 
         function processOrderSubmission(status) {
+            // Recalculate costs for payload
+            const rawTotal = document.getElementById('final-total').innerText.replace('MX$', '').replace(/,/g, '');
+            const total = parseFloat(rawTotal);
+
+            // Get breakdown from UI or State
+            // Tip
+            const tipVal = (CART.reduce((acc, i) => acc + i.total, 0) * (SELECTED_TIP / 100));
+            // Shipping
+            const shipText = document.getElementById('summ-shipping').innerText;
+            const shipping = shipText === '¡Gratis!' ? 0 : parseFloat(shipText.replace('MX$', ''));
+            // Service (OTHER_CHARGES is a global var in this scope?)
+            // Assuming OTHER_CHARGES exists based on previous code reading (line 1237 in updateCartUI)
+            const service = (typeof OTHER_CHARGES !== 'undefined') ? OTHER_CHARGES : 0;
+            const subtotal = CART.reduce((acc, i) => acc + i.total, 0);
+
+            // Customer Name
+            let custName = "Cliente";
+            const userData = JSON.parse(localStorage.getItem('menuia_user_data'));
+            if (userData && userData.name) custName = userData.name;
+
             const orderPayload = {
                 slug: SHOP_DATA ? SHOP_DATA.slug : 'demo',
                 order: {
-                    ref: 'APP-' + Math.floor(Math.random() * 10000),
+                    ref: custName, // Using Name as Ref for Admin Display
+                    customerName: custName,
                     customerPhone: USER_PHONE,
                     address: USER_ADDRESS,
                     note: document.getElementById('delivery-note')?.value || '',
                     paymentMethod: SELECTED_PAYMENT,
                     type: 'delivery',
-                    items: CART,
+                    items: CART, // CART items now have modifiers, note, cutlery
                     total: document.getElementById('final-total').innerText,
-                    status: status
+                    status: status,
+                    costs: {
+                        subtotal: subtotal,
+                        tip: tipVal,
+                        shipping: shipping,
+                        service: service,
+                        total: total
+                    }
                 }
             };
             console.log("Submitting", orderPayload);
