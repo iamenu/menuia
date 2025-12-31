@@ -68,6 +68,7 @@
         .line-clamp-2 {
             display: -webkit-box;
             -webkit-line-clamp: 2;
+            line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
         }
@@ -522,7 +523,7 @@
         const API_URL = "https://menuia.onrender.com";
         // const API_URL = "http://localhost:3000";
 
-        let socket;
+        const socket = io(API_URL);
         let SHOP_DATA = null;
         let CART = [];
         let CURRENT_ITEM = null;
@@ -627,25 +628,23 @@
 
         function initSocket(slug) {
             try {
-                socket = io(API_URL);
-                socket.on('connect', () => {
-                    if (slug) socket.emit('join-store', slug);
-                });
-                socket.on('order-created-client', (order) => {
-                    alert(`¡Pedido Enviado! 🎉`);
-                    CART = [];
-                    updateCartUI();
-                    closeCheckout();
-                });
+                // socket is already initialized globally as const
+
+                // Ensure we join the room if not already done via connect event
+                if (socket.connected && slug) {
+                    socket.emit('join-store', slug);
+                }
+
+                // socket.on('order-created-client') logic moved to global listeners below
 
                 // NEW: Listen for real-time shop updates from Admin
                 socket.on('shop-updated', () => {
                     console.log("Store updated! Refreshing...");
                     const params = new URLSearchParams(window.location.search);
-                    const slug = params.get('slug');
-                    if (slug) fetchShop(slug); // Re-fetch data
+                    const currentSlug = params.get('slug');
+                    if (currentSlug) fetchShop(currentSlug); // Re-fetch data
                 });
-            } catch (e) { console.error("Socket error", e); }
+            } catch (e) { console.error("Socket setup error", e); }
         }
 
         async function fetchShop(slug) {
@@ -736,6 +735,17 @@
                 } else if (ap.type === 'discount') {
                     promoItem.oldPrice = ap.originalPrice;
                     promoItem.price = ap.price;
+                } else if (ap.type === 'combo') {
+                    promoItem.image = 'https://cdn-icons-png.flaticon.com/512/5787/5787016.png';
+                    promoItem.desc = ap.desc;
+                } else if (ap.type === 'gift') {
+                    promoItem.image = 'https://cdn-icons-png.flaticon.com/512/4213/4213958.png';
+                    promoItem.desc = ap.desc;
+                }
+
+                // Custom Image Override
+                if (ap.image) {
+                    promoItem.image = ap.image;
                 }
 
                 allPromos.push(promoItem);
@@ -810,65 +820,93 @@
             }
 
             // 3. CATEGORIES
-            const ignoreKeys = ['groups'];
-            const allKeys = Object.keys(menu).filter(k => !ignoreKeys.includes(k));
-            let cats = [];
+            // 3. CATEGORIES
+            const catIgnoreKeys = ['groups']; // Promos are allowed if they exist in menu and have items
+            const menuKeys = Object.keys(menu).filter(k => !catIgnoreKeys.includes(k));
+            let categoriesToRender = [];
 
-            if (config.categories && Array.isArray(config.categories) && config.categories.length > 0) {
-                cats = config.categories.map(c => c.id);
-                allKeys.forEach(k => {
-                    if (!cats.includes(k)) cats.push(k);
+            // A) Start with Configured Categories (Preserve Order)
+            if (config.categories && Array.isArray(config.categories)) {
+                config.categories.forEach(c => {
+                    // Check for exact match first
+                    let key = c.id;
+                    // If not found, try to find a case-insensitive match in menuKeys
+                    if (!menu[key]) {
+                        const match = menuKeys.find(mk => mk.toLowerCase() === key.toLowerCase());
+                        if (match) key = match;
+                    }
+
+                    if (menu[key] && Array.isArray(menu[key]) && menu[key].length > 0) {
+                        categoriesToRender.push({ id: key, name: c.name, items: menu[key] });
+                    }
                 });
-            } else {
+            }
+
+            // B) Add "Zombie" Categories (In menu but not in config)
+            menuKeys.forEach(k => {
+                // Check if this key was already added (by ID or case-insensitive match)
+                const alreadyAdded = categoriesToRender.find(c => c.id === k || c.id.toLowerCase() === k.toLowerCase());
+                if (!alreadyAdded) {
+                    if (menu[k] && Array.isArray(menu[k]) && menu[k].length > 0) {
+                        // Fallback Title
+                        let title = k.charAt(0).toUpperCase() + k.slice(1);
+                        if (config.categoryTitles && config.categoryTitles[k]) title = config.categoryTitles[k];
+
+                        categoriesToRender.push({ id: k, name: title, items: menu[k] });
+                    }
+                }
+            });
+
+            // Fallback Sort if no config
+            if ((!config.categories || config.categories.length === 0) && categoriesToRender.length === 0) {
                 const preferred = ['promos', 'especiales', 'clasicos', 'extras'];
-                cats = allKeys.sort((a, b) => {
-                    const idxA = preferred.indexOf(a);
-                    const idxB = preferred.indexOf(b);
+                // logic re-run for all keys
+                menuKeys.forEach(k => {
+                    if (menu[k] && Array.isArray(menu[k]) && menu[k].length > 0) {
+                        let title = k.charAt(0).toUpperCase() + k.slice(1);
+                        categoriesToRender.push({ id: k, name: title, items: menu[k] });
+                    }
+                });
+                categoriesToRender.sort((a, b) => {
+                    const idxA = preferred.indexOf(a.id);
+                    const idxB = preferred.indexOf(b.id);
                     if (idxA !== -1 && idxB !== -1) return idxA - idxB;
                     if (idxA !== -1) return -1;
                     if (idxB !== -1) return 1;
-                    return a.localeCompare(b);
+                    return a.id.localeCompare(b.id);
                 });
             }
+
             const catContainer = document.getElementById('categories-list');
             const menuContainer = document.getElementById('menu-container');
 
             let catHtml = '';
             let menuHtml = '';
 
-            cats.forEach(key => {
-                const items = menu[key] || [];
-                let title = key.charAt(0).toUpperCase() + key.slice(1);
-                if (config.categories) {
-                    const c = config.categories.find(c => c.id === key);
-                    if (c) title = c.name;
-                } else if (config.categoryTitles?.[key]) {
-                    title = config.categoryTitles[key];
-                }
-
-                if (items.length > 0) {
-                    catHtml += `
-                        <button onclick="scrollToCat('${key}')" id="btn-cat-${key}" class="cat-pill whitespace-nowrap px-4 py-2 rounded-full text-xs font-bold transition bg-white border border-gray-200 text-gray-500 hover:bg-gray-100">
-                            ${title}
+            categoriesToRender.forEach(cat => {
+                catHtml += `
+                        <button onclick="scrollToCat('${cat.id}')" id="btn-cat-${cat.id}" class="cat-pill whitespace-nowrap px-4 py-2 rounded-full text-xs font-bold transition bg-white border border-gray-200 text-gray-500 hover:bg-gray-100">
+                            ${cat.name}
                         </button>
                     `;
 
-                    menuHtml += `
-                        <div id="cat-section-${key}" class="scroll-mt-36 product-section">
-                            <h3 class="font-extrabold text-lg text-black mb-4 capitalize">${title}</h3>
+                menuHtml += `
+                        <div id="cat-section-${cat.id}" class="scroll-mt-36 product-section">
+                            <h3 class="font-extrabold text-lg text-black mb-4 capitalize">${cat.name}</h3>
                             <div class="space-y-6">
-                                ${items.map(item => renderFullCard(item)).join('')}
+                                ${cat.items.map(item => renderFullCard(item)).join('')}
                             </div>
                         </div>
                     `;
-                }
             });
 
             catContainer.innerHTML = catHtml;
             menuContainer.innerHTML = menuHtml;
 
-            const firstPopulated = cats.find(key => (menu[key] || []).length > 0);
-            if (firstPopulated) setActiveCat(firstPopulated);
+            if (categoriesToRender.length > 0) {
+                // If checking active cat
+                setActiveCat(categoriesToRender[0].id);
+            }
         }
 
 
@@ -1152,7 +1190,8 @@
                 cutlery: cutlery,
                 qty: CURRENT_ITEM.qty,
                 total: total,
-                image: CURRENT_ITEM.image
+                image: CURRENT_ITEM.image,
+                desc: CURRENT_ITEM.desc // Save promo/item description
             };
             CART.push(cartItem);
             updateCartUI();
@@ -1501,6 +1540,152 @@
             } else if (status === 'cancel') {
                 alert("El pago fue cancelado/incompleto.");
             }
+        }
+
+        // --- CUSTOMER NOTIFICATIONS SYSTEM ---
+
+        socket.on('connect', () => {
+            // Extract slug from URL or global data
+            const params = new URLSearchParams(window.location.search);
+            const slug = params.get('slug') || (typeof SHOP_DATA !== 'undefined' ? SHOP_DATA.slug : 'demo');
+            socket.emit('join-store', slug);
+            console.log("🔔 Conectado a notificaciones de tienda:", slug);
+        });
+
+        // 1. Track My Order
+        socket.on('order-created-client', (order) => {
+            // Check if this order looks like ours (by Phone)
+            const myPhone = localStorage.getItem('user_phone');
+
+            // If phone matches OR if we are in the same session that just submitted (fallback)
+            // But phone is the best tracker.
+            if (myPhone && order.customerPhone === myPhone) {
+                console.log("✅ Mi Pedido Detectado:", order._id);
+                localStorage.setItem('last_active_order', order._id);
+
+                // Save SLUG to allow index.html to join the room and track it
+                const currentSlug = (typeof SHOP_DATA !== 'undefined' ? SHOP_DATA.slug : null) || new URLSearchParams(window.location.search).get('slug');
+                if (currentSlug) localStorage.setItem('active_shop_slug', currentSlug);
+
+                // --- UI SUCCESS ---
+                // alert(`¡Pedido Recibido! 🎉\nEstado: ${translateStatus(order.status)}`);
+                // Using a more persistent UI feedback instead of blocking alert if possible, 
+                // but alert is safest for ensuring they see it.
+                if (confirm(`¡Pedido Recibido! 🎉\nTu pedido está en estado: ${translateStatus(order.status)}.\n\n¿Deseas recibir notificaciones de progreso?`)) {
+                    if (Notification.permission !== "granted") Notification.requestPermission();
+                }
+
+                CART = [];
+                updateCartUI();
+
+                // If checking out, close it
+                if (typeof closeCheckout === 'function') closeCheckout();
+
+                // Also play a success sound?
+                // playClientStatusSound('pending'); 
+            }
+        });
+
+        // 2. Listen for Status Updates
+        socket.on('order-status-updated', (data) => {
+            // data = { orderId, status }
+            const myOrderId = localStorage.getItem('last_active_order');
+
+            if (myOrderId && data.orderId === myOrderId) {
+                console.log("📣 Actualización de estatus:", data.status);
+
+                const statusText = translateStatus(data.status);
+
+                // Audio
+                playClientStatusSound(data.status);
+
+                // System Notification (Real Push-like)
+                showSystemNotification("Tu pedido se ha actualizado", `Nuevo estado: ${statusText}`);
+
+                // In-App floating alert (Visual fallback)
+                showFloatingAlert(statusText);
+            }
+        });
+
+        function translateStatus(s) {
+            const map = {
+                'pending': 'Pendiente',
+                'preparing': 'En Cocina / Preparando',
+                'ready': 'Listo para Entrega / Recoger',
+                'delivering': 'En Camino',
+                'completed': 'Entregado'
+            };
+            return map[s] || s;
+        }
+
+        function showSystemNotification(title, body) {
+            if (!("Notification" in window)) {
+                return console.log("Navegador no soporta notificaciones");
+            }
+
+            if (Notification.permission === "granted") {
+                new Notification(title, {
+                    body: body,
+                    icon: 'https://cdn-icons-png.flaticon.com/512/3075/3075977.png',
+                    vibrate: [200, 100, 200]
+                });
+            } else if (Notification.permission !== "denied") {
+                Notification.requestPermission().then(permission => {
+                    if (permission === "granted") {
+                        showSystemNotification(title, body);
+                    }
+                });
+            }
+        }
+
+        // REGISTER SERVICE WORKER
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js')
+                .then(reg => console.log('SW Registered!', reg))
+                .catch(err => console.log('SW Failed', err));
+        }
+
+        // --- NEW TOAST NOTIFICATION SYSTEM ---
+        function showAppToast(statusText) {
+            // Create or get toast container
+            let container = document.getElementById('app-toast-container');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'app-toast-container';
+                container.className = "fixed top-4 left-4 right-4 z-[99999] flex flex-col gap-2 pointer-events-none";
+                document.body.appendChild(container);
+            }
+
+            // Create toast element
+            const el = document.createElement('div');
+            el.className = "bg-white border-l-4 border-black shadow-2xl p-4 rounded-r-lg flex items-center gap-4 transform transition-all duration-500 translate-y-[-100%] opacity-0 pointer-events-auto";
+            el.innerHTML = `
+                <div class="bg-gray-100 w-10 h-10 rounded-full flex items-center justify-center shrink-0">
+                    <i class="fa-solid fa-bell text-gray-800"></i>
+                </div>
+                <div class="flex-1">
+                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Actualización de Pedido</p>
+                    <p class="font-bold text-gray-800 text-sm">${statusText}</p>
+                </div>
+            `;
+
+            container.appendChild(el);
+
+            // Animate In
+            requestAnimationFrame(() => {
+                el.classList.remove('translate-y-[-100%]', 'opacity-0');
+            });
+
+            // Play delicate sound
+            const audio = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-software-interface-start-2574.mp3');
+            audio.volume = 0.5;
+            audio.play().catch(() => { });
+
+            // Remove after 5s
+            setTimeout(() => {
+                el.classList.add('translate-y-[-100%]', 'opacity-0');
+                setTimeout(() => el.remove(), 500);
+            }, 5000);
         }
 
         // Call on load
