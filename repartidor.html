@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Repartidor | MenúIA</title>
+    <title>ia food repartidor</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Leaflet CSS & JS -->
@@ -125,7 +125,7 @@
     <div id="dashboard-screen" class="hidden absolute inset-0 flex flex-col h-full w-full bg-gray-50">
         <!-- TOP NAV - Rappi Style -->
         <div
-            class="absolute top-0 left-0 right-0 z-[20] pt-4 pb-2 px-4 flex justify-between items-start pointer-events-none bg-gradient-to-b from-white via-white to-transparent h-24">
+            class="absolute top-0 left-0 right-0 z-[20] pt-12 pb-2 px-4 flex justify-between items-start pointer-events-none bg-gradient-to-b from-white via-white to-transparent h-24">
 
             <!-- Install Button (Dash) -->
             <button id="pwa-install-dash-btn" onclick="installPWA()"
@@ -525,6 +525,7 @@
             document.getElementById('dashboard-screen').classList.remove('hidden');
             setTimeout(() => {
                 MAP_INSTANCE.invalidateSize();
+                initSliderLogic(); // Initialize Slider Logic after showing dash
             }, 100);
         }
 
@@ -568,47 +569,64 @@
             }
         }
 
-        // --- CONTROLS REFACTORED (Modern UI + Permissions) ---
-        let WAKE_LOCK = null;
+        // --- SLIDER LOGIC vs CLICK (HYBRID) ---
+        function initSliderLogic() {
+            const btn = document.getElementById('go-online-btn');
+            const knob = document.getElementById('btn-knob');
+            const bg = document.getElementById('btn-bg-fill');
+            const maxSlide = btn.offsetWidth - knob.offsetWidth - 8; // 8px padding approx
 
-        async function requestWakeLock() {
-            try {
-                if ('wakeLock' in navigator) {
-                    WAKE_LOCK = await navigator.wakeLock.request('screen');
-                    console.log('💡 Screen Wake Lock active');
+            let startX = 0;
+            let currentX = 0;
+            let isDragging = false;
+            let startShift = 0; // Knob initial position
+
+            if (IS_ONLINE) return; // Don't slide if already online (button acts as click to off)
+
+            // TOUCH EVENTS
+            btn.addEventListener('touchstart', (e) => {
+                if (IS_ONLINE) return;
+                startX = e.touches[0].clientX;
+                isDragging = true;
+                btn.classList.remove('transition-transform'); // Disable transition for direct follow
+            }, { passive: true });
+
+            btn.addEventListener('touchmove', (e) => {
+                if (!isDragging || IS_ONLINE) return;
+                const touchX = e.touches[0].clientX;
+                const diff = touchX - startX;
+
+                // Clamp 0 to maxSlide
+                currentX = Math.max(0, Math.min(diff, maxSlide));
+
+                // Visual Update
+                knob.style.transform = `translateX(${currentX}px)`;
+                bg.style.opacity = currentX / maxSlide; // Fade in background
+            }, { passive: true });
+
+            btn.addEventListener('touchend', (e) => {
+                if (!isDragging || IS_ONLINE) return;
+                isDragging = false;
+
+                // Threshold to trigger (e.g., 70% of way)
+                if (currentX > (maxSlide * 0.7)) {
+                    // Success -> Snap to end
+                    knob.style.transform = `translateX(${maxSlide}px)`;
+                    toggleOnline();
+                } else {
+                    // Reset -> Snap back
+                    knob.style.transform = `translateX(0px)`;
+                    bg.style.opacity = 0;
                 }
-            } catch (err) {
-                console.error(`${err.name}, ${err.message}`);
-            }
-        }
+            });
 
-        async function releaseWakeLock() {
-            if (WAKE_LOCK) {
-                await WAKE_LOCK.release();
-                WAKE_LOCK = null;
-                console.log('💡 Screen Wake Lock released');
-            }
-        }
-
-        // --- AUDIO HELPERS ---
-        function playNotificationSound() {
-            const audio = document.getElementById('notification-sound');
-            if (audio) {
-                audio.currentTime = 0;
-                audio.play().catch(e => console.error("Error playing sound (Autoplay blocked?):", e));
-            }
-        }
-
-        function stopNotificationSound() {
-            const audio = document.getElementById('notification-sound');
-            if (audio) {
-                audio.pause();
-                audio.currentTime = 0;
-            }
+            // CLICK FALLBACK (Tap) is handled by onclick="toggleOnline()" 
+            // but we might want to disable it if we only want slide. 
+            // For now, we keep both for usability.
         }
 
         function toggleOnline() {
-            // UNLOCK AUDIO CONTEXT ON USER CLICK
+            // UNLOCK AUDIO CONTEXT
             const audio = document.getElementById('notification-sound');
             if (audio) {
                 audio.play().then(() => {
@@ -617,9 +635,8 @@
                 }).catch(() => { });
             }
 
-            // Permission Check before Going Online
+            // Permission Check
             if (!IS_ONLINE) {
-                // Request Notifications
                 if (Notification.permission === 'default' || Notification.permission === 'denied') {
                     Notification.requestPermission().then(p => {
                         if (p === 'granted') document.getElementById('perm-warning').classList.add('hidden');
@@ -627,20 +644,29 @@
                 }
             }
 
-            // Toggle Logic
+            // Logic
             IS_ONLINE = !IS_ONLINE;
             localStorage.setItem('menuia_driver_online', IS_ONLINE);
             updateOnlineUI(IS_ONLINE);
 
             if (IS_ONLINE) {
                 socket.emit('driver-online', CURRENT_DRIVER._id);
-                // Keep Screen Awake
+                showNotification("¡Estás en línea!", "success");
                 requestWakeLock();
             } else {
                 socket.emit('driver-offline', CURRENT_DRIVER._id);
+                showNotification("Desconectado", "info");
                 releaseWakeLock();
+                // Reset Slider Visuals
+                const bg = document.getElementById('btn-bg-fill');
+                const knob = document.getElementById('btn-knob');
+                bg.style.opacity = 0;
+                knob.style.transform = "translateX(0)";
             }
         }
+
+        // --- CONTROLS REFACTORED ---
+
 
         // NEW FEATURES LOGIC
         function toggleProfileMenu() {
