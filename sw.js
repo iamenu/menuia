@@ -33,14 +33,18 @@ self.addEventListener('fetch', (event) => {
 self.addEventListener('notificationclick', (event) => {
     event.notification.close();
     event.waitUntil(
-        clients.matchAll({ type: 'window' }).then((clientList) => {
+        clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+            // Priority 1: Focus existing window
             for (const client of clientList) {
-                if (client.url.includes('menu.html') && 'focus' in client) {
+                // Check if the client matches the notification's target URL or related app pages
+                if ((client.url.includes('repartidor.html') || client.url.includes('menu.html') || client.url.includes('index.html')) && 'focus' in client) {
                     return client.focus();
                 }
             }
+            // Priority 2: Open new window if none exists
             if (clients.openWindow) {
-                return clients.openWindow('/menu.html');
+                const urlToOpen = event.notification.data?.url || '/repartidor.html'; // Default to driver if unsure, or contextual
+                return clients.openWindow(urlToOpen);
             }
         })
     );
