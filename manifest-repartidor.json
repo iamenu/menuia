@@ -3,6 +3,7 @@
     "short_name": "ia food repartidor",
     "id": "/repartidor.html",
     "start_url": "./repartidor.html",
+    "scope": "/repartidor.html",
     "display": "standalone",
     "background_color": "#f3f4f6",
     "theme_color": "#ea580c",
