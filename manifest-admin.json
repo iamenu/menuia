@@ -3,6 +3,7 @@
     "id": "/admin.html",
     "short_name": "ia food tienda",
     "start_url": "./admin.html",
+    "scope": "/admin.html",
     "display": "standalone",
     "background_color": "#f3f4f6",
     "theme_color": "#2563eb",
@@ -20,3 +21,4 @@
         }
     ]
 }
+
