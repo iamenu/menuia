@@ -118,6 +118,9 @@
         </div>
     </div>
 
+    <!-- NOTIFICATION TOAST CONTAINER -->
+    <div id="toast-container" class="fixed top-4 left-4 right-4 z-[100] flex flex-col gap-2 pointer-events-none"></div>
+
     <!-- MAIN DASHBOARD -->
     <div id="dashboard-screen" class="hidden absolute inset-0 flex flex-col h-full w-full bg-gray-50">
         <!-- TOP NAV - Rappi Style -->
@@ -411,6 +414,46 @@
             }
         }
 
+        // --- TOAST NOTIFICATIONS ---
+        function showNotification(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+
+            const styles = {
+                success: 'bg-green-500 text-white shadow-green-500/30',
+                error: 'bg-red-500 text-white shadow-red-500/30',
+                info: 'bg-blue-600 text-white shadow-blue-500/30'
+            };
+
+            const icons = {
+                success: '<i class="fa-solid fa-check-circle text-lg"></i>',
+                error: '<i class="fa-solid fa-circle-exclamation text-lg"></i>',
+                info: '<i class="fa-solid fa-info-circle text-lg"></i>'
+            };
+
+            toast.className = `${styles[type]} px-4 py-3 rounded-xl shadow-lg flex items-center gap-3 transform translate-y-[-20px] opacity-0 transition-all duration-300 animate-slide-in-down pointer-events-auto min-w-[300px] mx-auto`;
+            toast.innerHTML = `
+                <div>${icons[type]}</div>
+                <div class="font-bold text-sm bg-transparent">${message}</div>
+            `;
+
+            container.appendChild(toast);
+
+            // Animate In
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-y-[-20px]', 'opacity-0');
+            });
+
+            // Remove after 3s
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-[-20px]');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        // --- OLD ALERT REPLACEMENTS ---
+        window.alert = function (msg) { showNotification(msg, 'info'); }
+
         async function handleLogin() {
             const phone = document.getElementById('login-phone').value;
             const password = document.getElementById('login-pass').value;
@@ -438,11 +481,12 @@
                     if (IS_ONLINE) {
                         socket.emit('driver-online', CURRENT_DRIVER._id);
                     }
+                    showNotification("¡Bienvenido de nuevo!", "success");
 
                 } else {
-                    alert(data.error);
+                    showNotification(data.error, "error");
                 }
-            } catch (e) { alert("Error de conexión"); }
+            } catch (e) { showNotification("Error de conexión", "error"); }
         }
 
         async function handleRegister() {
@@ -459,12 +503,12 @@
                 });
                 const data = await res.json();
                 if (data.success) {
-                    alert("Registro exitoso. Por favor ingresa.");
+                    showNotification("Registro exitoso. Por favor ingresa.", "success");
                     switchAuth('login');
                 } else {
-                    alert(data.error);
+                    showNotification(data.error, "error");
                 }
-            } catch (e) { alert("Error al registrar"); }
+            } catch (e) { showNotification("Error al registrar", "error"); }
         }
 
         function updateProfileUI() {
@@ -678,7 +722,7 @@
             // If we are looking at this order in modal, close it
             if (PENDING_ORDER && (PENDING_ORDER._id === data.orderId || PENDING_ORDER.id === data.orderId)) {
                 closeRequestModal();
-                alert(data.message || "Pedido ya tomado.");
+                showNotification(data.message || "Pedido ya tomado.", "info");
             }
         });
 
@@ -870,7 +914,7 @@
             if (!order) return;
 
             const totalGain = (order.costs?.shipping || 35) + (order.costs?.tip || 0);
-            alert(`¡Excelente trabajo! Entrega completada +$${totalGain.toFixed(2)}`);
+            showNotification(`¡Excelente trabajo! Entrega completada +$${totalGain.toFixed(2)}`, "success");
 
             document.getElementById('active-panel').classList.add('hidden');
             document.getElementById('bottom-controls').classList.remove('hidden');
