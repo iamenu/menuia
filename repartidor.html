@@ -742,6 +742,33 @@
             PENDING_ORDER = order;
             playNotificationSound(); // PLAY SOUND HERE
             showNotification("¡Nueva Solicitud de Pedido!", "success");
+
+            // SYSTEM NOTIFICATION (Background/Lock Screen)
+            if (Notification.permission === "granted") {
+                try {
+                    // Stop any previous
+                    navigator.serviceWorker.getRegistration().then(reg => {
+                        const title = "¡NUEVO PEDIDO DISPONIBLE! 🍔";
+                        const options = {
+                            body: `Ganancia: $${((order.costs?.shipping || 35) + (order.costs?.tip || 0)).toFixed(2)} - ${order.shopName || 'Restaurante'}`,
+                            icon: 'https://cdn-icons-png.flaticon.com/512/3075/3075977.png',
+                            vibrate: [200, 100, 200, 100, 200],
+                            tag: 'new-order-request',
+                            renotify: true,
+                            requireInteraction: true, // Persist until clicked
+                            data: { url: window.location.href }
+                        };
+
+                        // Try SW Notification first (More reliable on Android)
+                        if (reg) {
+                            reg.showNotification(title, options);
+                        } else {
+                            new Notification(title, options);
+                        }
+                    });
+                } catch (e) { console.error("Notification Error:", e); }
+            }
+
             showRequestModal(order);
         });
 
