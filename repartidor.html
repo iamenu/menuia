@@ -590,7 +590,33 @@
             }
         }
 
+        // --- AUDIO HELPERS ---
+        function playNotificationSound() {
+            const audio = document.getElementById('notification-sound');
+            if (audio) {
+                audio.currentTime = 0;
+                audio.play().catch(e => console.error("Error playing sound (Autoplay blocked?):", e));
+            }
+        }
+
+        function stopNotificationSound() {
+            const audio = document.getElementById('notification-sound');
+            if (audio) {
+                audio.pause();
+                audio.currentTime = 0;
+            }
+        }
+
         function toggleOnline() {
+            // UNLOCK AUDIO CONTEXT ON USER CLICK
+            const audio = document.getElementById('notification-sound');
+            if (audio) {
+                audio.play().then(() => {
+                    audio.pause();
+                    audio.currentTime = 0;
+                }).catch(() => { });
+            }
+
             // Permission Check before Going Online
             if (!IS_ONLINE) {
                 // Request Notifications
@@ -714,6 +740,8 @@
 
             console.log("Nueva solicitud:", order);
             PENDING_ORDER = order;
+            playNotificationSound(); // PLAY SOUND HERE
+            showNotification("¡Nueva Solicitud de Pedido!", "success");
             showRequestModal(order);
         });
 
@@ -721,6 +749,7 @@
         socket.on('order-taken', (data) => {
             // If we are looking at this order in modal, close it
             if (PENDING_ORDER && (PENDING_ORDER._id === data.orderId || PENDING_ORDER.id === data.orderId)) {
+                stopNotificationSound(); // Stop Sound if taken
                 closeRequestModal();
                 showNotification(data.message || "Pedido ya tomado.", "info");
             }
@@ -839,6 +868,7 @@
         }
 
         function ignoreOrder() {
+            stopNotificationSound(); // Stop Sound
             if (PENDING_ORDER) {
                 localStorage.setItem(`ignored_${PENDING_ORDER._id}`, 'true');
             }
@@ -846,6 +876,7 @@
         }
 
         function acceptOrder() {
+            stopNotificationSound(); // Stop Sound
             if (!PENDING_ORDER) return;
             socket.emit('accept-order', {
                 driverId: CURRENT_DRIVER._id,
