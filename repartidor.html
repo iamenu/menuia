@@ -153,10 +153,15 @@
 
             <!-- MENU DROPDOWN (Hidden) -->
             <div id="profile-menu"
-                class="hidden absolute top-20 right-4 bg-white rounded-xl shadow-xl p-2 w-48 z-50 animate-fade-in-up border border-gray-100">
+                class="hidden pointer-events-auto absolute top-20 right-4 bg-white rounded-xl shadow-xl p-2 w-48 z-50 animate-fade-in-up border border-gray-100">
                 <button onclick="window.location.reload()"
                     class="w-full text-left px-4 py-2 hover:bg-gray-50 rounded-lg text-sm font-bold text-gray-700 flex items-center gap-2">
                     <i class="fa-solid fa-rotate-right text-blue-500"></i> Refrescar
+                </button>
+                <div class="h-px bg-gray-100 my-1"></div>
+                <button onclick="openHistory()"
+                    class="w-full text-left px-4 py-2 hover:bg-gray-50 rounded-lg text-sm font-bold text-gray-700 flex items-center gap-2">
+                    <i class="fa-solid fa-clock-rotate-left text-orange-500"></i> Historial
                 </button>
                 <div class="h-px bg-gray-100 my-1"></div>
                 <!-- Auto Accept Toggle -->
@@ -242,8 +247,8 @@
                     <span
                         class="bg-green-100 text-green-700 font-bold text-xs px-2 py-1 rounded inline-block mb-1">Nueva
                         Solicitud</span>
-                    <h2 class="text-2xl font-extrabold">$35.00</h2>
-                    <p class="text-xs text-gray-400">Ganancia estimada (incluye propina)</p>
+                    <h2 class="text-2xl font-extrabold" id="req-gain-total">$35.00</h2>
+                    <p class="text-xs text-gray-400" id="req-gain-breakdown">Ganancia estimada (incluye propina)</p>
                 </div>
                 <div class="w-12 h-12 rounded-full border-4 border-orange-500 flex items-center justify-center font-bold text-orange-600"
                     id="request-timer">30</div>
@@ -278,6 +283,29 @@
                 Aceptar Pedido
             </button>
             <button onclick="ignoreOrder()" class="w-full mt-3 py-2 text-xs font-bold text-gray-400">Ignorar</button>
+        </div>
+    </div>
+
+    <!-- HISTORY MODAL -->
+    <div id="history-modal" class="hidden absolute inset-0 z-[70] bg-white flex flex-col animate-fade-in-up">
+        <div class="bg-white px-4 py-4 border-b border-gray-100 flex justify-between items-center shadow-sm">
+            <h2 class="text-lg font-bold text-gray-800">Historial de Pedidos</h2>
+            <button onclick="document.getElementById('history-modal').classList.add('hidden')"
+                class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
+                <i class="fa-solid fa-times"></i>
+            </button>
+        </div>
+        <div class="flex-1 overflow-y-auto p-4 space-y-3" id="history-list">
+            <!-- Dynamic Content -->
+            <div class="animate-pulse flex space-x-4">
+                <div class="flex-1 space-y-4 py-1">
+                    <div class="h-4 bg-gray-200 rounded w-3/4"></div>
+                    <div class="space-y-2">
+                        <div class="h-4 bg-gray-200 rounded"></div>
+                        <div class="h-4 bg-gray-200 rounded w-5/6"></div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -441,8 +469,11 @@
 
         function updateProfileUI() {
             const nameEl = document.getElementById('dash-name');
-            if (nameEl && CURRENT_DRIVER) nameEl.innerText = CURRENT_DRIVER.name;
-            // Fetch earnings if needed
+            const earnEl = document.getElementById('dash-earnings');
+            if (CURRENT_DRIVER) {
+                if (nameEl) nameEl.innerText = CURRENT_DRIVER.name;
+                if (earnEl) earnEl.innerText = (CURRENT_DRIVER.earnings || 0).toFixed(2);
+            }
         }
 
         // --- DASHBOARD & MAP ---
@@ -457,9 +488,10 @@
             if (MAP_INSTANCE) return;
             // Default: Guadalajara
             MAP_INSTANCE = L.map('map', { zoomControl: false }).setView([20.659698, -103.349609], 13);
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-                attribution: '&copy; OpenStreetMap &copy; CARTO',
-                subdomains: 'abcd',
+
+            // GOOGLE MAPS TILES (Streets)
+            L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+                attribution: '&copy; Google Maps',
                 maxZoom: 20
             }).addTo(MAP_INSTANCE);
 
@@ -676,12 +708,32 @@
         let requestTimerInterval;
 
         function showRequestModal(order) {
-            document.getElementById('req-store-name').innerText = order.shopSlug; // Ideally Name
+            document.getElementById('req-store-name').innerText = order.shopName || "Restaurante";
             document.getElementById('req-store-address').innerText = "Ver mapa";
             document.getElementById('req-cust-address').innerText = order.address.substring(0, 30) + "...";
+
+            // CALCULATE TOTAL GAIN (Shipping + Tip)
+            const shipping = order.costs?.shipping || 35;
+            const tip = order.costs?.tip || 0;
+            const totalGain = shipping + tip;
+
+            document.getElementById('req-gain-total').innerText = `$${totalGain.toFixed(2)}`;
+            document.getElementById('req-gain-breakdown').innerText = `Envío $${shipping} + Propina $${tip}`;
+
+            // CALCULATE DISTANCE
+            let distanceStr = "-- km";
+            if (order.shopCoords && CURRENT_DRIVER && CURRENT_DRIVER.currentLocation) {
+                const d = calculateDistance(
+                    CURRENT_DRIVER.currentLocation.lat, CURRENT_DRIVER.currentLocation.lng,
+                    order.shopCoords.lat, order.shopCoords.lng
+                );
+                distanceStr = `${d} km`;
+            }
+            document.getElementById('req-distance').innerText = distanceStr;
+
             document.getElementById('request-modal').classList.remove('hidden');
 
-            // TIMER PERSISTENCE LOGIC
+            // ... TIMER LOGIC ...
             let storedExpiry = localStorage.getItem(`timer_${order._id}`);
 
             // If no timer exists, make one (30s from now)
@@ -813,14 +865,74 @@
             });
         }
 
-        function finishOrder() {
-            alert("¡Excelente trabajo! Entrega completada +$35.00");
+        function finishOrder(orderArg) {
+            const order = orderArg || CURRENT_ORDER;
+            if (!order) return;
+
+            const totalGain = (order.costs?.shipping || 35) + (order.costs?.tip || 0);
+            alert(`¡Excelente trabajo! Entrega completada +$${totalGain.toFixed(2)}`);
+
             document.getElementById('active-panel').classList.add('hidden');
             document.getElementById('bottom-controls').classList.remove('hidden');
             CURRENT_ORDER = null;
-            // Update earnings UI locally
+
+            // Update earnings UI locally & PERSIST
             const earn = document.getElementById('dash-earnings');
-            earn.innerText = (parseFloat(earn.innerText) + 35).toFixed(2);
+            const newTotal = parseFloat(earn.innerText) + totalGain;
+            earn.innerText = newTotal.toFixed(2);
+
+            if (CURRENT_DRIVER) {
+                CURRENT_DRIVER.earnings = (CURRENT_DRIVER.earnings || 0) + totalGain;
+                localStorage.setItem('menuia_driver', JSON.stringify(CURRENT_DRIVER));
+            }
+        }
+
+        // --- HISTORY LOGIC ---
+        function openHistory() {
+            toggleProfileMenu(); // Close menu
+            // Show Modal or separate view
+            const modal = document.getElementById('history-modal'); // We need to create this
+            if (modal) modal.classList.remove('hidden');
+            socket.emit('get-driver-history', CURRENT_DRIVER._id);
+        }
+
+        socket.on('driver-history-data', (orders) => {
+            const list = document.getElementById('history-list');
+            if (!list) return;
+
+            if (orders.length === 0) {
+                list.innerHTML = '<p class="text-center text-gray-400 py-4">No hay historial reciente.</p>';
+                return;
+            }
+
+            list.innerHTML = orders.map(o => {
+                const date = new Date(o.createdAt).toLocaleDateString();
+                const earn = (o.costs?.shipping || 35) + (o.costs?.tip || 0);
+                return `
+                    <div class="bg-gray-50 p-3 rounded-xl border border-gray-100 flex justify-between items-center">
+                        <div>
+                            <p class="font-bold text-xs text-gray-800">${o.shopName || 'Restaurante'}</p>
+                            <p class="text-[10px] text-gray-500">${date} • #${o.ref}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-bold text-green-600 text-sm">+$${earn.toFixed(2)}</p>
+                            <p class="text-[10px] text-gray-400">Envío + Propina</p>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        });
+
+        // --- DISTANCE HELPER ---
+        function calculateDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371; // km
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return (R * c).toFixed(1);
         }
 
         function callContact() {
