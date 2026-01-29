@@ -13,6 +13,12 @@
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <!-- Leaflet Maps CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <!-- Leaflet Maps JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
     <style>
         body {
@@ -1213,7 +1219,7 @@
 
         // --- FUNCIONES DE GEOLOCALIZACIÓN Y DISTANCIA ---
 
-        function calculateShipping(isManual = false, onSuccessCallback = null) {
+        function calculateShipping(isManual = false, onSuccessCallback = null, bypassGPS = false) {
             const cashRadio = document.getElementById('opt-cash');
             const btn = document.getElementById('btn-location');
             const resultDiv = document.getElementById('location-result');
@@ -1223,7 +1229,7 @@
                 return;
             }
 
-            if (isManual && btn) {
+            if (isManual && btn && !bypassGPS) {
                 btn.innerHTML = `<i class="fa-solid fa-spinner loading-spin"></i> Localizando...`;
                 btn.disabled = true;
             }
@@ -1301,6 +1307,12 @@
                     { enableHighAccuracy: false, timeout: 10000, maximumAge: 0 }
                 );
             };
+
+            // BYPASS GPS CHECK
+            if (bypassGPS && userLocation) {
+                onSuccess({ coords: { latitude: userLocation.lat, longitude: userLocation.lng } });
+                return;
+            }
 
             navigator.geolocation.getCurrentPosition(onSuccess, onErrorHighAcc, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
         }
@@ -1817,16 +1829,124 @@
             }
         });
 
+        let map, marker;
+        const DEFAULT_CENTER = [STORE_COORDS.lat, STORE_COORDS.lng]; // Tienda
+
+        function initMap(lat, lng) {
+            if (map) {
+                map.setView([lat, lng], 16);
+                marker.setLatLng([lat, lng]);
+                return;
+            }
+
+            // Inicializar mapa
+            map = L.map('map-container').setView([lat, lng], 16);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(map);
+
+            // Icono personalizado
+            const pinIcon = L.icon({
+                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                iconSize: [25, 41],
+                iconAnchor: [12, 41],
+                popupAnchor: [1, -34],
+                shadowSize: [41, 41]
+            });
+
+            marker = L.marker([lat, lng], { draggable: true, icon: pinIcon }).addTo(map);
+
+            // Evento al mover el pin
+            marker.on('dragend', function (e) {
+                const position = marker.getLatLng();
+                updateLocationFromPin(position.lat, position.lng);
+            });
+
+            // Evento al hacer clic en mapa
+            map.on('click', function (e) {
+                marker.setLatLng(e.latlng);
+                updateLocationFromPin(e.latlng.lat, e.latlng.lng);
+            });
+        }
+
+        function updateLocationFromPin(lat, lng) {
+            const dist = getDistanceFromLatLonInKm(STORE_COORDS.lat, STORE_COORDS.lng, lat, lng);
+            distanceKm = parseFloat(dist.toFixed(2));
+            userLocation = { lat: lat, lng: lng };
+
+            // Actualizar UI del modal
+            const info = document.getElementById('map-location-info');
+            if (dist > MAX_DELIVERY_RADIUS) {
+                info.innerHTML = `<span class="text-red-500 font-bold"><i class="fa-solid fa-circle-xmark"></i> Fuera de zona (${dist}km)</span>`;
+                document.getElementById('btn-confirm-location').disabled = true;
+                document.getElementById('btn-confirm-location').classList.add('opacity-50', 'cursor-not-allowed');
+            } else {
+                info.innerHTML = `<span class="text-green-600 font-bold"><i class="fa-solid fa-check-circle"></i> En zona de reparto (${dist}km)</span>`;
+                document.getElementById('btn-confirm-location').disabled = false;
+                document.getElementById('btn-confirm-location').classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        }
+
         function handleLocationPermission() {
             const btn = document.getElementById('btn-enable-location');
-            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Localizando...`;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Obteniendo señal GPS...`;
             btn.disabled = true;
 
-            calculateShipping(true, () => {
-                // On Success callback
-                document.getElementById('location-modal').classList.remove('active');
-                document.body.classList.remove('modal-open');
-            });
+            if (!navigator.geolocation) {
+                alert("Geolocalización no soportada.");
+                showMapStep(STORE_COORDS.lat, STORE_COORDS.lng);
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    // Éxito GPS
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    showMapStep(lat, lng);
+                },
+                (error) => {
+                    // Error GPS
+                    console.warn("Error GPS:", error);
+                    let msg = "No pudimos obtener tu ubicación exacta.";
+                    if (error.code === 1) msg = "⚠️ Es necesario permitir la ubicación para verificar la cobertura.";
+                    alert(msg);
+
+                    // Fallback a la tienda, permiso denegado o error
+                    showMapStep(STORE_COORDS.lat, STORE_COORDS.lng);
+
+                    // Reset botón para reintentar si quiere
+                    btn.innerHTML = `<i class="fa-solid fa-location-crosshairs"></i> Reintentar GPS`;
+                    btn.disabled = false;
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 0
+                }
+            );
+        }
+
+        function showMapStep(lat, lng) {
+            // Ocultar paso 1 (Bienvenida), Mostrar paso 2 (Mapa)
+            document.getElementById('location-step-1').classList.add('hidden');
+            document.getElementById('location-step-2').classList.remove('hidden');
+
+            // Renderizar mapa
+            setTimeout(() => {
+                initMap(lat, lng);
+                updateLocationFromPin(lat, lng);
+                map.invalidateSize(); // Fix render issues
+            }, 200);
+        }
+
+        function confirmLocation() {
+            // Cerrar modal y proceder
+            calculateShipping(false, null, true); // Bypass GPS, usar userLocation confirmado
+            document.getElementById('location-modal').classList.remove('active');
+            document.body.classList.remove('modal-open');
         }
     </script>
     <!-- Menú Inferior Android Style -->
@@ -1942,23 +2062,53 @@
         </div>
     </div>
     <!-- LOCATION WELCOME MODAL -->
+    <!-- LOCATION WELCOME MODAL -->
     <div id="location-modal"
-        class="modal fixed inset-0 z-[70] flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
+        class="modal fixed inset-0 z-[70] flex items-center justify-center bg-black/90 backdrop-blur-md p-4">
         <div
-            class="bg-white w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden animate-fade-in text-center p-6 relative">
-            <div
-                class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
-                <i class="fa-solid fa-location-dot text-3xl text-blue-600"></i>
-            </div>
-            <h2 class="text-xl font-bold text-gray-900 mb-2">¡Hola! 🍣</h2>
-            <p class="text-gray-500 text-sm mb-6">Para mostrarte el menú y costos de envío exactos, necesitamos saber si
-                estás dentro de nuestra zona de reparto.</p>
+            class="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden animate-fade-in relative flex flex-col max-h-[90vh]">
 
-            <button onclick="handleLocationPermission()" id="btn-enable-location"
-                class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow-lg shadow-blue-500/30 transition transform active:scale-95 mb-3 flex justify-center items-center gap-2">
-                <i class="fa-solid fa-location-crosshairs"></i> Usar mi ubicación actual
-            </button>
-            <p class="text-[10px] text-gray-400">Usaremos GPS de alta precisión</p>
+            <!-- Step 1: Request Permission -->
+            <div id="location-step-1" class="p-8 text-center">
+                <div
+                    class="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce">
+                    <i class="fa-solid fa-location-dot text-4xl text-blue-600"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-gray-900 mb-2">Ubicación Requerida</h2>
+                <p class="text-gray-500 text-sm mb-8 leading-relaxed">
+                    Necesitamos tu ubicación exacta para asegurarnos de que llegamos a tu casa caliente y a tiempo.
+                    <br><br>
+                    <span class="font-bold text-gray-800">Por favor, permite el acceso al GPS cuando se te
+                        solicite.</span>
+                </p>
+
+                <button onclick="handleLocationPermission()" id="btn-enable-location"
+                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-500/30 transition transform active:scale-95 mb-4 flex justify-center items-center gap-2 text-lg">
+                    <i class="fa-solid fa-location-crosshairs"></i> Activar ubicación
+                </button>
+                <p class="text-[10px] text-gray-400">🔒 Tu ubicación solo se usa para calcular el envío.</p>
+            </div>
+
+            <!-- Step 2: Verify on Map -->
+            <div id="location-step-2" class="hidden flex flex-col h-full bg-gray-50">
+                <div class="bg-white p-4 border-b border-gray-200 z-10 shadow-sm text-center">
+                    <h3 class="font-bold text-gray-800">Confirma tu ubicación</h3>
+                    <p class="text-xs text-gray-500">Mueve el pin rojo a tu entrega exacta</p>
+                </div>
+
+                <div id="map-container" class="flex-1 w-full min-h-[300px] z-0"></div>
+
+                <div class="p-4 bg-white border-t border-gray-200 z-10">
+                    <div id="map-location-info" class="text-center text-sm mb-3">
+                        <!-- Distancia info -->
+                    </div>
+                    <button onclick="confirmLocation()" id="btn-confirm-location"
+                        class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl shadow-lg transition active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <i class="fa-solid fa-check"></i> Confirmar Ubicación
+                    </button>
+                </div>
+            </div>
+
         </div>
     </div>
 </body>
