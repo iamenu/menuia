@@ -830,8 +830,10 @@
         const STORE_COORDS = { lat: 20.648325, lng: -103.267706 };
 
         // Horario de Atención (Formato 24h)
-        const OPEN_HOUR = 16; // 4 PM
-        const CLOSE_HOUR = 23; // 11 PM
+        // Horario de Atención (Formato 24h) - Dinámico
+        let openHour = 16;
+        let closeHour = 23;
+        let forceClose = false;
 
         // Configuración de Tarifas
         const SHIPPING_FREE_THRESHOLD = 250;
@@ -860,10 +862,26 @@
 
         // --- FUNCIÓN PARA VERIFICAR HORARIO ---
         function isStoreOpen() {
+            if (forceClose) return false; // Cierre de emergencia activo
             const now = new Date();
             const hours = now.getHours();
-            return hours >= OPEN_HOUR && hours < CLOSE_HOUR;
+            return hours >= openHour && hours < closeHour;
         }
+
+        async function fetchStoreConfig() {
+            try {
+                const res = await fetch('https://menuia.onrender.com/api/config/hours');
+                const data = await res.json();
+                if (data) {
+                    openHour = data.open;
+                    closeHour = data.close;
+                    forceClose = data.force_close;
+                    // Actualizar UI si es necesario (ej: mostrar banner de cerrado)
+                }
+            } catch (err) { console.error("Error loading store config", err); }
+        }
+        // Cargar config al iniciar
+        fetchStoreConfig();
 
         function isWeekend() {
             const day = new Date().getDay();
