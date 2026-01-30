@@ -439,6 +439,13 @@
                             class="text-transparent bg-clip-text bg-gradient-to-r from-red-600 to-orange-500">SUSHI</span></span>
                 </div>
 
+                <!-- Dirección en Header (Visible en Desktop y Mobile) -->
+                <div id="header-location"
+                    class="hidden flex items-center gap-1 text-[10px] sm:text-xs text-gray-600 bg-gray-50 px-2 py-1 rounded-full border border-gray-200 shadow-sm max-w-[120px] sm:max-w-[200px] whitespace-nowrap overflow-hidden text-ellipsis">
+                    <i class="fa-solid fa-location-dot text-red-500"></i>
+                    <span id="header-address-text" class="truncate">Ubicación...</span>
+                </div>
+
                 <div class="flex items-center gap-3">
                     <!-- Botón IA -->
                     <button onclick="toggleAI()"
@@ -1311,10 +1318,121 @@
             // BYPASS GPS CHECK
             if (bypassGPS && userLocation) {
                 onSuccess({ coords: { latitude: userLocation.lat, longitude: userLocation.lng } });
+                reverseGeocode(userLocation.lat, userLocation.lng);
                 return;
             }
 
-            navigator.geolocation.getCurrentPosition(onSuccess, onErrorHighAcc, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
+            navigator.geolocation.getCurrentPosition((pos) => {
+                onSuccess(pos);
+                reverseGeocode(pos.coords.latitude, pos.coords.longitude);
+            }, onErrorHighAcc, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
+        }
+
+        // JSONP Callback global
+        window.onGeocodeSuccess = function (data) {
+            const display = document.getElementById('header-address-text');
+            const input = document.getElementById('customer-address');
+
+            if (data && data.address) {
+                let shortAddr = data.address.road || data.address.pedestrian || data.address.path || data.address.cycleway || data.address.suburb || data.display_name.split(',')[0];
+                if (data.address.house_number) shortAddr += ` #${data.address.house_number}`;
+                else if (data.address.house_name) shortAddr += ` (${data.address.house_name})`;
+                if (data.address.suburb && !shortAddr.includes(data.address.suburb)) shortAddr += `, ${data.address.suburb}`;
+
+                if (display) { display.innerText = shortAddr; display.title = data.display_name; }
+                if (input && !input.value) input.value = data.display_name;
+            } else {
+                if (display) display.innerText = "Ubicación detectada";
+            }
+        };
+
+        function reverseGeocode(lat, lng) {
+            const display = document.getElementById('header-address-text');
+            const container = document.getElementById('header-location');
+            if (!display) return;
+
+            container.classList.remove('hidden');
+            display.innerText = "Cargando dirección...";
+
+            const script = document.createElement('script');
+            script.src = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1&json_callback=onGeocodeSuccess`;
+            script.onerror = () => { console.warn("JSONP failed"); fallbackGeocode(lat, lng); };
+            document.body.appendChild(script);
+            setTimeout(() => { script.remove(); }, 5000);
+        }
+
+        async function fallbackGeocode(lat, lng) {
+            const display = document.getElementById('header-address-text');
+            try {
+                const res = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=es`);
+                const data = await res.json();
+                if (data && data.locality) {
+                    let shortAddr = `${data.locality}, ${data.principalSubdivision}`;
+                    if (display) { display.innerText = shortAddr; display.title = shortAddr; }
+                    const input = document.getElementById('customer-address');
+                    if (input && !input.value) input.value = shortAddr;
+                } else { if (display) display.innerText = "Ubicación detectada"; }
+            } catch (e) { if (display) display.innerText = "Ubicación detectada"; }
+        }
+
+        async function reverseGeocode_deprecated(lat, lng) {
+            const display = document.getElementById('header-address-text');
+            const container = document.getElementById('header-location');
+            if (!display) return;
+
+            container.classList.remove('hidden');
+            display.innerText = "Cargando dirección...";
+
+            try {
+                // Agregar zoom=18 para mayor detalle y addressdetails=1
+                const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`);
+                const data = await res.json();
+                if (data && data.address) {
+                    // Construir dirección corta buscando varios campos posibles de calle
+                    let shortAddr = data.address.road || data.address.pedestrian || data.address.path || data.address.cycleway || data.address.suburb || data.display_name.split(',')[0];
+
+                    if (data.address.house_number) shortAddr += ` #${data.address.house_number}`;
+                    else if (data.address.house_name) shortAddr += ` (${data.address.house_name})`;
+
+                    // Solo agregar suburbio si es diferente a la calle
+                    if (data.address.suburb && !shortAddr.includes(data.address.suburb)) {
+                        shortAddr += `, ${data.address.suburb}`;
+                    }
+
+                    display.innerText = shortAddr;
+                    display.title = data.display_name; // Tooltip con dirección completa
+
+                    // Pre-llenar checkout si está vacío
+                    const addressInput = document.getElementById('customer-address');
+                    if (addressInput && !addressInput.value) {
+                        addressInput.value = data.display_name;
+                    }
+                } else {
+                    display.innerText = "Ubicación detectada";
+                }
+            } catch (e) {
+                console.warn("Nominatim error, trying fallback...", e);
+                // Fallback: BigDataCloud (Free, no key)
+                try {
+                    const res2 = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=es`);
+                    const data2 = await res2.json();
+                    if (data2 && data2.locality) {
+                        let shortAddr = `${data2.locality}, ${data2.principalSubdivision}`;
+                        display.innerText = shortAddr;
+                        display.title = `${data2.locality}, ${data2.principalSubdivision}, ${data2.countryName}`;
+
+                        const addressInput = document.getElementById('customer-address');
+                        if (addressInput && !addressInput.value) {
+                            addressInput.value = display.title;
+                        }
+                    } else {
+                        display.innerText = "Ubicación detectada";
+                    }
+                } catch (err2) {
+                    console.error("All geocoding failed", err2);
+                    display.innerText = "Ubicación detectada";
+                }
+            }
         }
 
         function togglePaymentMethod() {
