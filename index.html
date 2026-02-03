@@ -602,177 +602,190 @@
                     <i class="fa-solid fa-xmark text-lg"></i>
                 </button>
             </div>
+            <!-- Middle Scrollable Area (Items + Form) -->
+            <div id="cart-scroll-container" class="flex-1 overflow-y-auto bg-gray-50 relative">
 
-            <!-- Cart Items Area -->
-            <div id="cart-items-container" class="cart-items flex-1 p-4 overflow-y-auto bg-gray-50">
-                <div class="text-center text-gray-400 mt-20">
-                    <i class="fa-solid fa-basket-shopping text-6xl mb-4 opacity-30"></i>
-                    <p class="text-lg text-gray-600">Tu carrito está vacío</p>
-                    <p class="text-sm opacity-60">¡Agrega unos rollos deliciosos!</p>
-                </div>
-            </div>
-
-            <!-- AI Suggestion Box (Hidden by default) -->
-            <div id="ai-suggestion-box"
-                class="hidden bg-gradient-to-r from-blue-50 to-purple-50 border-y border-blue-100 p-3 flex items-center gap-3 animate-fade-in relative overflow-hidden">
-                <div class="absolute -right-4 -top-4 w-12 h-12 bg-blue-500 blur-xl opacity-10 rounded-full"></div>
-                <div
-                    class="bg-blue-600 rounded-full w-10 h-10 flex-shrink-0 flex items-center justify-center text-white shadow-lg animate-pulse">
-                    <i class="fa-solid fa-lightbulb"></i>
-                </div>
-                <div class="flex-1 relative z-10">
-                    <p class="text-[10px] text-blue-600 font-bold uppercase tracking-wider mb-0.5">Sugerencia IA 🤖</p>
-                    <p id="ai-suggestion-text" class="text-xs text-gray-700 leading-tight">¿Qué tal unos bocados para
-                        acompañar?</p>
-                </div>
-                <button id="ai-suggestion-btn"
-                    class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-3 py-1.5 rounded-full font-bold shadow transition flex-shrink-0 relative z-10">
-                    + Agregar
-                </button>
-            </div>
-
-            <!-- Checkout Form Section -->
-            <div
-                class="p-5 bg-white border-t border-gray-200 shadow-[0_-5px_15px_rgba(0,0,0,0.05)] overflow-y-auto max-h-[80vh]">
-
-                <div class="flex justify-between items-center mb-1 text-base text-gray-600">
-                    <span>Subtotal:</span>
-                    <span id="cart-subtotal" class="text-gray-900 font-bold">$0.00</span>
-                </div>
-                <div class="flex justify-between items-center mb-1 text-base text-gray-600">
-                    <span>Envío:</span>
-                    <span id="cart-shipping" class="text-gray-900 font-bold">--</span>
-                </div>
-
-                <!-- Barra de progreso para envío gratis -->
-                <div id="free-shipping-progress" class="hidden mb-3">
-                    <div class="w-full bg-gray-700 rounded-full h-1.5 mb-1 overflow-hidden">
-                        <div id="progress-bar-fill"
-                            class="bg-gradient-to-r from-green-500 to-emerald-400 h-1.5 rounded-full transition-all duration-500"
-                            style="width: 0%"></div>
-                    </div>
-                    <p id="progress-text" class="text-[10px] text-green-400 text-right mt-1">¡Te faltan $50 para envío
-                        gratis!</p>
-                </div>
-
-                <div
-                    class="flex justify-between items-center mb-4 text-xl font-bold text-gray-900 border-t border-gray-200 pt-2">
-                    <span>Total:</span>
-                    <span id="cart-total" class="text-red-600">$0.00</span>
-                </div>
-
-                <div id="checkout-form" class="hidden">
-                    <div class="space-y-3 mb-4">
-                        <!-- Datos personales -->
-                        <div>
-                            <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Tu Nombre</label>
-                            <input type="text" id="customer-name"
-                                class="w-full bg-gray-50 border border-gray-300 rounded p-2 text-gray-900 focus:border-red-500 outline-none transition placeholder-gray-400 focus:bg-white">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Teléfono</label>
-                            <input type="tel" id="customer-phone"
-                                class="w-full bg-gray-50 border border-gray-300 rounded p-2 text-gray-900 focus:border-red-500 outline-none transition placeholder-gray-400 focus:bg-white">
-                        </div>
-
-                        <!-- Sección de Ubicación Inteligente -->
-                        <div class="bg-gray-50 p-3 rounded border border-gray-200">
-                            <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Ubicación de
-                                Entrega</label>
-
-                            <div id="location-result"
-                                class="hidden text-xs mt-2 p-2 bg-white rounded border border-gray-200 shadow-sm">
-                                <!-- Resultado JS -->
-                            </div>
-
-                            <textarea id="customer-address" rows="2" placeholder="O escribe tu dirección manual aquí..."
-                                class="w-full bg-white border border-gray-300 rounded p-2 text-gray-900 focus:border-red-500 outline-none transition placeholder-gray-400 mt-2 text-sm"></textarea>
-                            <input type="text" id="customer-address-details"
-                                placeholder="Referencias (Color casa, entre calles...)"
-                                class="w-full bg-white border border-gray-300 rounded p-2 text-gray-900 focus:border-red-500 outline-none transition placeholder-gray-400 text-sm mt-2">
-                        </div>
-
-                        <!-- Sección de Método de Pago -->
-                        <div class="mt-4 pt-4 border-t border-gray-700">
-                            <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Método de Pago</label>
-
-                            <!-- Selectores de Método (Radio Buttons) -->
-                            <div class="flex gap-4 mb-3">
-                                <label class="flex items-center cursor-pointer group">
-                                    <input type="radio" name="payment-method" value="transferencia" checked
-                                        onchange="togglePaymentMethod()"
-                                        class="text-red-600 focus:ring-red-500 bg-gray-100 border-gray-300">
-                                    <span
-                                        class="ml-2 text-sm text-gray-700 group-hover:text-blue-600 transition">Transferencia</span>
-                                </label>
-                                <!-- Opción Efectivo (Oculta por defecto, se activa si distancia <= 1km) -->
-                                <label id="opt-cash" class="hidden items-center cursor-pointer group">
-                                    <input type="radio" name="payment-method" value="efectivo"
-                                        onchange="togglePaymentMethod()"
-                                        class="text-red-600 focus:ring-red-500 bg-gray-100 border-gray-300">
-                                    <span
-                                        class="ml-2 text-sm text-gray-700 group-hover:text-green-600 transition">Efectivo</span>
-                                </label>
-                            </div>
-
-                            <!-- Opciones Transferencia (Default) -->
-                            <div id="transfer-options" class="transition-all duration-300">
-                                <div
-                                    class="bg-blue-50 p-3 rounded border border-blue-100 text-sm relative overflow-hidden">
-                                    <div class="absolute top-0 right-0 w-16 h-16 bg-blue-500/10 rounded-full blur-xl">
-                                    </div>
-                                    <div class="flex items-center gap-2 mb-2 relative z-10">
-                                        <i class="fa-solid fa-building-columns text-blue-600"></i>
-                                        <span class="text-gray-900 font-bold">Transferencia Bancaria</span>
-                                    </div>
-                                    <p class="text-gray-600 text-xs mb-2">Realiza tu pago a la siguiente cuenta:</p>
-
-                                    <div class="bg-white p-2 rounded mb-2 border border-blue-200">
-                                        <p class="text-gray-800 mb-1 text-xs"><span
-                                                class="text-gray-500 w-16 inline-block">Banco:</span> <span
-                                                class="font-bold text-gray-900">BBVA</span></p>
-                                        <p class="text-gray-800 mb-1 text-xs"><span
-                                                class="text-gray-500 w-16 inline-block">CLABE:</span> <span
-                                                class="font-mono text-blue-600 select-all font-bold cursor-pointer hover:bg-blue-50 px-1 rounded transition"
-                                                title="Copiar">012 180 01542692475 7</span></p>
-                                        <p class="text-gray-800 text-xs"><span
-                                                class="text-gray-500 w-16 inline-block">Titular:</span> <span
-                                                class="font-bold text-gray-900">So Sushi</span></p>
-                                    </div>
-
-                                    <p class="text-xs text-yellow-500 mt-2 flex items-start gap-1">
-                                        <i class="fa-solid fa-triangle-exclamation mt-0.5"></i>
-                                        <span>Importante: Envía tu comprobante por WhatsApp al finalizar.</span>
-                                    </p>
-                                </div>
-                            </div>
-
-                            <!-- Opciones Efectivo (Solo visible si selecciona efectivo) -->
-                            <div id="cash-options" class="hidden transition-all duration-300">
-                                <div class="bg-gray-50 p-3 rounded border border-gray-200 text-sm">
-                                    <div class="flex items-center gap-2 mb-2">
-                                        <i class="fa-solid fa-money-bill-wave text-green-600"></i>
-                                        <span class="text-gray-900 font-bold">Pago en Efectivo</span>
-                                    </div>
-                                    <label class="block text-xs text-gray-500 mb-1">¿Con cuánto vas a pagar?</label>
-                                    <div class="relative">
-                                        <span class="absolute left-3 top-2 text-gray-500">$</span>
-                                        <input type="number" id="payment-amount" placeholder="Ej. 500"
-                                            class="w-full bg-white border border-gray-300 rounded p-2 pl-6 text-gray-900 focus:border-red-500 outline-none text-sm">
-                                    </div>
-                                    <p class="text-[10px] text-gray-500 mt-1">El repartidor llevará tu cambio.</p>
-                                </div>
-                            </div>
-
-                        </div>
+                <!-- Cart Items Area -->
+                <div id="cart-items-container" class="cart-items p-4">
+                    <div class="text-center text-gray-400 mt-20">
+                        <i class="fa-solid fa-basket-shopping text-6xl mb-4 opacity-30"></i>
+                        <p class="text-lg text-gray-600">Tu carrito está vacío</p>
+                        <p class="text-sm opacity-60">¡Agrega unos rollos deliciosos!</p>
                     </div>
                 </div>
 
+                <!-- AI Suggestion Box (Hidden by default) -->
+                <div id="ai-suggestion-box"
+                    class="hidden bg-gradient-to-r from-blue-50 to-purple-50 border-y border-blue-100 p-3 flex items-center gap-3 animate-fade-in relative overflow-hidden">
+                    <div class="absolute -right-4 -top-4 w-12 h-12 bg-blue-500 blur-xl opacity-10 rounded-full"></div>
+                    <div
+                        class="bg-blue-600 rounded-full w-10 h-10 flex-shrink-0 flex items-center justify-center text-white shadow-lg animate-pulse">
+                        <i class="fa-solid fa-lightbulb"></i>
+                    </div>
+                    <div class="flex-1 relative z-10">
+                        <p class="text-[10px] text-blue-600 font-bold uppercase tracking-wider mb-0.5">Sugerencia IA 🤖
+                        </p>
+                        <p id="ai-suggestion-text" class="text-xs text-gray-700 leading-tight">¿Qué tal unos bocados
+                            para
+                            acompañar?</p>
+                    </div>
+                    <button id="ai-suggestion-btn"
+                        class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-3 py-1.5 rounded-full font-bold shadow transition flex-shrink-0 relative z-10">
+                        + Agregar
+                    </button>
+                </div>
+
+                <!-- Checkout Form Section -->
+                <div class="p-5 bg-white border-t border-gray-200 shadow-sm">
+
+                    <div class="flex justify-between items-center mb-1 text-base text-gray-600">
+                        <span>Subtotal:</span>
+                        <span id="cart-subtotal" class="text-gray-900 font-bold">$0.00</span>
+                    </div>
+                    <div class="flex justify-between items-center mb-1 text-base text-gray-600">
+                        <span>Envío:</span>
+                        <span id="cart-shipping" class="text-gray-900 font-bold">--</span>
+                    </div>
+
+                    <!-- Barra de progreso para envío gratis -->
+                    <div id="free-shipping-progress" class="hidden mb-3">
+                        <div class="w-full bg-gray-700 rounded-full h-1.5 mb-1 overflow-hidden">
+                            <div id="progress-bar-fill"
+                                class="bg-gradient-to-r from-green-500 to-emerald-400 h-1.5 rounded-full transition-all duration-500"
+                                style="width: 0%"></div>
+                        </div>
+                        <p id="progress-text" class="text-[10px] text-green-400 text-right mt-1">¡Te faltan $50 para
+                            envío
+                            gratis!</p>
+                    </div>
+
+                    <div
+                        class="flex justify-between items-center mb-4 text-xl font-bold text-gray-900 border-t border-gray-200 pt-2">
+                        <span>Total:</span>
+                        <span id="cart-total" class="text-red-600">$0.00</span>
+                    </div>
+
+                    <div id="checkout-form" class="hidden">
+                        <div class="space-y-3 mb-4">
+                            <!-- Datos personales -->
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Tu Nombre</label>
+                                <input type="text" id="customer-name"
+                                    class="w-full bg-gray-50 border border-gray-300 rounded p-2 text-gray-900 focus:border-red-500 outline-none transition placeholder-gray-400 focus:bg-white">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Teléfono</label>
+                                <input type="tel" id="customer-phone"
+                                    class="w-full bg-gray-50 border border-gray-300 rounded p-2 text-gray-900 focus:border-red-500 outline-none transition placeholder-gray-400 focus:bg-white">
+                            </div>
+
+                            <!-- Sección de Ubicación Inteligente -->
+                            <div class="bg-gray-50 p-3 rounded border border-gray-200">
+                                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Ubicación de
+                                    Entrega</label>
+
+                                <div id="location-result"
+                                    class="hidden text-xs mt-2 p-2 bg-white rounded border border-gray-200 shadow-sm">
+                                    <!-- Resultado JS -->
+                                </div>
+
+                                <textarea id="customer-address" rows="2"
+                                    placeholder="O escribe tu dirección manual aquí..."
+                                    class="w-full bg-white border border-gray-300 rounded p-2 text-gray-900 focus:border-red-500 outline-none transition placeholder-gray-400 mt-2 text-sm"></textarea>
+                                <input type="text" id="customer-address-details"
+                                    placeholder="Referencias (Color casa, entre calles...)"
+                                    class="w-full bg-white border border-gray-300 rounded p-2 text-gray-900 focus:border-red-500 outline-none transition placeholder-gray-400 text-sm mt-2">
+                            </div>
+
+                            <!-- Sección de Método de Pago -->
+                            <div class="mt-4 pt-4 border-t border-gray-700">
+                                <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Método de
+                                    Pago</label>
+
+                                <!-- Selectores de Método (Radio Buttons) -->
+                                <div class="flex gap-4 mb-3">
+                                    <label class="flex items-center cursor-pointer group">
+                                        <input type="radio" name="payment-method" value="transferencia" checked
+                                            onchange="togglePaymentMethod()"
+                                            class="text-red-600 focus:ring-red-500 bg-gray-100 border-gray-300">
+                                        <span
+                                            class="ml-2 text-sm text-gray-700 group-hover:text-blue-600 transition">Transferencia</span>
+                                    </label>
+                                    <!-- Opción Efectivo (Oculta por defecto, se activa si distancia <= 1km) -->
+                                    <label id="opt-cash" class="hidden items-center cursor-pointer group">
+                                        <input type="radio" name="payment-method" value="efectivo"
+                                            onchange="togglePaymentMethod()"
+                                            class="text-red-600 focus:ring-red-500 bg-gray-100 border-gray-300">
+                                        <span
+                                            class="ml-2 text-sm text-gray-700 group-hover:text-green-600 transition">Efectivo</span>
+                                    </label>
+                                </div>
+
+                                <!-- Opciones Transferencia (Default) -->
+                                <div id="transfer-options" class="transition-all duration-300">
+                                    <div
+                                        class="bg-blue-50 p-3 rounded border border-blue-100 text-sm relative overflow-hidden">
+                                        <div
+                                            class="absolute top-0 right-0 w-16 h-16 bg-blue-500/10 rounded-full blur-xl">
+                                        </div>
+                                        <div class="flex items-center gap-2 mb-2 relative z-10">
+                                            <i class="fa-solid fa-building-columns text-blue-600"></i>
+                                            <span class="text-gray-900 font-bold">Transferencia Bancaria</span>
+                                        </div>
+                                        <p class="text-gray-600 text-xs mb-2">Realiza tu pago a la siguiente cuenta:</p>
+
+                                        <div class="bg-white p-2 rounded mb-2 border border-blue-200">
+                                            <p class="text-gray-800 mb-1 text-xs"><span
+                                                    class="text-gray-500 w-16 inline-block">Banco:</span> <span
+                                                    class="font-bold text-gray-900">BBVA</span></p>
+                                            <p class="text-gray-800 mb-1 text-xs"><span
+                                                    class="text-gray-500 w-16 inline-block">CLABE:</span> <span
+                                                    class="font-mono text-blue-600 select-all font-bold cursor-pointer hover:bg-blue-50 px-1 rounded transition"
+                                                    title="Copiar">012 180 01542692475 7</span></p>
+                                            <p class="text-gray-800 text-xs"><span
+                                                    class="text-gray-500 w-16 inline-block">Titular:</span> <span
+                                                    class="font-bold text-gray-900">So Sushi</span></p>
+                                        </div>
+
+                                        <p class="text-xs text-yellow-500 mt-2 flex items-start gap-1">
+                                            <i class="fa-solid fa-triangle-exclamation mt-0.5"></i>
+                                            <span>Importante: Envía tu comprobante por WhatsApp al finalizar.</span>
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <!-- Opciones Efectivo (Solo visible si selecciona efectivo) -->
+                                <div id="cash-options" class="hidden transition-all duration-300">
+                                    <div class="bg-gray-50 p-3 rounded border border-gray-200 text-sm">
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <i class="fa-solid fa-money-bill-wave text-green-600"></i>
+                                            <span class="text-gray-900 font-bold">Pago en Efectivo</span>
+                                        </div>
+                                        <label class="block text-xs text-gray-500 mb-1">¿Con cuánto vas a pagar?</label>
+                                        <div class="relative">
+                                            <span class="absolute left-3 top-2 text-gray-500">$</span>
+                                            <input type="number" id="payment-amount" placeholder="Ej. 500"
+                                                class="w-full bg-white border border-gray-300 rounded p-2 pl-6 text-gray-900 focus:border-red-500 outline-none text-sm">
+                                        </div>
+                                        <p class="text-[10px] text-gray-500 mt-1">El repartidor llevará tu cambio.</p>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+                </div> <!-- End Form Section -->
+            </div> <!-- End Middle Scrollable Area -->
+
+            <!-- Fixed Footer Action -->
+            <div class="p-4 pb-24 bg-white border-t border-gray-200 shadow-[0_-5px_15px_rgba(0,0,0,0.05)] z-20">
                 <button onclick="handleCheckout()" id="checkout-btn"
                     class="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-lg shadow-lg transition transform active:scale-95 flex justify-center items-center gap-2 hover:shadow-green-500/20">
                     <i class="fa-brands fa-whatsapp text-xl"></i> Enviar Pedido
                 </button>
             </div>
+
         </div>
     </div>
 
@@ -872,8 +885,8 @@
 
         // Horario de Atención (Formato 24h)
         // Horario de Atención (Formato 24h) - Dinámico
-        let openHour = 16;
-        let closeHour = 23;
+        let openHour = "16:00";
+        let closeHour = "23:00";
         let forceClose = false;
 
         // Configuración de Tarifas
@@ -904,9 +917,21 @@
         // --- FUNCIÓN PARA VERIFICAR HORARIO ---
         function isStoreOpen() {
             if (forceClose) return false; // Cierre de emergencia activo
+
             const now = new Date();
-            const hours = now.getHours();
-            return hours >= openHour && hours < closeHour;
+            const currentFreq = now.getHours() * 60 + now.getMinutes();
+
+            // Default safe values
+            const op = openHour || "16:00";
+            const cl = closeHour || "23:00";
+
+            const [openH, openM] = op.toString().split(':').map(Number);
+            const [closeH, closeM] = cl.toString().split(':').map(Number);
+
+            const openFreq = (openH || 0) * 60 + (openM || 0);
+            const closeFreq = (closeH || 0) * 60 + (closeM || 0);
+
+            return currentFreq >= openFreq && currentFreq < closeFreq;
         }
 
         async function fetchStoreConfig() {
@@ -1382,9 +1407,13 @@
             }
 
             navigator.geolocation.getCurrentPosition((pos) => {
+                // Check accuracy threshold (approx 20-30m)
+                if (pos.coords.accuracy > 25) {
+                    showToast(`⚠️ Precisión baja (${Math.round(pos.coords.accuracy)}m). Verifica tu ubicación en el mapa.`);
+                }
                 onSuccess(pos);
                 reverseGeocode(pos.coords.latitude, pos.coords.longitude);
-            }, onErrorHighAcc, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
+            }, onErrorHighAcc, { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 });
         }
 
         // JSONP Callback global
